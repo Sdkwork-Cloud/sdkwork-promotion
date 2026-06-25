@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "kind": "sdkwork.component.spec",
+  "component": {
+    "name": "sdkwork-promotion-workspace",
+    "domain": "commerce",
+    "capability": "promotion",
+    "root": "sdkwork-promotion"
+  }
+}

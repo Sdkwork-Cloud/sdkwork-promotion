@@ -1,0 +1,66 @@
+{
+  "name": "@sdkwork/promotion-pc-points",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Points, credits, quota balances, and consumption history.",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sdkwork/appbase-pc-react": "workspace:*",
+    "@sdkwork/account-pc-wallet": "workspace:*",
+    "@sdkwork/account-service": "workspace:*",
+    "@sdkwork/membership-pc-membership": "workspace:*",
+    "@sdkwork/membership-service": "workspace:*",
+    "@sdkwork/promotion-service": "workspace:*"
+  },
+  "devDependencies": {
+    "@sdkwork/ui-pc-react": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "@sdkwork/promotion-service": "*",
+    "@sdkwork/ui-pc-react": "*",
+    "@sdkwork/membership-pc-membership": "*",
+    "@sdkwork/account-pc-wallet": "*",
+    "react": ">=18.2.0 <20.0.0",
+    "react-dom": ">=18.2.0 <20.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@sdkwork/promotion-service": {
+      "optional": true
+    },
+    "@sdkwork/ui-pc-react": {
+      "optional": true
+    },
+    "@sdkwork/membership-pc-membership": {
+      "optional": true
+    },
+    "@sdkwork/account-pc-wallet": {
+      "optional": true
+    }
+  },
+  "sdkwork": {
+    "workspace": "sdkwork-promotion",
+    "architecture": "pc-react",
+    "domain": "promotion",
+    "capability": "points",
+    "status": "ready"
+  }
+}

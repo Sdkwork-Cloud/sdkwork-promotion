@@ -1,0 +1,27 @@
+﻿{
+  "name": "@sdkwork/promotion-pc-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5185",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "pnpm --dir ../.. run test:vitest",
+    "lint": "pnpm run typecheck"
+  },
+  "dependencies": {
+    "@sdkwork/promotion-pc-core": "workspace:*",
+    "@sdkwork/promotion-pc-shell": "workspace:*",
+    "@sdkwork/promotion-service": "workspace:*",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

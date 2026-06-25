@@ -1,0 +1,12 @@
+﻿{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@sdkwork/promotion-pc-core": ["packages/sdkwork-promotion-pc-core/src/index.ts"],
+      "@sdkwork/promotion-pc-shell": ["packages/sdkwork-promotion-pc-shell/src/index.tsx"],
+      "@sdkwork/promotion-pc-wallet": ["packages/sdkwork-promotion-pc-wallet/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "packages/**/*.ts", "packages/**/*.tsx"]
+}

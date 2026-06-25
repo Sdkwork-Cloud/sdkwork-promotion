@@ -1,0 +1,29 @@
+﻿packages:
+  - "packages/common/promotion/*"
+  - "apps/sdkwork-promotion-pc"
+  - "apps/sdkwork-promotion-pc/packages/*"
+  - "../sdkwork-account/packages/common/account/*"
+  - "../sdkwork-account/apps/sdkwork-account-pc/packages/sdkwork-account-pc-wallet"
+  - "../sdkwork-membership/packages/common/membership/*"
+  - "../sdkwork-membership/apps/sdkwork-membership-pc/packages/sdkwork-membership-pc-membership"
+  - "../sdkwork-membership/apps/sdkwork-membership-pc/packages/sdkwork-membership-pc-subscription"
+  - "../sdkwork-payment/packages/common/payment/*"
+  - "../sdkwork-payment/apps/sdkwork-payment-pc/packages/sdkwork-payment-pc-payment"
+  - "../sdkwork-appbase/packages/common/foundation/sdkwork-runtime-bootstrap"
+  - "../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react"
+  - "../sdkwork-appbase/packages/pc-react/foundation/sdkwork-i18n-pc-react"
+  - "../sdkwork-ui/sdkwork-ui-pc-react"
+  - "../sdkwork-utils/packages/sdkwork-utils-typescript"
+  - "../sdkwork-sdk-commons/sdkwork-sdk-common-typescript"
+
+catalog:
+  "@types/react": ^19.2.14
+  "@types/react-dom": ^19.2.3
+  "@vitejs/plugin-react": ^6.0.1
+  react: ^19.2.4
+  react-dom: ^19.2.4
+  react-router: ">=6.0.0 <8.0.0"
+  react-router-dom: ">=6.0.0 <8.0.0"
+  typescript: ~6.0.2
+  vite: ^8.0.3
+  vitest: ^4.1.2
