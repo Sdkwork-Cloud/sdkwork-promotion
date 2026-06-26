@@ -52,7 +52,7 @@ Migration status: **complete**.
 ## 6. Success Metrics
 
 - Promotion SQL and HTTP routes owned exclusively in sdkwork-promotion.
-- Coupon and exchange routes served from `sdkwork-router-promotion-app-api`.
+- Coupon and exchange routes served from `sdkwork-routes-promotion-app-api`.
 
 ## 7. Phases
 

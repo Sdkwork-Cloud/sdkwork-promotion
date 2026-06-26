@@ -15,3 +15,11 @@ pub use promotion_router::{
 };
 pub use routes::build_promotion_app_router_with_framework;
 pub use web_bootstrap::wrap_router_with_web_framework_from_env;
+
+use axum::Router;
+use sdkwork_promotion_service_host::PromotionServiceHost;
+use std::sync::Arc;
+
+pub async fn gateway_mount(host: Arc<PromotionServiceHost>) -> Router {
+    build_promotion_app_router_with_framework(host).await
+}

@@ -34,7 +34,7 @@ Migration status: **complete**.
 | --- | --- | --- |
 | Domain commands/queries | `sdkwork-commerce-promotion-service` | Business validation and ports |
 | SQL repositories | `sdkwork-commerce-promotion-repository-sqlx` | Tenant-scoped persistence |
-| HTTP route builders | sdkwork-router-promotion-app-api, sdkwork-router-promotion-backend-api | `build_*_router` exports without IAM |
+| HTTP route builders | sdkwork-routes-promotion-app-api, sdkwork-routes-promotion-backend-api | `build_*_router` exports without IAM |
 | IAM / gateway composition | `sdkwork-commerce` | Thin wrappers only |
 | OpenAPI / SDK authority | `sdkwork-commerce/sdks/` | Composed commerce SDK families |
 
@@ -44,8 +44,8 @@ Standard capability workspace:
 
 - `crates/sdkwork-commerce-promotion-service/`
 - `crates/sdkwork-commerce-promotion-repository-sqlx/`
-- `crates/sdkwork-router-promotion-app-api/`
-- `crates/sdkwork-router-promotion-backend-api/`
+- `crates/sdkwork-routes-promotion-app-api/`
+- `crates/sdkwork-routes-promotion-backend-api/`
 - `crates/sdkwork-promotion-database-host/`
 - `crates/sdkwork-promotion-service-host/`
 - `crates/sdkwork-promotion-api-server/`

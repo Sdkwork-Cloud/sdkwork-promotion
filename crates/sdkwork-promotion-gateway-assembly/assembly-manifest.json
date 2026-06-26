@@ -1,0 +1,30 @@
+{
+  "kind": "sdkwork.gateway.assembly",
+  "schemaVersion": 1,
+  "applicationCode": "promotion",
+  "packageName": "sdkwork-promotion-gateway-assembly",
+  "crateDir": "crates/sdkwork-promotion-gateway-assembly",
+  "generatedAt": "2026-06-25T13:08:05.594Z",
+  "routeCrates": [
+    {
+      "packageName": "sdkwork-routes-promotion-app-api",
+      "memberDir": "crates/sdkwork-routes-promotion-app-api",
+      "libName": "sdkwork_routes_promotion_app_api",
+      "surface": "app-api",
+      "pathPrefix": null,
+      "mountOrder": 0,
+      "hasGatewayMount": true,
+      "hasGatewayRouteManifest": false
+    },
+    {
+      "packageName": "sdkwork-routes-promotion-backend-api",
+      "memberDir": "crates/sdkwork-routes-promotion-backend-api",
+      "libName": "sdkwork_routes_promotion_backend_api",
+      "surface": "backend-api",
+      "pathPrefix": null,
+      "mountOrder": 1,
+      "hasGatewayMount": true,
+      "hasGatewayRouteManifest": false
+    }
+  ]
+}
