@@ -2510,12 +2510,12 @@ mod tests {
                  audience_scope, combinability, priority, status, current_offer_version_id, starts_at, ends_at,
                  created_at, updated_at)
             VALUES
-                ('offer-welcome', 'tenant-1', 'org-1', 'offer-welcome', 'welcome_points',
+                ('offer-welcome', '100001', '300001', 'offer-welcome', 'welcome_points',
                  'Welcome points', 'coupon', 'new_user', 'exclusive', 100, 'active',
                  'offer-version-welcome-v1',
                  '2026-01-01 00:00:00', '2099-01-01 00:00:00',
                  '2026-05-20 00:00:00', '2026-05-20 00:00:00'),
-                ('offer-other', 'tenant-1', 'org-1', 'offer-other', 'other_points',
+                ('offer-other', '100001', '300001', 'offer-other', 'other_points',
                  'Other points', 'coupon', 'new_user', 'exclusive', 90, 'active',
                  'offer-version-other-v1',
                  '2026-01-01 00:00:00', '2099-01-01 00:00:00',
@@ -2533,11 +2533,11 @@ mod tests {
                  discount_type, discount_value, minimum_amount, maximum_discount_amount,
                  currency_code, rule_json, stack_rule_json, published_at, created_at, updated_at)
             VALUES
-                ('offer-version-welcome-v1', 'tenant-1', 'org-1', 'offer-welcome', 'v1',
+                ('offer-version-welcome-v1', '100001', '300001', 'offer-welcome', 'v1',
                  'published', 'fixed_amount', '5.00', '0', NULL, 'CNY',
                  '{}', NULL, '2026-05-20 00:00:00',
                  '2026-05-20 00:00:00', '2026-05-20 00:00:00'),
-                ('offer-version-other-v1', 'tenant-1', 'org-1', 'offer-other', 'v1',
+                ('offer-version-other-v1', '100001', '300001', 'offer-other', 'v1',
                  'published', 'fixed_amount', '9.00', '0', NULL, 'CNY',
                  '{}', NULL, '2026-05-20 00:00:00',
                  '2026-05-20 00:00:00', '2026-05-20 00:00:00')
@@ -2555,11 +2555,11 @@ mod tests {
                  redeemed_quantity, locked_quantity, status, starts_at, expires_at,
                  created_at, updated_at)
             VALUES
-                ('stock-welcome', 'tenant-1', 'org-1', 'stock-welcome', 'Welcome stock', 'offer-welcome',
+                ('stock-welcome', '100001', '300001', 'stock-welcome', 'Welcome stock', 'offer-welcome',
                  'offer-version-welcome-v1', 'limited', 100, 100, 0, 0, 0, 'active',
                  '2026-01-01 00:00:00', '2099-01-01 00:00:00',
                  '2026-05-20 00:00:00', '2026-05-20 00:00:00'),
-                ('stock-other', 'tenant-1', 'org-1', 'stock-other', 'Other stock', 'offer-other',
+                ('stock-other', '100001', '300001', 'stock-other', 'Other stock', 'offer-other',
                  'offer-version-other-v1', 'limited', 100, 100, 0, 0, 0, 'active',
                  '2026-01-01 00:00:00', '2099-01-01 00:00:00',
                  '2026-05-20 00:00:00', '2026-05-20 00:00:00')
@@ -2576,11 +2576,11 @@ mod tests {
                  code_type, max_claims, claimed_quantity, status, starts_at, expires_at,
                  created_at, updated_at)
             VALUES
-                ('code-welcome', 'tenant-1', 'org-1', 'code-welcome', 'stock-welcome',
+                ('code-welcome', '100001', '300001', 'code-welcome', 'stock-welcome',
                  'offer-welcome', 'offer-version-welcome-v1', 'WELCOME', 'public', 100, 0, 'active',
                  '2026-01-01 00:00:00', '2099-01-01 00:00:00',
                  '2026-05-20 00:00:00', '2026-05-20 00:00:00'),
-                ('code-other', 'tenant-1', 'org-1', 'code-other', 'stock-other',
+                ('code-other', '100001', '300001', 'code-other', 'stock-other',
                  'offer-other', 'offer-version-other-v1', 'OTHER', 'public', 100, 0, 'active',
                  '2026-01-01 00:00:00', '2099-01-01 00:00:00',
                  '2026-05-20 00:00:00', '2026-05-20 00:00:00')
@@ -2597,8 +2597,8 @@ mod tests {
         request_no: &str,
     ) -> PromotionCodeRedemptionCommand {
         PromotionCodeRedemptionCommand::new(
-            "tenant-1",
-            Some("org-1"),
+            "100001",
+            Some("300001"),
             user_id,
             code,
             request_no,
@@ -2614,8 +2614,8 @@ mod tests {
         idempotency_key: &str,
     ) -> PromotionCodeRedemptionCommand {
         PromotionCodeRedemptionCommand::new(
-            "tenant-1",
-            Some("org-1"),
+            "100001",
+            Some("300001"),
             user_id,
             code,
             request_no,
@@ -2631,11 +2631,11 @@ mod tests {
                 (id, tenant_id, organization_id, owner_user_id, asset_type, currency_code,
                  available_amount, frozen_amount, version, status, created_at, updated_at)
             VALUES
-                (?, 'tenant-1', 'org-1', ?, 'points', 'POINT',
+                (?, '100001', '300001', ?, 'points', 'POINT',
                  ?, '0', 0, 'active', '2026-05-26 00:00:00', '2026-05-26 00:00:00')
             "#,
         )
-        .bind(format!("account-tenant-1-org-1-{user_id}-points"))
+        .bind(format!("account-100001-300001-{user_id}-points"))
         .bind(user_id)
         .bind(available_points.to_string())
         .execute(pool)
@@ -2650,7 +2650,7 @@ mod tests {
         let store = super::SqliteCommercePromotionStore::new(pool.clone());
 
         let outcome = store
-            .redeem_promotion_code(redeem_command("user-1", "WELCOME", "redeem-1"))
+            .redeem_promotion_code(redeem_command("30", "WELCOME", "redeem-1"))
             .await
             .expect("promotion code redemption");
 
@@ -2661,7 +2661,7 @@ mod tests {
 
         let balance = store
             .retrieve_points_balance(
-                PointsBalanceQuery::new("tenant-1", Some("org-1"), "user-1")
+                PointsBalanceQuery::new("100001", Some("300001"), "30")
                     .expect("balance query"),
             )
             .await
@@ -2671,7 +2671,7 @@ mod tests {
 
         let history = store
             .list_points_history(
-                PointsHistoryQuery::new("tenant-1", Some("org-1"), "user-1")
+                PointsHistoryQuery::new("100001", Some("300001"), "30")
                     .expect("history query"),
             )
             .await
@@ -2684,7 +2684,7 @@ mod tests {
 
         let coupons = store
             .list_promotion_user_coupons(
-                PromotionUserCouponListQuery::new("tenant-1", Some("org-1"), "user-1", None)
+                PromotionUserCouponListQuery::new("100001", Some("300001"), "30", None)
                     .expect("coupon query"),
             )
             .await
@@ -2694,7 +2694,7 @@ mod tests {
         assert_eq!("success", coupons[0].status);
 
         let coupon_count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(1) FROM promotion_user_coupon WHERE tenant_id = 'tenant-1' AND subject_id = 'user-1' AND status = 'redeemed'",
+            "SELECT COUNT(1) FROM promotion_user_coupon WHERE tenant_id = '100001' AND subject_id = '30' AND status = 'redeemed'",
         )
         .fetch_one(&pool)
         .await
@@ -2706,13 +2706,13 @@ mod tests {
         .await
         .expect("promotion stock counters");
         let coupon_ledger_count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(1) FROM promotion_coupon_ledger_entry WHERE tenant_id = 'tenant-1' AND stock_id = 'stock-welcome'",
+            "SELECT COUNT(1) FROM promotion_coupon_ledger_entry WHERE tenant_id = '100001' AND stock_id = 'stock-welcome'",
         )
         .fetch_one(&pool)
         .await
         .expect("promotion coupon ledger count");
         let billing_source_type: String = sqlx::query_scalar(
-            "SELECT source_type FROM commerce_billing_history WHERE tenant_id = 'tenant-1' AND owner_user_id = 'user-1'",
+            "SELECT source_type FROM commerce_billing_history WHERE tenant_id = '100001' AND owner_user_id = '30'",
         )
         .fetch_one(&pool)
         .await
@@ -2727,7 +2727,7 @@ mod tests {
 
         let other_coupons = store
             .list_promotion_user_coupons(
-                PromotionUserCouponListQuery::new("tenant-1", Some("org-1"), "user-2", None)
+                PromotionUserCouponListQuery::new("100001", Some("300001"), "31", None)
                     .expect("other coupon query"),
             )
             .await
@@ -2742,11 +2742,11 @@ mod tests {
         let store = super::SqliteCommercePromotionStore::new(pool);
 
         store
-            .redeem_promotion_code(redeem_command("user-1", "WELCOME", "redeem-1"))
+            .redeem_promotion_code(redeem_command("30", "WELCOME", "redeem-1"))
             .await
             .expect("first redeem");
         let error = store
-            .redeem_promotion_code(redeem_command("user-1", "WELCOME", "redeem-2"))
+            .redeem_promotion_code(redeem_command("30", "WELCOME", "redeem-2"))
             .await
             .expect_err("duplicate user redeem must fail");
 
@@ -2757,29 +2757,29 @@ mod tests {
     async fn sqlite_redeem_promotion_code_rejects_points_balance_overflow_without_ledger() {
         let pool = migrated_pool().await;
         seed_promotion_codes(&pool).await;
-        seed_points_account(&pool, "user-1", i64::MAX).await;
+        seed_points_account(&pool, "30", i64::MAX).await;
         let store = super::SqliteCommercePromotionStore::new(pool.clone());
 
         let error = store
-            .redeem_promotion_code(redeem_command("user-1", "WELCOME", "redeem-overflow"))
+            .redeem_promotion_code(redeem_command("30", "WELCOME", "redeem-overflow"))
             .await
             .expect_err("overflowing promotion credit must fail");
 
         assert_eq!("storage", error.code());
         let account_balance: String = sqlx::query_scalar(
-            "SELECT available_amount FROM commerce_account WHERE tenant_id = 'tenant-1' AND owner_user_id = 'user-1' AND asset_type = 'points'",
+            "SELECT available_amount FROM commerce_account WHERE tenant_id = '100001' AND owner_user_id = '30' AND asset_type = 'points'",
         )
         .fetch_one(&pool)
         .await
         .expect("account balance");
         let account_ledger_count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(1) FROM commerce_account_ledger_entry WHERE tenant_id = 'tenant-1' AND owner_user_id = 'user-1'",
+            "SELECT COUNT(1) FROM commerce_account_ledger_entry WHERE tenant_id = '100001' AND owner_user_id = '30'",
         )
         .fetch_one(&pool)
         .await
         .expect("account ledger count");
         let user_coupon_count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(1) FROM promotion_user_coupon WHERE tenant_id = 'tenant-1' AND owner_user_id = 'user-1'",
+            "SELECT COUNT(1) FROM promotion_user_coupon WHERE tenant_id = '100001' AND owner_user_id = '30'",
         )
         .fetch_one(&pool)
         .await
@@ -2804,7 +2804,7 @@ mod tests {
         let pool = migrated_pool().await;
         seed_promotion_codes(&pool).await;
         let store = super::SqliteCommercePromotionStore::new(pool.clone());
-        let command = redeem_command_with_idempotency("user-1", "WELCOME", "redeem-1", "idem-1");
+        let command = redeem_command_with_idempotency("30", "WELCOME", "redeem-1", "idem-1");
 
         let first = store
             .redeem_promotion_code(command.clone())
@@ -2817,13 +2817,13 @@ mod tests {
 
         assert_eq!(first, second);
         let ledger_count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(1) FROM commerce_account_ledger_entry WHERE tenant_id = 'tenant-1' AND owner_user_id = 'user-1'",
+            "SELECT COUNT(1) FROM commerce_account_ledger_entry WHERE tenant_id = '100001' AND owner_user_id = '30'",
         )
         .fetch_one(&pool)
         .await
         .expect("ledger count");
         let coupon_count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(1) FROM promotion_user_coupon WHERE tenant_id = 'tenant-1' AND owner_user_id = 'user-1'",
+            "SELECT COUNT(1) FROM promotion_user_coupon WHERE tenant_id = '100001' AND owner_user_id = '30'",
         )
         .fetch_one(&pool)
         .await
@@ -2841,13 +2841,13 @@ mod tests {
 
         store
             .redeem_promotion_code(redeem_command_with_idempotency(
-                "user-1", "WELCOME", "redeem-1", "idem-1",
+                "30", "WELCOME", "redeem-1", "idem-1",
             ))
             .await
             .expect("first redeem");
         let error = store
             .redeem_promotion_code(redeem_command_with_idempotency(
-                "user-1", "OTHER", "redeem-2", "idem-1",
+                "30", "OTHER", "redeem-2", "idem-1",
             ))
             .await
             .expect_err("idempotency key reuse with different request must fail");

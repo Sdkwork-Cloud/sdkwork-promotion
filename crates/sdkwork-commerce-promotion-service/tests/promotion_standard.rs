@@ -11,16 +11,16 @@ use sdkwork_commerce_promotion_service::{
 fn validates_promotion_offer_and_version_for_local_private_runtime() {
     let discount = PromotionDiscount::fixed_amount(CommerceMoney::new("10.00").unwrap()).unwrap();
     let offer = PromotionOfferDraft::new(
-        "tenant-1",
+        "100001",
         "offer-new-user",
         "new_user_coupon",
         "New user coupon",
         "coupon",
     )
     .unwrap();
-    let version = PromotionOfferVersionDraft::new("tenant-1", "offer-1", 1, discount).unwrap();
+    let version = PromotionOfferVersionDraft::new("100001", "offer-1", 1, discount).unwrap();
 
-    assert_eq!(offer.tenant_id, "tenant-1");
+    assert_eq!(offer.tenant_id, "100001");
     assert_eq!(offer.offer_no, "offer-new-user");
     assert_eq!(offer.offer_code, "new_user_coupon");
     assert_eq!(offer.name, "New user coupon");
@@ -28,7 +28,7 @@ fn validates_promotion_offer_and_version_for_local_private_runtime() {
     assert_eq!(version.offer_id, "offer-1");
     assert_eq!(version.version_no, 1);
     assert!(PromotionOfferDraft::new(
-        "tenant-1",
+        "100001",
         "",
         "new_user_coupon",
         "New user coupon",
@@ -70,10 +70,10 @@ fn validates_promotion_user_coupon_status_lifecycle() {
 #[test]
 fn user_coupon_claim_and_discount_application_require_subject_and_idempotency() {
     let claim =
-        PromotionUserCouponClaimDraft::new("tenant-1", "offer-1", "user", "user-1", "idem-claim-1")
+        PromotionUserCouponClaimDraft::new("100001", "offer-1", "user", "user-1", "idem-claim-1")
             .unwrap();
     let application = PromotionDiscountApplicationDraft::new(
-        "tenant-1",
+        "100001",
         "user-coupon-1",
         "order-1",
         "user",
@@ -85,11 +85,11 @@ fn user_coupon_claim_and_discount_application_require_subject_and_idempotency() 
     assert_eq!(claim.subject_id, "user-1");
     assert_eq!(application.order_id, "order-1");
     assert!(
-        PromotionUserCouponClaimDraft::new("tenant-1", "offer-1", "user", "", "idem-claim-1")
+        PromotionUserCouponClaimDraft::new("100001", "offer-1", "user", "", "idem-claim-1")
             .is_err()
     );
     assert!(PromotionDiscountApplicationDraft::new(
-        "tenant-1",
+        "100001",
         "user-coupon-1",
         "order-1",
         "user",
