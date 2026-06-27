@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "kind": "sdkwork.dependency.composition",
+  "applicationCode": "promotion",
+  "clientArchitecture": "pc",
+  "surfaces": [
+    {
+      "surface": "app",
+      "corePackage": "@sdkwork/promotion-pc-core",
+      "sdkClients": [],
+      "reusableModules": [],
+      "hostAdapters": [],
+      "dependencyApiExports": [],
+      "dependencyApiSurfaces": []
+    }
+  ],
+  "buildToolEntries": {
+    "pnpm": {
+      "workspacePackages": [
+        "@sdkwork/promotion-pc-core",
+        "@sdkwork/promotion-pc-coupon",
+        "@sdkwork/promotion-pc-offer",
+        "@sdkwork/promotion-pc-points",
+        "@sdkwork/promotion-pc-pricing",
+        "@sdkwork/promotion-pc-shell"
+      ]
+    }
+  }
+}

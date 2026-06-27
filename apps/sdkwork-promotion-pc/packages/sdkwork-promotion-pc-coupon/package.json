@@ -1,0 +1,55 @@
+{
+  "name": "@sdkwork/promotion-pc-coupon",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Coupon discovery, redemption, points exchange, and checkout-ready discount inventory.",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sdkwork/appbase-pc-react": "workspace:*",
+    "@sdkwork/promotion-service": "workspace:*",
+    "lucide-react": "^1.7.0",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@sdkwork/ui-pc-react": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "@sdkwork/promotion-service": "*",
+    "@sdkwork/ui-pc-react": "*",
+    "react": ">=18.2.0 <20.0.0",
+    "react-dom": ">=18.2.0 <20.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@sdkwork/promotion-service": {
+      "optional": true
+    },
+    "@sdkwork/ui-pc-react": {
+      "optional": true
+    }
+  },
+  "sdkwork": {
+    "workspace": "sdkwork-promotion",
+    "architecture": "pc-react",
+    "domain": "commerce",
+    "capability": "coupon",
+    "status": "ready"
+  }
+}

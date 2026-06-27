@@ -1,0 +1,77 @@
+{
+  "name": "@sdkwork/promotion-pc-pricing",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Price books, plan comparison, bundle strategy, and reusable pricing-center surfaces.",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./billing-stub": {
+      "types": "./src/billing-stub.ts",
+      "import": "./src/billing-stub.ts",
+      "default": "./src/billing-stub.ts"
+    }
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sdkwork/appbase-pc-react": "workspace:*",
+    "@sdkwork/account-pc-wallet": "workspace:*",
+    "@sdkwork/account-service": "workspace:*",
+    "@sdkwork/membership-pc-subscription": "workspace:*",
+    "@sdkwork/membership-service": "workspace:*",
+    "@sdkwork/promotion-pc-offer": "workspace:*",
+    "@sdkwork/promotion-service": "workspace:*",
+    "lucide-react": "^1.7.0",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@sdkwork/ui-pc-react": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "@sdkwork/promotion-service": "*",
+    "@sdkwork/promotion-pc-offer": "*",
+    "@sdkwork/membership-pc-subscription": "*",
+    "@sdkwork/account-pc-wallet": "*",
+    "@sdkwork/ui-pc-react": "*",
+    "react": ">=18.2.0 <20.0.0",
+    "react-dom": ">=18.2.0 <20.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@sdkwork/promotion-service": {
+      "optional": true
+    },
+    "@sdkwork/promotion-pc-offer": {
+      "optional": true
+    },
+    "@sdkwork/membership-pc-subscription": {
+      "optional": true
+    },
+    "@sdkwork/account-pc-wallet": {
+      "optional": true
+    },
+    "@sdkwork/ui-pc-react": {
+      "optional": true
+    }
+  },
+  "sdkwork": {
+    "workspace": "sdkwork-promotion",
+    "architecture": "pc-react",
+    "domain": "commerce",
+    "capability": "pricing",
+    "status": "ready"
+  }
+}

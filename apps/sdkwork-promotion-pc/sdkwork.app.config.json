@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 3,
+  "kind": "sdkwork.app",
+  "app": {
+    "key": "sdkwork-promotion-pc",
+    "name": "SDKWork Promotion PC",
+    "displayName": "SDKWork Promotion PC",
+    "description": "Promotion capability PC surface for coupons, offers, pricing, and points.",
+    "vendor": "SDKWork",
+    "appType": "APP_REACT",
+    "versionSource": "package.json",
+    "identifiers": {
+      "desktopAppId": "com.sdkwork.promotion.pc.desktop",
+      "containerImage": "registry.sdkwork.com/apps/sdkwork-promotion-pc"
+    }
+  },
+  "backend": {
+    "profileKey": "backend-root-admin",
+    "ownerMode": "tenant",
+    "grantMode": "current",
+    "platform": "WEB",
+    "tenantId": "100001",
+    "organizationId": "0"
+  },
+  "runtime": {
+    "family": "web",
+    "framework": "react",
+    "runtimes": ["WEB", "BROWSER"],
+    "deliveryModes": ["WEB_URL"],
+    "supportedDeploymentProfiles": ["standalone", "cloud"],
+    "defaultDeploymentProfile": "standalone"
+  },
+  "publish": {
+    "config": {
+      "workspaceRoot": "sdkwork-promotion",
+      "managedBy": "sdkwork-promotion-workspace"
+    }
+  },
+  "devApp": {
+    "sourceRoot": "apps/sdkwork-promotion-pc"
+  },
+  "metadata": {
+    "standardOwner": "sdkwork-promotion",
+    "initializedAt": "2026-06-24T00:00:00.000Z"
+  }
+}
