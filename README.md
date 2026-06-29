@@ -3,9 +3,9 @@
 SDKWork commerce **promotion** capability building-block repository (domain `commerce`).
 
 - Standards: `../sdkwork-specs/README.md`
-- Composition consumer: `../sdkwork-clawrouter/vendor/sdkwork-commerce` (archived transitional platform snapshot)
-- Domain service: `crates/sdkwork-commerce-promotion-service/`
-- Repository SQL: `crates/sdkwork-commerce-promotion-repository-sqlx/`
+- Composition consumer: `../sdkwork-clawrouter/vendor/sdkwork-commerce (deleted)` (archived transitional platform snapshot)
+- Domain service: `crates/sdkwork-promotion-service/`
+- Repository SQL: `crates/sdkwork-commerce (deleted)-promotion-repository-sqlx/`
 - HTTP API server: `crates/sdkwork-promotion-standalone-gateway/`
 
 ## Quick start

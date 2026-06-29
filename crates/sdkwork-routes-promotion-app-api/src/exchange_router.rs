@@ -7,11 +7,11 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use axum::{Json, Router};
-use sdkwork_commerce_contract_service::CommerceServiceError;
-use sdkwork_commerce_promotion_repository_sqlx::{
+use sdkwork_contract_service::CommerceServiceError;
+use sdkwork_promotion_repository_sqlx::{
     PostgresCommerceExchangeStore, SqliteCommerceExchangeStore,
 };
-use sdkwork_commerce_promotion_service::{
+use sdkwork_promotion_service::{
     AppCommerceExchangeRuleItem, AppCommerceExchangeRuleQuery, AppCommerceSubject,
 };
 use sdkwork_iam_context_service::IamAppContext;

@@ -1,7 +1,7 @@
-use sdkwork_commerce_contract_service::{
+use sdkwork_contract_service::{
     CommerceMoney, CommerceServiceError, PromotionCouponStatus,
 };
-use sdkwork_commerce_promotion_service::{
+use sdkwork_promotion_service::{
     PromotionDiscount, PromotionDiscountApplicationDraft, PromotionOfferDraft,
     PromotionOfferVersionDraft, PromotionPortRequirement, PromotionRepositoryCommand,
     PromotionUserCouponClaimDraft, PromotionUserCouponTransition,

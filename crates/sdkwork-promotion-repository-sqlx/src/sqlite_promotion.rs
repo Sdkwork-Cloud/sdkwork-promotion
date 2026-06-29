@@ -1,9 +1,9 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use sdkwork_commerce_contract_service::{
+use sdkwork_contract_service::{
     CommerceAccountAssetType, CommerceLedgerDirection, CommerceServiceError,
 };
-use sdkwork_commerce_promotion_service::{
+use sdkwork_promotion_service::{
     ApplyPromotionDiscountCommand, ClaimPromotionUserCouponCommand, PointsBalance,
     PointsBalanceQuery, PointsHistoryItem, PointsHistoryQuery, PromotionCodeRedemptionCommand,
     PromotionCodeRedemptionOutcome, PromotionUserCouponItem, PromotionUserCouponListQuery,
@@ -2584,7 +2584,7 @@ fn civil_from_days(days: i64) -> (i64, i64, i64) {
 
 #[cfg(test)]
 mod tests {
-    use sdkwork_commerce_promotion_service::{
+    use sdkwork_promotion_service::{
         PointsBalanceQuery, PointsHistoryQuery, PromotionCodeRedemptionCommand,
         PromotionUserCouponListQuery,
     };

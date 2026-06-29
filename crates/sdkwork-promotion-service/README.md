@@ -1,11 +1,11 @@
-# sdkwork-commerce-promotion-service
+# sdkwork-promotion-service
 
 Domain: commerce
 Capability: commerce
 Package type: rust-crate
 Status: stable
 
-This README is the SDKWork module entrypoint for `sdkwork-commerce-promotion-service`. The machine-readable component contract is `specs/component.spec.json`; canonical standards are under `../../../sdkwork-specs/`.
+This README is the SDKWork module entrypoint for `sdkwork-promotion-service`. The machine-readable component contract is `specs/component.spec.json`; canonical standards are under `../../../sdkwork-specs/`.
 
 ## Public API
 
@@ -33,7 +33,7 @@ Extension points are limited to public exports, runtime entrypoints, SDK clients
 
 ## Verification
 
-- `cargo test --manifest-path crates/sdkwork-commerce-promotion-service/Cargo.toml`
+- `cargo test --manifest-path crates/sdkwork-promotion-service/Cargo.toml`
 
 ## Owner And Status
 

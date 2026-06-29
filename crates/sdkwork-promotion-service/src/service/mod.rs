@@ -1,4 +1,4 @@
-use sdkwork_commerce_contract_service::CommerceServiceContract;
+use sdkwork_contract_service::CommerceServiceContract;
 
 pub fn promotion_service_contract() -> CommerceServiceContract {
     CommerceServiceContract::new(

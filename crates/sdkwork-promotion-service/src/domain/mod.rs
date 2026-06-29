@@ -1,4 +1,4 @@
-use sdkwork_commerce_contract_service::{
+use sdkwork_contract_service::{
     CommerceMoney, CommerceServiceError, PromotionCouponStatus,
 };
 

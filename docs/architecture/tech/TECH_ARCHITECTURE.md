@@ -7,7 +7,7 @@ Specs: ARCHITECTURE_DECISION_SPEC.md, RUST_CODE_SPEC.md, API_SPEC.md, WEB_FRAMEW
 
 ## 1. Architecture Overview
 
-`sdkwork-promotion` is a **T1 capability repository** in the commerce domain. It owns domain services, SQL repositories, HTTP route builders, and a standalone gateway with IAM middleware. The `sdkwork-commerce` monolith has been dissolved; each T1 capability repository is self-contained.
+`sdkwork-promotion` is a **T1 capability repository** in the commerce domain. It owns domain services, SQL repositories, HTTP route builders, and a standalone gateway with IAM middleware. The `sdkwork-commerce (deleted)` monolith has been dissolved; each T1 capability repository is self-contained.
 
 ```text
 T1 promotion crate  →  build_*_router()     (no IAM)
@@ -27,8 +27,8 @@ Migration status: **complete**.
 
 | Layer | Owner | Notes |
 | --- | --- | --- |
-| Domain commands/queries | `sdkwork-commerce-promotion-service` | Business validation and ports |
-| SQL repositories | `sdkwork-commerce-promotion-repository-sqlx` | Tenant-scoped persistence |
+| Domain commands/queries | `sdkwork-promotion-service` | Business validation and ports |
+| SQL repositories | `sdkwork-commerce (deleted)-promotion-repository-sqlx` | Tenant-scoped persistence |
 | HTTP route builders | sdkwork-routes-promotion-app-api, sdkwork-routes-promotion-backend-api | `build_*_router` exports without IAM |
 | IAM / gateway composition | `sdkwork-promotion-standalone-gateway` | IAM middleware at T1 standalone-gateway |
 | OpenAPI / SDK authority | `sdkwork-promotion/sdks/` | Per-T1 SDK families |
@@ -37,8 +37,8 @@ Migration status: **complete**.
 
 Standard capability workspace:
 
-- `crates/sdkwork-commerce-promotion-service/`
-- `crates/sdkwork-commerce-promotion-repository-sqlx/`
+- `crates/sdkwork-promotion-service/`
+- `crates/sdkwork-commerce (deleted)-promotion-repository-sqlx/`
 - `crates/sdkwork-routes-promotion-app-api/`
 - `crates/sdkwork-routes-promotion-backend-api/`
 - `crates/sdkwork-promotion-database-host/`

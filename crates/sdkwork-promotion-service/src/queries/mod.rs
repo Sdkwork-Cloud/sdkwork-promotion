@@ -46,7 +46,7 @@ impl PromotionUserCouponListQuery {
         organization_id: Option<&str>,
         owner_user_id: &str,
         status: Option<&str>,
-    ) -> Result<Self, sdkwork_commerce_contract_service::CommerceServiceError> {
+    ) -> Result<Self, sdkwork_contract_service::CommerceServiceError> {
         crate::validation::require_non_empty("tenant_id", tenant_id)?;
         crate::validation::require_non_empty("owner_user_id", owner_user_id)?;
 
@@ -64,7 +64,7 @@ impl PointsBalanceQuery {
         tenant_id: &str,
         organization_id: Option<&str>,
         owner_user_id: &str,
-    ) -> Result<Self, sdkwork_commerce_contract_service::CommerceServiceError> {
+    ) -> Result<Self, sdkwork_contract_service::CommerceServiceError> {
         crate::validation::require_non_empty("tenant_id", tenant_id)?;
         crate::validation::require_non_empty("owner_user_id", owner_user_id)?;
 
@@ -81,7 +81,7 @@ impl PointsHistoryQuery {
         tenant_id: &str,
         organization_id: Option<&str>,
         owner_user_id: &str,
-    ) -> Result<Self, sdkwork_commerce_contract_service::CommerceServiceError> {
+    ) -> Result<Self, sdkwork_contract_service::CommerceServiceError> {
         crate::validation::require_non_empty("tenant_id", tenant_id)?;
         crate::validation::require_non_empty("owner_user_id", owner_user_id)?;
 
@@ -98,7 +98,7 @@ impl AppCommerceSubject {
         tenant_id: &str,
         organization_id: Option<&str>,
         user_id: &str,
-    ) -> Result<Self, sdkwork_commerce_contract_service::CommerceServiceError> {
+    ) -> Result<Self, sdkwork_contract_service::CommerceServiceError> {
         crate::validation::require_non_empty("tenant_id", tenant_id)?;
         crate::validation::require_non_empty("user_id", user_id)?;
 

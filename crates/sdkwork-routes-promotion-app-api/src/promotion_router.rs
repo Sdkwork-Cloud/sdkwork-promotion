@@ -3,14 +3,14 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use sdkwork_commerce_contract_service::CommerceServiceError;
-use sdkwork_commerce_promotion_service::{
+use sdkwork_contract_service::CommerceServiceError;
+use sdkwork_promotion_service::{
     ApplyPromotionDiscountCommand, ClaimPromotionUserCouponCommand, PointsBalance,
     PointsBalanceQuery, PointsHistoryItem, PointsHistoryQuery, PromotionCodeRedemptionCommand,
     PromotionCodeRedemptionOutcome, PromotionUserCouponItem, PromotionUserCouponListQuery,
     ReversePromotionDiscountCommand,
 };
-use sdkwork_commerce_promotion_repository_sqlx::{
+use sdkwork_promotion_repository_sqlx::{
     PostgresCommerceExchangeStore, PostgresCommercePromotionStore, SqliteCommerceExchangeStore,
     SqliteCommercePromotionStore,
 };

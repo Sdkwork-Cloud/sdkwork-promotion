@@ -16,7 +16,7 @@ impl ClaimPromotionUserCouponCommand {
         offer_id: &str,
         request_no: &str,
         idempotency_key: &str,
-    ) -> Result<Self, sdkwork_commerce_contract_service::CommerceServiceError> {
+    ) -> Result<Self, sdkwork_contract_service::CommerceServiceError> {
         crate::validation::require_non_empty("tenant_id", tenant_id)?;
         crate::validation::require_non_empty("owner_user_id", owner_user_id)?;
         crate::validation::require_non_empty("offer_id", offer_id)?;
@@ -57,7 +57,7 @@ impl ApplyPromotionDiscountCommand {
         user_coupon_id: &str,
         request_no: &str,
         idempotency_key: &str,
-    ) -> Result<Self, sdkwork_commerce_contract_service::CommerceServiceError> {
+    ) -> Result<Self, sdkwork_contract_service::CommerceServiceError> {
         crate::validation::require_non_empty("tenant_id", tenant_id)?;
         crate::validation::require_non_empty("owner_user_id", owner_user_id)?;
         crate::validation::require_non_empty("order_id", order_id)?;
@@ -100,7 +100,7 @@ impl ReversePromotionDiscountCommand {
         request_no: &str,
         idempotency_key: &str,
         reason: Option<&str>,
-    ) -> Result<Self, sdkwork_commerce_contract_service::CommerceServiceError> {
+    ) -> Result<Self, sdkwork_contract_service::CommerceServiceError> {
         crate::validation::require_non_empty("tenant_id", tenant_id)?;
         crate::validation::require_non_empty("owner_user_id", owner_user_id)?;
         crate::validation::require_non_empty("user_coupon_id", user_coupon_id)?;
@@ -143,7 +143,7 @@ impl PromotionCodeRedemptionCommand {
         code: &str,
         request_no: &str,
         idempotency_key: &str,
-    ) -> Result<Self, sdkwork_commerce_contract_service::CommerceServiceError> {
+    ) -> Result<Self, sdkwork_contract_service::CommerceServiceError> {
         crate::validation::require_non_empty("tenant_id", tenant_id)?;
         crate::validation::require_non_empty("owner_user_id", owner_user_id)?;
         crate::validation::require_non_empty("code", code)?;

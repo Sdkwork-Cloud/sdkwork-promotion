@@ -1,8 +1,8 @@
-use sdkwork_commerce_contract_service::CommerceServiceError;
-use sdkwork_commerce_promotion_service::{
+use sdkwork_contract_service::CommerceServiceError;
+use sdkwork_promotion_service::{
     AppCommerceExchangeRuleItem, AppCommerceExchangeRuleQuery,
 };
-use sqlx::{PgPool, Row};
+use sqlx::{Row, SqlitePool};
 
 const POINTS_STORAGE_ASSET_TYPE: &str = "points";
 const CASH_STORAGE_ASSET_TYPE: &str = "cash";
@@ -36,12 +36,12 @@ fn global_exchange_organization_id() -> Option<String> {
 }
 
 #[derive(Debug, Clone)]
-pub struct PostgresCommerceExchangeStore {
-    pool: PgPool,
+pub struct SqliteCommerceExchangeStore {
+    pool: SqlitePool,
 }
 
-impl PostgresCommerceExchangeStore {
-    pub fn new(pool: PgPool) -> Self {
+impl SqliteCommerceExchangeStore {
+    pub fn new(pool: SqlitePool) -> Self {
         Self { pool }
     }
 
@@ -124,12 +124,12 @@ SELECT
     tenant_id,
     organization_id
 FROM commerce_exchange_rule
-WHERE ((tenant_id = $1::text AND organization_id = $2::text)
-       OR (tenant_id = $5::text AND (organization_id = $6::text OR organization_id IS NULL)))
+WHERE ((tenant_id = CAST(? AS TEXT) AND organization_id = CAST(? AS TEXT))
+       OR (tenant_id = CAST(? AS TEXT) AND (organization_id = CAST(? AS TEXT) OR organization_id IS NULL)))
   AND source_asset_type = 'points'
   AND target_asset_type = 'cash'
   AND status = 'active'
-ORDER BY CASE WHEN tenant_id = $3::text AND organization_id = $4::text THEN 0 ELSE 1 END,
+ORDER BY CASE WHEN tenant_id = CAST(? AS TEXT) AND organization_id = CAST(? AS TEXT) THEN 0 ELSE 1 END,
          updated_at DESC,
          id DESC
 LIMIT 500
@@ -145,8 +145,8 @@ SELECT
     tenant_id,
     organization_id
 FROM commerce_exchange_rule
-WHERE tenant_id = $1::text
-  AND (organization_id = $2::text OR organization_id IS NULL)
+WHERE tenant_id = CAST(? AS TEXT)
+  AND (organization_id = CAST(? AS TEXT) OR organization_id IS NULL)
   AND source_asset_type = 'points'
   AND target_asset_type = 'cash'
   AND status = 'active'
@@ -155,7 +155,7 @@ LIMIT 500
 "#;
 
 fn exchange_rule_from_row(
-    row: &sqlx::postgres::PgRow,
+    row: &sqlx::sqlite::SqliteRow,
 ) -> Result<AppCommerceExchangeRuleItem, CommerceServiceError> {
     AppCommerceExchangeRuleItem::new(
         &string_cell(row, "id"),
@@ -228,7 +228,7 @@ fn canonical_decimal_string(
     }
 }
 
-fn optional_string_cell(row: &sqlx::postgres::PgRow, column: &str) -> Option<String> {
+fn optional_string_cell(row: &sqlx::sqlite::SqliteRow, column: &str) -> Option<String> {
     row.try_get::<Option<String>, _>(column)
         .ok()
         .flatten()
@@ -246,7 +246,7 @@ fn optional_string_cell(row: &sqlx::postgres::PgRow, column: &str) -> Option<Str
         })
 }
 
-fn string_cell(row: &sqlx::postgres::PgRow, column: &str) -> String {
+fn string_cell(row: &sqlx::sqlite::SqliteRow, column: &str) -> String {
     optional_string_cell(row, column).unwrap_or_default()
 }
 

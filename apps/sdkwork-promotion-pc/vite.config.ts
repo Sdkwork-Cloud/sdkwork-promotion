@@ -2,14 +2,11 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 
-// PC 应用根目录：apps/sdkwork-promotion-pc
 const appRoot = path.dirname(fileURLToPath(import.meta.url));
-// 仓库根目录：sdkwork-promotion
 const workspaceRoot = path.resolve(appRoot, "../..");
 
-// 强制 React/React-DOM 解析到仓库根的 node_modules，避免 pnpm 多副本导致的 hooks 报错
 function forceLocalReactPlugin() {
   const reactRoot = path.join(workspaceRoot, "node_modules/react");
   const reactDomRoot = path.join(workspaceRoot, "node_modules/react-dom");
@@ -34,7 +31,6 @@ function forceLocalReactPlugin() {
   };
 }
 
-// 复用 tsconfig.base.json 的 path 映射，保证与 vitest/typescript 解析一致
 function loadTsconfigAliases() {
   const tsconfig = JSON.parse(
     readFileSync(path.join(workspaceRoot, "tsconfig.base.json"), "utf8"),
@@ -58,19 +54,26 @@ function loadTsconfigAliases() {
     }>;
 }
 
-export default defineConfig({
-  plugins: [forceLocalReactPlugin(), react()],
-  resolve: {
-    dedupe: ["react", "react-dom"],
-    alias: [
-      ...loadTsconfigAliases(),
-    ].filter((entry) => entry.find !== "@sdkwork/ui-pc-react" || existsSync(entry.replacement)),
-  },
-  server: {
-    port: 5173,
-    host: "127.0.0.1",
-  },
-  build: {
-    outDir: "dist",
-  },
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, appRoot, "");
+
+  return {
+    define: {
+      "process.env.SDKWORK_ACCESS_TOKEN": JSON.stringify(env.SDKWORK_ACCESS_TOKEN ?? ""),
+    },
+    plugins: [forceLocalReactPlugin(), react()],
+    resolve: {
+      dedupe: ["react", "react-dom"],
+      alias: [
+        ...loadTsconfigAliases(),
+      ].filter((entry) => entry.find !== "@sdkwork/ui-pc-react" || existsSync(entry.replacement)),
+    },
+    server: {
+      port: 5173,
+      host: "127.0.0.1",
+    },
+    build: {
+      outDir: "dist",
+    },
+  };
 });
