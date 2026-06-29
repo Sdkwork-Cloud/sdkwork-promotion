@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "kind": "sdkwork.database.table-registry",
+  "tables": [
+    {
+      "name": "commerce_account",
+      "owner": "sdkwork-commerce-platform",
+      "profile": "user_entity",
+      "complianceLevel": "L2",
+      "engine": ["postgres", "sqlite"],
+      "migration": "commerce-initial",
+      "referenceOnly": true
+    },
+    {
+      "name": "commerce_account_ledger_entry",
+      "owner": "sdkwork-commerce-platform",
+      "profile": "event_log",
+      "complianceLevel": "L2",
+      "engine": ["postgres", "sqlite"],
+      "migration": "commerce-initial",
+      "referenceOnly": true
+    },
+    {
+      "name": "commerce_billing_history",
+      "owner": "sdkwork-commerce-platform",
+      "profile": "event_log",
+      "complianceLevel": "L2",
+      "engine": ["postgres", "sqlite"],
+      "migration": "commerce-initial",
+      "referenceOnly": true
+    },
+    {
+      "name": "commerce_idempotency_key",
+      "owner": "sdkwork-commerce-platform",
+      "profile": "tenant_entity",
+      "complianceLevel": "L2",
+      "engine": ["postgres", "sqlite"],
+      "migration": "commerce-initial",
+      "referenceOnly": true
+    },
+    {
+      "name": "commerce_order",
+      "owner": "sdkwork-commerce-platform",
+      "profile": "user_entity",
+      "complianceLevel": "L2",
+      "engine": ["postgres", "sqlite"],
+      "migration": "commerce-initial",
+      "referenceOnly": true
+    }
+  ]
+}

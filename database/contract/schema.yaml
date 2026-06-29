@@ -1,0 +1,17 @@
+schema_version: 1
+kind: sdkwork.database.schema
+module_id: promotion
+contract_version: 1.0.0
+owner_team: sdkwork-promotion
+compliance_level: L2
+engines:
+  - postgres
+  - sqlite
+table_prefix: commerce_
+tables:
+  - name: commerce_promotion_campaign
+    write_owner: sdkwork-commerce-platform
+    reference_only: true
+  - name: commerce_promotion_coupon
+    write_owner: sdkwork-commerce-platform
+    reference_only: true
