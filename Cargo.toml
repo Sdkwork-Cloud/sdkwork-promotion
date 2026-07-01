@@ -50,3 +50,4 @@ sdkwork_routes_promotion_app_api = { path = "crates/sdkwork-routes-promotion-app
 sdkwork_routes_promotion_backend_api = { path = "crates/sdkwork-routes-promotion-backend-api", package = "sdkwork-routes-promotion-backend-api" }
 sdkwork_promotion_database_host = { path = "crates/sdkwork-promotion-database-host", package = "sdkwork-promotion-database-host" }
 sdkwork_promotion_service_host = { path = "crates/sdkwork-promotion-service-host", package = "sdkwork-promotion-service-host" }
+sdkwork-utils-rust = { path = "../sdkwork-utils/packages/sdkwork-utils-rust" }

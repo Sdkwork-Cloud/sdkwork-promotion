@@ -35,6 +35,14 @@ fn global_exchange_organization_id() -> Option<String> {
     }
 }
 
+fn legacy_appbase_organization_id(organization_id: Option<&str>) -> String {
+    organization_id
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .unwrap_or(DEFAULT_GLOBAL_EXCHANGE_ORGANIZATION_ID)
+        .to_owned()
+}
+
 #[derive(Debug, Clone)]
 pub struct SqliteCommerceExchangeStore {
     pool: SqlitePool,
@@ -53,11 +61,13 @@ impl SqliteCommerceExchangeStore {
         let global_org = global_exchange_organization_id();
         let rows = match query.subject.as_ref() {
             Some(subject) => {
+                let organization_id =
+                    legacy_appbase_organization_id(subject.organization_id.as_deref());
                 sqlx::query(EXCHANGE_RULES_FOR_SUBJECT_SQL)
                     .bind(&subject.tenant_id)
-                    .bind(subject.organization_id.as_deref())
+                    .bind(&organization_id)
                     .bind(&subject.tenant_id)
-                    .bind(subject.organization_id.as_deref())
+                    .bind(&organization_id)
                     .bind(&global_tenant)
                     .bind(global_org.as_deref())
                     .fetch_all(&self.pool)
@@ -90,11 +100,13 @@ impl SqliteCommerceExchangeStore {
         let global_org = global_exchange_organization_id();
         let row = match query.subject.as_ref() {
             Some(subject) => {
+                let organization_id =
+                    legacy_appbase_organization_id(subject.organization_id.as_deref());
                 sqlx::query(EXCHANGE_RULES_FOR_SUBJECT_SQL)
                     .bind(&subject.tenant_id)
-                    .bind(subject.organization_id.as_deref())
+                    .bind(&organization_id)
                     .bind(&subject.tenant_id)
-                    .bind(subject.organization_id.as_deref())
+                    .bind(&organization_id)
                     .bind(&global_tenant)
                     .bind(global_org.as_deref())
                     .fetch_optional(&self.pool)

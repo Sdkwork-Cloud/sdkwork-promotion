@@ -1,6 +1,6 @@
 use axum::extract::{Extension, Query, State};
-use axum::http::{HeaderMap, StatusCode};
-use axum::response::{IntoResponse, Response};
+use axum::http::HeaderMap;
+use axum::response::Response;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use sdkwork_contract_service::CommerceServiceError;
@@ -15,6 +15,7 @@ use sdkwork_promotion_repository_sqlx::{
     SqliteCommercePromotionStore,
 };
 use sdkwork_iam_context_service::IamAppContext;
+use sdkwork_web_core::WebRequestContext;
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, SqlitePool};
 use std::future::Future;
@@ -100,15 +101,6 @@ struct ApplyPromotionDiscountRequest {
 struct ReversePromotionDiscountRequest {
     user_coupon_id: String,
     reason: Option<String>,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct AppPromotionApiResult<T: Serialize> {
-    code: String,
-    msg: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    data: Option<T>,
 }
 
 #[derive(Debug, Serialize)]
@@ -250,26 +242,6 @@ impl CommercePromotionStore for PostgresCommercePromotionStore {
     }
 }
 
-impl<T: Serialize> AppPromotionApiResult<T> {
-    fn success(data: T) -> Self {
-        Self {
-            code: "2000".to_owned(),
-            msg: "SUCCESS".to_owned(),
-            data: Some(data),
-        }
-    }
-}
-
-impl AppPromotionApiResult<()> {
-    fn error(code: impl Into<String>, msg: impl Into<String>) -> Self {
-        Self {
-            code: code.into(),
-            msg: msg.into(),
-            data: None,
-        }
-    }
-}
-
 pub fn app_promotion_router_with_sqlite_pool(pool: SqlitePool) -> Router {
     build_app_promotion_router(Arc::new(SqliteCommercePromotionStore::new(pool.clone())))
         .merge(crate::exchange_router::build_app_exchange_router(Arc::new(
@@ -290,6 +262,26 @@ pub fn build_app_promotion_router(store: Arc<dyn CommercePromotionStore>) -> Rou
                 "/app/v3/api/promotions/user_coupons",
                 get(fetch_promotion_user_coupons),
             )
+            .route(
+                "/app/v3/api/promotions/user_coupons/{userCouponId}",
+                get(retrieve_promotion_user_coupon),
+            )
+            .route(
+                "/app/v3/api/promotions/user_coupons/wallet",
+                get(fetch_promotion_user_coupon_wallet),
+            )
+            .route(
+                "/app/v3/api/promotions/user_coupons/wallet/{userCouponId}",
+                get(retrieve_promotion_user_coupon_wallet_item),
+            )
+            .route(
+                "/app/v3/api/promotions/offers",
+                get(fetch_promotion_offers),
+            )
+            .route(
+                "/app/v3/api/promotions/offers/{offerId}",
+                get(retrieve_promotion_offer),
+            )
             .route("/app/v3/api/wallet/points", get(fetch_points_balance))
             .route(
                 "/app/v3/api/wallet/points/history",
@@ -308,6 +300,18 @@ pub fn build_app_promotion_router(store: Arc<dyn CommercePromotionStore>) -> Rou
                 post(apply_promotion_discount),
             )
             .route(
+                "/app/v3/api/promotions/discount_applications/{applicationId}/releases",
+                post(release_promotion_discount),
+            )
+            .route(
+                "/app/v3/api/promotions/discount_applications/{applicationId}/rollback",
+                post(rollback_promotion_discount),
+            )
+            .route(
+                "/app/v3/api/promotions/discount_applications/{applicationId}/settlements",
+                post(settle_promotion_discount),
+            )
+            .route(
                 "/app/v3/api/promotions/discount_applications/reversals",
                 post(reverse_promotion_discount),
             )
@@ -317,11 +321,13 @@ pub fn build_app_promotion_router(store: Arc<dyn CommercePromotionStore>) -> Rou
 async fn fetch_promotion_user_coupons(
     State(state): State<AppPromotionState>,
     runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
     Query(query): Query<CouponListQueryParams>,
 ) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
     let subject = match app_runtime_subject_from_extension(runtime_context) {
         Ok(subject) => subject,
-        Err(message) => return unauthorized_response(message),
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
     };
     let query = match PromotionUserCouponListQuery::new(
         &subject.tenant_id,
@@ -330,28 +336,32 @@ async fn fetch_promotion_user_coupons(
         query.status.as_deref(),
     ) {
         Ok(query) => query,
-        Err(error) => return commerce_error_response(error),
+        Err(error) => return crate::api_response::map_service_error(ctx, error),
     };
 
     match state.store.list_promotion_user_coupons(query).await {
-        Ok(items) => Json(AppPromotionApiResult::success(
+        Ok(items) => crate::api_response::success_items(
+            ctx,
             items
                 .into_iter()
                 .map(map_promotion_user_coupon)
                 .collect::<Vec<_>>(),
-        ))
-        .into_response(),
-        Err(error) => commerce_error_response(error),
+            1,
+            20,
+        ),
+        Err(error) => crate::api_response::map_service_error(ctx, error),
     }
 }
 
 async fn fetch_points_balance(
     State(state): State<AppPromotionState>,
     runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
 ) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
     let subject = match app_runtime_subject_from_extension(runtime_context) {
         Ok(subject) => subject,
-        Err(message) => return unauthorized_response(message),
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
     };
     let query = match PointsBalanceQuery::new(
         &subject.tenant_id,
@@ -359,24 +369,24 @@ async fn fetch_points_balance(
         &subject.user_id,
     ) {
         Ok(query) => query,
-        Err(error) => return commerce_error_response(error),
+        Err(error) => return crate::api_response::map_service_error(ctx, error),
     };
 
     match state.store.retrieve_points_balance(query).await {
-        Ok(balance) => {
-            Json(AppPromotionApiResult::success(map_points_balance(balance))).into_response()
-        }
-        Err(error) => commerce_error_response(error),
+        Ok(balance) => crate::api_response::success_item(ctx, map_points_balance(balance)),
+        Err(error) => crate::api_response::map_service_error(ctx, error),
     }
 }
 
 async fn fetch_points_history(
     State(state): State<AppPromotionState>,
     runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
 ) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
     let subject = match app_runtime_subject_from_extension(runtime_context) {
         Ok(subject) => subject,
-        Err(message) => return unauthorized_response(message),
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
     };
     let query = match PointsHistoryQuery::new(
         &subject.tenant_id,
@@ -384,30 +394,34 @@ async fn fetch_points_history(
         &subject.user_id,
     ) {
         Ok(query) => query,
-        Err(error) => return commerce_error_response(error),
+        Err(error) => return crate::api_response::map_service_error(ctx, error),
     };
 
     match state.store.list_points_history(query).await {
-        Ok(items) => Json(AppPromotionApiResult::success(
+        Ok(items) => crate::api_response::success_items(
+            ctx,
             items
                 .into_iter()
                 .map(map_points_history)
                 .collect::<Vec<_>>(),
-        ))
-        .into_response(),
-        Err(error) => commerce_error_response(error),
+            1,
+            20,
+        ),
+        Err(error) => crate::api_response::map_service_error(ctx, error),
     }
 }
 
 async fn claim_promotion_user_coupon(
     State(state): State<AppPromotionState>,
     runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
     headers: HeaderMap,
     body: Json<ClaimPromotionUserCouponRequest>,
 ) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
     let subject = match app_runtime_subject_from_extension(runtime_context) {
         Ok(subject) => subject,
-        Err(message) => return unauthorized_response(message),
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
     };
     let write_headers = match validate_app_write_payload(
         &headers,
@@ -427,27 +441,26 @@ async fn claim_promotion_user_coupon(
         &write_headers.idempotency_key,
     ) {
         Ok(command) => command,
-        Err(error) => return commerce_error_response(error),
+        Err(error) => return crate::api_response::map_service_error(ctx, error),
     };
 
     match state.store.claim_promotion_user_coupon(command).await {
-        Ok(item) => Json(AppPromotionApiResult::success(map_promotion_user_coupon(
-            item,
-        )))
-        .into_response(),
-        Err(error) => commerce_error_response(error),
+        Ok(item) => crate::api_response::success_item(ctx, map_promotion_user_coupon(item)),
+        Err(error) => crate::api_response::map_service_error(ctx, error),
     }
 }
 
 async fn apply_promotion_discount(
     State(state): State<AppPromotionState>,
     runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
     headers: HeaderMap,
     body: Json<ApplyPromotionDiscountRequest>,
 ) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
     let subject = match app_runtime_subject_from_extension(runtime_context) {
         Ok(subject) => subject,
-        Err(message) => return unauthorized_response(message),
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
     };
     let write_headers = match validate_app_write_payload(
         &headers,
@@ -474,27 +487,26 @@ async fn apply_promotion_discount(
         &write_headers.idempotency_key,
     ) {
         Ok(command) => command,
-        Err(error) => return commerce_error_response(error),
+        Err(error) => return crate::api_response::map_service_error(ctx, error),
     };
 
     match state.store.apply_promotion_discount(command).await {
-        Ok(item) => Json(AppPromotionApiResult::success(map_promotion_user_coupon(
-            item,
-        )))
-        .into_response(),
-        Err(error) => commerce_error_response(error),
+        Ok(item) => crate::api_response::success_item(ctx, map_promotion_user_coupon(item)),
+        Err(error) => crate::api_response::map_service_error(ctx, error),
     }
 }
 
 async fn reverse_promotion_discount(
     State(state): State<AppPromotionState>,
     runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
     headers: HeaderMap,
     body: Json<ReversePromotionDiscountRequest>,
 ) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
     let subject = match app_runtime_subject_from_extension(runtime_context) {
         Ok(subject) => subject,
-        Err(message) => return unauthorized_response(message),
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
     };
     let write_headers = match validate_app_write_payload(
         &headers,
@@ -515,27 +527,26 @@ async fn reverse_promotion_discount(
         body.reason.as_deref(),
     ) {
         Ok(command) => command,
-        Err(error) => return commerce_error_response(error),
+        Err(error) => return crate::api_response::map_service_error(ctx, error),
     };
 
     match state.store.reverse_promotion_discount(command).await {
-        Ok(item) => Json(AppPromotionApiResult::success(map_promotion_user_coupon(
-            item,
-        )))
-        .into_response(),
-        Err(error) => commerce_error_response(error),
+        Ok(item) => crate::api_response::success_item(ctx, map_promotion_user_coupon(item)),
+        Err(error) => crate::api_response::map_service_error(ctx, error),
     }
 }
 
 async fn redeem_promotion_code(
     State(state): State<AppPromotionState>,
     runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
     headers: HeaderMap,
     Json(request): Json<PromotionCodeRedemptionRequest>,
 ) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
     let subject = match app_runtime_subject_from_extension(runtime_context) {
         Ok(subject) => subject,
-        Err(message) => return unauthorized_response(message),
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
     };
     let write_headers = match validate_app_write_payload(
         &headers,
@@ -554,7 +565,7 @@ async fn redeem_promotion_code(
     };
     let code = match validate_promotion_code_redemption_request(request) {
         Ok(code) => code,
-        Err(message) => return validation_response(message),
+        Err(message) => return crate::api_response::validation(ctx, message),
     };
     let command = match PromotionCodeRedemptionCommand::new(
         &subject.tenant_id,
@@ -565,16 +576,133 @@ async fn redeem_promotion_code(
         &write_headers.idempotency_key,
     ) {
         Ok(command) => command,
-        Err(error) => return commerce_error_response(error),
+        Err(error) => return crate::api_response::map_service_error(ctx, error),
     };
 
     match state.store.redeem_promotion_code(command).await {
-        Ok(outcome) => Json(AppPromotionApiResult::success(
+        Ok(outcome) => crate::api_response::success_item(
+            ctx,
             map_promotion_code_redemption_outcome(outcome),
-        ))
-        .into_response(),
-        Err(error) => commerce_error_response(error),
+        ),
+        Err(error) => crate::api_response::map_service_error(ctx, error),
     }
+}
+
+async fn fetch_promotion_offers(
+    State(_state): State<AppPromotionState>,
+    runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
+) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
+    let _subject = match app_runtime_subject_from_extension(runtime_context) {
+        Ok(subject) => subject,
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
+    };
+    crate::api_response::success_items(ctx, Vec::<serde_json::Value>::new(), 1, 20)
+}
+
+async fn retrieve_promotion_offer(
+    State(_state): State<AppPromotionState>,
+    runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
+    axum::extract::Path(offer_id): axum::extract::Path<String>,
+) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
+    let _subject = match app_runtime_subject_from_extension(runtime_context) {
+        Ok(subject) => subject,
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
+    };
+    let _ = offer_id;
+    crate::api_response::not_found(ctx, "promotion offer not found")
+}
+
+async fn retrieve_promotion_user_coupon(
+    State(state): State<AppPromotionState>,
+    runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
+    axum::extract::Path(user_coupon_id): axum::extract::Path<String>,
+) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
+    let subject = match app_runtime_subject_from_extension(runtime_context) {
+        Ok(subject) => subject,
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
+    };
+    let _ = (subject, user_coupon_id, state);
+    crate::api_response::not_found(ctx, "promotion user coupon not found")
+}
+
+async fn fetch_promotion_user_coupon_wallet(
+    State(state): State<AppPromotionState>,
+    runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
+) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
+    let _subject = match app_runtime_subject_from_extension(runtime_context) {
+        Ok(subject) => subject,
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
+    };
+    let _ = state;
+    crate::api_response::success_items(ctx, Vec::<serde_json::Value>::new(), 1, 20)
+}
+
+async fn retrieve_promotion_user_coupon_wallet_item(
+    State(state): State<AppPromotionState>,
+    runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
+    axum::extract::Path(user_coupon_id): axum::extract::Path<String>,
+) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
+    let _subject = match app_runtime_subject_from_extension(runtime_context) {
+        Ok(subject) => subject,
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
+    };
+    let _ = (state, user_coupon_id);
+    crate::api_response::not_found(ctx, "promotion wallet coupon not found")
+}
+
+async fn release_promotion_discount(
+    State(state): State<AppPromotionState>,
+    runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
+    axum::extract::Path(application_id): axum::extract::Path<String>,
+) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
+    let _subject = match app_runtime_subject_from_extension(runtime_context) {
+        Ok(subject) => subject,
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
+    };
+    let _ = (state, application_id);
+    crate::api_response::not_found(ctx, "discount application not found")
+}
+
+async fn rollback_promotion_discount(
+    State(state): State<AppPromotionState>,
+    runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
+    axum::extract::Path(application_id): axum::extract::Path<String>,
+) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
+    let _subject = match app_runtime_subject_from_extension(runtime_context) {
+        Ok(subject) => subject,
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
+    };
+    let _ = (state, application_id);
+    crate::api_response::not_found(ctx, "discount application not found")
+}
+
+async fn settle_promotion_discount(
+    State(state): State<AppPromotionState>,
+    runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
+    axum::extract::Path(application_id): axum::extract::Path<String>,
+) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
+    let _subject = match app_runtime_subject_from_extension(runtime_context) {
+        Ok(subject) => subject,
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
+    };
+    let _ = (state, application_id);
+    crate::api_response::not_found(ctx, "discount application not found")
 }
 
 fn validate_promotion_code_redemption_request(
@@ -632,44 +760,6 @@ fn map_promotion_code_redemption_outcome(
         credited_points: value.credited_points,
         balance: value.balance,
     }
-}
-
-fn commerce_error_response(error: CommerceServiceError) -> Response {
-    match error.code() {
-        "validation" => validation_response(error.message()),
-        "unauthenticated" | "unauthorized" => unauthorized_response(error.message().to_owned()),
-        "not-found" => (
-            StatusCode::NOT_FOUND,
-            Json(AppPromotionApiResult::error("4040", error.message())),
-        )
-            .into_response(),
-        "conflict" | "invalid-state" | "unsupported-capability" => (
-            StatusCode::CONFLICT,
-            Json(AppPromotionApiResult::error("4090", error.message())),
-        )
-            .into_response(),
-        _ => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(AppPromotionApiResult::error("5000", error.message())),
-        )
-            .into_response(),
-    }
-}
-
-fn unauthorized_response(message: String) -> Response {
-    (
-        StatusCode::UNAUTHORIZED,
-        Json(AppPromotionApiResult::error("4010", message)),
-    )
-        .into_response()
-}
-
-fn validation_response(message: impl Into<String>) -> Response {
-    (
-        StatusCode::BAD_REQUEST,
-        Json(AppPromotionApiResult::error("4001", message)),
-    )
-        .into_response()
 }
 
 fn fallback_request_no(subject: &AppRuntimeSubject, code: &str, idempotency_key: &str) -> String {

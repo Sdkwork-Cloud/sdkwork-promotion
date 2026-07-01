@@ -1,13 +1,15 @@
-﻿packages:
-  - "packages/common/promotion/*"
+packages:
+  - "apps/sdkwork-promotion-common"
+  - "apps/sdkwork-promotion-common/packages/*"
   - "apps/sdkwork-promotion-pc"
   - "apps/sdkwork-promotion-pc/packages/*"
-  - "../sdkwork-account/packages/common/account/*"
+﻿packages:
+  - "../sdkwork-account/apps/sdkwork-account-common/packages/*"
   - "../sdkwork-account/apps/sdkwork-account-pc/packages/sdkwork-account-pc-wallet"
-  - "../sdkwork-membership/packages/common/membership/*"
+  - "../sdkwork-membership/apps/sdkwork-membership-common/packages/*"
   - "../sdkwork-membership/apps/sdkwork-membership-pc/packages/sdkwork-membership-pc-membership"
   - "../sdkwork-membership/apps/sdkwork-membership-pc/packages/sdkwork-membership-pc-subscription"
-  - "../sdkwork-payment/packages/common/payment/*"
+  - "../sdkwork-payment/apps/sdkwork-payment-common/packages/*"
   - "../sdkwork-payment/apps/sdkwork-payment-pc/packages/sdkwork-payment-pc-payment"
   - "../sdkwork-appbase/packages/common/foundation/sdkwork-runtime-bootstrap"
   - "../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react"

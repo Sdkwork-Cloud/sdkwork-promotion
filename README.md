@@ -1,4 +1,5 @@
 # sdkwork-promotion
+repository-kind: application
 
 SDKWork commerce **promotion** capability building-block repository (domain `commerce`).
 

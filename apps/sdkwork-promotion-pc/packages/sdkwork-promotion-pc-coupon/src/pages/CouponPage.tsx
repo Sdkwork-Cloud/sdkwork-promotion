@@ -1,10 +1,5 @@
 import { useEffect } from "react";
 import {
-  Clock3,
-  Sparkles,
-  TicketPercent,
-} from "lucide-react";
-import {
   Button,
   LoadingBlock,
   StatusNotice,
@@ -19,16 +14,7 @@ import {
   SdkworkCouponIntlProvider,
   useSdkworkCouponIntl,
 } from "../coupon-intl";
-import {
-  createSdkworkCouponBackdropStyle,
-  createSdkworkCouponGlassStyle,
-  createSdkworkCouponHeroStyle,
-  createSdkworkCouponHeroTextStyle,
-  createSdkworkCouponMetricToneStyle,
-  createSdkworkCouponPanelStyle,
-  createSdkworkCouponToneStyle,
-  resolveSdkworkCouponStatusTone,
-} from "../coupon-appearance";
+import { resolveSdkworkCouponStatusTone } from "../coupon-appearance";
 import { SdkworkCouponDetailDrawer } from "../components/coupon-detail-drawer";
 import { SdkworkCouponRedeemDialog } from "../components/coupon-redeem-dialog";
 
@@ -60,147 +46,64 @@ function SdkworkCouponPageContent({
   const state = useSdkworkCouponControllerState(controller);
 
   useEffect(() => {
-    if (!state.isBootstrapped && !state.isLoading) {
-      void controller.bootstrap().catch(() => {});
+    if (!state.isBootstrapped && !state.isLoading && !state.lastError) {
+      void controller.bootstrap().catch(() => undefined);
     }
-  }, [controller, state.isBootstrapped, state.isLoading]);
+  }, [controller, state.isBootstrapped, state.isLoading, state.lastError]);
 
-  const heroHighlights = [
+  const stats = [
     {
-      helper: state.dashboard.availableCoupons[0]?.name || copy.page.activeCouponFallback,
-      icon: TicketPercent,
       label: copy.stats.availableCoupons,
-      tone: "success" as const,
       value: state.dashboard.userDigest.availableCoupons,
     },
     {
-      helper: `${copy.stats.claimableOffers}: ${state.dashboard.catalogDigest.claimableCoupons}`,
-      icon: Clock3,
       label: copy.stats.expiringSoon,
-      tone: "warning" as const,
       value: state.dashboard.userDigest.expiringSoonCoupons,
     },
     {
-      helper: `${copy.stats.usedCoupons}: ${state.dashboard.statistics.usedCount}`,
-      icon: Sparkles,
       label: copy.page.highestDiscountLabel,
-      tone: "brand" as const,
       value: formatCurrencyCny(state.dashboard.userDigest.highestDiscountAmountCny),
     },
-  ];
-
-  const operations = [
     {
-      helper: copy.actions.discover,
       label: copy.stats.claimableOffers,
-      tone: "accent" as const,
       value: state.dashboard.catalogDigest.claimableCoupons,
     },
-    {
-      helper: copy.actions.exchangePoints,
-      label: copy.stats.pointsExchangeOffers,
-      tone: "brand" as const,
-      value: state.dashboard.catalogDigest.pointsExchangeCoupons,
-    },
-    {
-      helper: `${copy.stats.totalInventory}: ${state.dashboard.statistics.totalCoupons}`,
-      label: copy.stats.usedCoupons,
-      tone: "warning" as const,
-      value: state.dashboard.statistics.usedCount,
-    },
   ];
-  const primaryHeroTextStyle = createSdkworkCouponHeroTextStyle();
-  const mutedHeroTextStyle = createSdkworkCouponHeroTextStyle("muted");
-  const subtleHeroTextStyle = createSdkworkCouponHeroTextStyle("subtle");
 
   return (
-    <div className="relative h-full overflow-y-auto">
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-80"
-        style={createSdkworkCouponBackdropStyle()}
-      />
-
-      <div className="relative px-4 py-4 sm:px-5 sm:py-5">
-        <div className="mx-auto max-w-[92rem] space-y-6">
-          <section
-            className="overflow-hidden rounded-[2rem] border border-[color-mix(in_srgb,var(--sdk-color-border-default)_72%,transparent)] px-6 py-7 text-white shadow-[var(--sdk-shadow-lg)]"
-            style={createSdkworkCouponHeroStyle()}
-          >
-            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(22rem,0.65fr)] xl:items-end">
+    <div className="h-full overflow-y-auto">
+      <div className="px-4 py-4 sm:px-5 sm:py-5">
+        <div className="mx-auto max-w-5xl space-y-4">
+          <section className="rounded-[var(--sdk-radius-panel)] border border-[var(--sdk-color-border-default)] bg-[var(--sdk-color-surface-panel)]">
+            <div className="flex flex-col gap-4 border-b border-[var(--sdk-color-border-subtle)] px-5 py-5 sm:flex-row sm:items-start sm:justify-between sm:px-6">
               <div>
-                <div
-                  className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.18em] shadow-[var(--sdk-shadow-soft)]"
-                  style={{
-                    ...createSdkworkCouponGlassStyle("accent", {
-                      backgroundWeight: 12,
-                      borderWeight: 24,
-                      surfaceWeight: 82,
-                    }),
-                    ...subtleHeroTextStyle,
-                  }}
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  {copy.page.eyebrow}
-                </div>
-                <h1 className="mt-4 text-4xl font-semibold tracking-tight" style={primaryHeroTextStyle}>{copy.page.title}</h1>
-                <p className="mt-3 max-w-2xl text-sm leading-7" style={mutedHeroTextStyle}>
+                <h1 className="text-lg font-semibold tracking-tight text-[var(--sdk-color-text-primary)]">
+                  {copy.page.title}
+                </h1>
+                <p className="mt-1 max-w-xl text-sm text-[var(--sdk-color-text-secondary)]">
                   {copy.page.description}
                 </p>
-
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <Button
-                    className="rounded-2xl px-5 py-5 text-sm font-semibold"
-                    onClick={() => controller.openRedeemDialog()}
-                    type="button"
-                    variant="secondary"
-                  >
-                    {copy.actions.redeemCode}
-                  </Button>
-                  <Button
-                    className="rounded-2xl px-5 py-5 text-sm font-semibold"
-                    onClick={() => void controller.refresh().catch(() => {})}
-                    type="button"
-                    variant="outline"
-                  >
-                    {copy.actions.refreshInventory}
-                  </Button>
-                </div>
               </div>
-
-              <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
-                {heroHighlights.map((highlight) => {
-                  const Icon = highlight.icon;
-
-                  return (
-                    <div
-                      className="rounded-[1.6rem] border p-5 shadow-[var(--sdk-shadow-sm)] backdrop-blur-xl"
-                      key={highlight.label}
-                      style={createSdkworkCouponGlassStyle(highlight.tone, {
-                        backgroundWeight: 12,
-                        borderWeight: 26,
-                      })}
-                    >
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <div className="text-sm" style={mutedHeroTextStyle}>{highlight.label}</div>
-                          <div className="mt-3 text-4xl font-semibold tracking-tight">{highlight.value}</div>
-                          <div className="mt-2 text-sm" style={subtleHeroTextStyle}>{highlight.helper}</div>
-                        </div>
-                        <div
-                          className="flex h-12 w-12 items-center justify-center rounded-[1rem] border"
-                          style={createSdkworkCouponToneStyle(highlight.tone, {
-                            backgroundWeight: 18,
-                            borderWeight: 32,
-                          })}
-                        >
-                          <Icon className="h-5 w-5" />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <Button onClick={() => controller.openRedeemDialog()} type="button">
+                  {copy.actions.redeemCode}
+                </Button>
+                <Button onClick={() => void controller.refresh().catch(() => {})} type="button" variant="outline">
+                  {copy.actions.refreshInventory}
+                </Button>
               </div>
             </div>
+
+            <dl className="grid grid-cols-2 divide-[var(--sdk-color-border-subtle)] sm:grid-cols-4 sm:divide-x">
+              {stats.map((stat) => (
+                <div className="px-5 py-4" key={stat.label}>
+                  <dt className="text-xs text-[var(--sdk-color-text-muted)]">{stat.label}</dt>
+                  <dd className="mt-1 text-lg font-semibold tabular-nums text-[var(--sdk-color-text-primary)]">
+                    {stat.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </section>
 
           {state.isLoading && !state.isBootstrapped ? <LoadingBlock label={copy.page.loading} /> : null}
@@ -211,53 +114,10 @@ function SdkworkCouponPageContent({
             </StatusNotice>
           ) : null}
 
-          <section className="grid gap-4 md:grid-cols-3">
-            {operations.map((card) => (
-              <article
-                className="rounded-[1.6rem] border px-5 py-5 shadow-[var(--sdk-shadow-md)]"
-                key={card.label}
-                style={createSdkworkCouponPanelStyle(card.tone, {
-                  backgroundWeight: 8,
-                  borderWeight: 24,
-                })}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--sdk-color-text-muted)]">
-                      {card.label}
-                    </div>
-                    <div className="mt-3 text-3xl font-semibold tracking-tight text-[var(--sdk-color-text-primary)]">
-                      {card.value}
-                    </div>
-                    <div className="mt-2 text-sm text-[var(--sdk-color-text-secondary)]">
-                      {card.helper}
-                    </div>
-                  </div>
-                  <div
-                    className="mt-1 h-3 w-3 rounded-full border"
-                    style={createSdkworkCouponToneStyle(card.tone, {
-                      backgroundWeight: 22,
-                      borderWeight: 38,
-                    })}
-                  />
-                </div>
-              </article>
-            ))}
-          </section>
-
-          <section
-            className="overflow-hidden rounded-[2rem] border shadow-[var(--sdk-shadow-md)]"
-            style={createSdkworkCouponPanelStyle("neutral", {
-              backgroundWeight: 6,
-              borderWeight: 16,
-            })}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--sdk-color-border-subtle)] px-6 py-6">
+          <section className="rounded-[var(--sdk-radius-panel)] border border-[var(--sdk-color-border-default)] bg-[var(--sdk-color-surface-panel)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--sdk-color-border-subtle)] px-5 py-4 sm:px-6">
               <div>
-                <div className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--sdk-color-text-muted)]">
-                  {copy.page.inventoryEyebrow}
-                </div>
-                <h2 className="mt-3 text-2xl font-semibold tracking-tight text-[var(--sdk-color-text-primary)]">
+                <h2 className="text-sm font-semibold text-[var(--sdk-color-text-primary)]">
                   {copy.page.inventoryTitle}
                 </h2>
               </div>
@@ -276,111 +136,93 @@ function SdkworkCouponPageContent({
             </div>
 
             {state.activeTab === "discover" ? (
-              <div className="grid gap-4 px-6 py-6 md:grid-cols-2 xl:grid-cols-3">
+              <div className="divide-y divide-[var(--sdk-color-border-subtle)]">
                 {state.visibleCatalogCoupons.length === 0 ? (
-                  <div className="col-span-full rounded-[1.4rem] border border-dashed border-[var(--sdk-color-border-default)] px-5 py-10 text-sm text-[var(--sdk-color-text-secondary)]">
+                  <div className="px-5 py-10 text-sm text-[var(--sdk-color-text-secondary)] sm:px-6">
                     {copy.inventory.emptyDiscover}
                   </div>
                 ) : state.visibleCatalogCoupons.map((coupon) => (
-                  <article
-                    className="rounded-[1.6rem] border p-5 shadow-[var(--sdk-shadow-sm)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[var(--sdk-shadow-md)]"
-                    key={coupon.id}
-                    style={createSdkworkCouponPanelStyle("neutral", {
-                      backgroundWeight: 8,
-                      borderWeight: 20,
-                      surfaceColor: "var(--sdk-color-surface-panel-muted)",
-                    })}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-lg font-semibold text-[var(--sdk-color-text-primary)]">{coupon.name}</div>
-                        <div className="mt-2 text-sm leading-7 text-[var(--sdk-color-text-secondary)]">
-                          {coupon.description || copy.inventory.catalogFallbackDescription}
+                  <article className="px-5 py-4 sm:px-6" key={coupon.id}>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-sm font-medium text-[var(--sdk-color-text-primary)]">{coupon.name}</h3>
+                          <span
+                            className="rounded-full border border-[var(--sdk-color-border-default)] px-2 py-0.5 text-xs text-[var(--sdk-color-text-secondary)]"
+                            data-sdk-coupon-status={coupon.status}
+                            data-sdk-tone={resolveSdkworkCouponStatusTone(coupon.status)}
+                          >
+                            {formatStatus(coupon.status)}
+                          </span>
                         </div>
+                        <p className="mt-1 text-sm text-[var(--sdk-color-text-secondary)]">
+                          {coupon.description || copy.inventory.catalogFallbackDescription}
+                        </p>
+                        <p className="mt-2 text-lg font-semibold tabular-nums text-[var(--sdk-color-text-primary)]">
+                          {formatCurrencyCny(coupon.amountCny)}
+                        </p>
+                        <p className="mt-1 text-xs text-[var(--sdk-color-text-muted)]">
+                          {copy.inventory.pointCostLabel}: {formatPointCost(coupon.pointCost)}
+                        </p>
                       </div>
-                      <div
-                        className="rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em]"
-                        data-sdk-coupon-status={coupon.status}
-                        data-sdk-tone={resolveSdkworkCouponStatusTone(coupon.status)}
-                        style={createSdkworkCouponMetricToneStyle(resolveSdkworkCouponStatusTone(coupon.status))}
-                      >
-                        {formatStatus(coupon.status)}
+                      <div className="flex shrink-0 flex-wrap gap-2">
+                        <Button onClick={() => void controller.openCatalogDetail(coupon.id).catch(() => {})} type="button" variant="outline">
+                          {copy.actions.viewDetails}
+                        </Button>
+                        {coupon.canReceive ? (
+                          <Button onClick={() => void controller.receiveCoupon(coupon.id).catch(() => {})} type="button">
+                            {copy.actions.claimCoupon}
+                          </Button>
+                        ) : null}
+                        {coupon.pointsExchange ? (
+                          <Button onClick={() => void controller.exchangeCouponByPoints({ couponId: coupon.id }).catch(() => {})} type="button" variant="outline">
+                            {copy.actions.exchangePoints}
+                          </Button>
+                        ) : null}
                       </div>
-                    </div>
-
-                    <div className="mt-5 text-3xl font-semibold tracking-tight text-[var(--sdk-color-text-primary)]">
-                      {formatCurrencyCny(coupon.amountCny)}
-                    </div>
-                    <div className="mt-2 text-sm text-[var(--sdk-color-text-secondary)]">
-                      {copy.inventory.pointCostLabel}: {formatPointCost(coupon.pointCost)}
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      <Button onClick={() => void controller.openCatalogDetail(coupon.id).catch(() => {})} type="button" variant="outline">
-                        {copy.actions.viewDetails}
-                      </Button>
-                      {coupon.canReceive ? (
-                        <Button onClick={() => void controller.receiveCoupon(coupon.id).catch(() => {})} type="button">
-                          {copy.actions.claimCoupon}
-                        </Button>
-                      ) : null}
-                      {coupon.pointsExchange ? (
-                        <Button onClick={() => void controller.exchangeCouponByPoints({ couponId: coupon.id }).catch(() => {})} type="button" variant="outline">
-                          {copy.actions.exchangePoints}
-                        </Button>
-                      ) : null}
                     </div>
                   </article>
                 ))}
               </div>
             ) : (
-              <div className="grid gap-4 px-6 py-6 md:grid-cols-2 xl:grid-cols-3">
+              <div className="divide-y divide-[var(--sdk-color-border-subtle)]">
                 {state.visibleUserCoupons.length === 0 ? (
-                  <div className="col-span-full rounded-[1.4rem] border border-dashed border-[var(--sdk-color-border-default)] px-5 py-10 text-sm text-[var(--sdk-color-text-secondary)]">
+                  <div className="px-5 py-10 text-sm text-[var(--sdk-color-text-secondary)] sm:px-6">
                     {copy.inventory.emptyVisible}
                   </div>
                 ) : state.visibleUserCoupons.map((coupon) => (
-                  <article
-                    className="rounded-[1.6rem] border p-5 shadow-[var(--sdk-shadow-sm)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[var(--sdk-shadow-md)]"
-                    key={coupon.id}
-                    style={createSdkworkCouponPanelStyle("neutral", {
-                      backgroundWeight: 8,
-                      borderWeight: 20,
-                      surfaceColor: "var(--sdk-color-surface-panel-muted)",
-                    })}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-lg font-semibold text-[var(--sdk-color-text-primary)]">{coupon.name}</div>
-                        <div className="mt-2 text-sm text-[var(--sdk-color-text-secondary)]">
-                          {copy.inventory.codeLabel}: {coupon.code || copy.common.emptyValue}
+                  <article className="px-5 py-4 sm:px-6" key={coupon.id}>
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-sm font-medium text-[var(--sdk-color-text-primary)]">{coupon.name}</h3>
+                          <span
+                            className="rounded-full border border-[var(--sdk-color-border-default)] px-2 py-0.5 text-xs text-[var(--sdk-color-text-secondary)]"
+                            data-sdk-coupon-status={coupon.status}
+                            data-sdk-tone={resolveSdkworkCouponStatusTone(coupon.status)}
+                          >
+                            {formatStatus(coupon.status)}
+                          </span>
                         </div>
+                        <p className="mt-1 text-sm text-[var(--sdk-color-text-secondary)]">
+                          {copy.inventory.codeLabel}: {coupon.code || copy.common.emptyValue}
+                        </p>
+                        <p className="mt-2 text-lg font-semibold tabular-nums text-[var(--sdk-color-text-primary)]">
+                          {formatCurrencyCny(coupon.amountCny)}
+                        </p>
+                        <p className="mt-1 text-xs text-[var(--sdk-color-text-muted)]">
+                          {copy.inventory.remainingDaysLabel}: {formatRemainingDays(coupon.remainingDays)}
+                        </p>
                       </div>
-                      <div
-                        className="rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em]"
-                        data-sdk-coupon-status={coupon.status}
-                        data-sdk-tone={resolveSdkworkCouponStatusTone(coupon.status)}
-                        style={createSdkworkCouponMetricToneStyle(resolveSdkworkCouponStatusTone(coupon.status))}
-                      >
-                        {formatStatus(coupon.status)}
+                      <div className="flex shrink-0 gap-2">
+                        <Button
+                          onClick={() => void controller.openUserCouponDetail(coupon.userCouponId ?? coupon.id).catch(() => {})}
+                          type="button"
+                          variant="outline"
+                        >
+                          {copy.actions.viewDetails}
+                        </Button>
                       </div>
-                    </div>
-
-                    <div className="mt-5 text-3xl font-semibold tracking-tight text-[var(--sdk-color-text-primary)]">
-                      {formatCurrencyCny(coupon.amountCny)}
-                    </div>
-                    <div className="mt-2 text-sm text-[var(--sdk-color-text-secondary)]">
-                      {copy.inventory.remainingDaysLabel}: {formatRemainingDays(coupon.remainingDays)}
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      <Button
-                        onClick={() => void controller.openUserCouponDetail(coupon.userCouponId ?? coupon.id).catch(() => {})}
-                        type="button"
-                        variant="outline"
-                      >
-                        {copy.actions.viewDetails}
-                      </Button>
                     </div>
                   </article>
                 ))}

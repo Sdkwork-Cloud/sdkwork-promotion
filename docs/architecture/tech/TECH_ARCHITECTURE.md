@@ -44,7 +44,7 @@ Standard capability workspace:
 - `crates/sdkwork-promotion-database-host/`
 - `crates/sdkwork-promotion-service-host/`
 - `crates/sdkwork-promotion-standalone-gateway/`
-- `packages/common/promotion/` — `@sdkwork/promotion-service`, `@sdkwork/promotion-sdk-ports`, `@sdkwork/promotion-contracts`
+- `apps/sdkwork-promotion-common/packages/` — `@sdkwork/promotion-service`, `@sdkwork/promotion-sdk-ports`, `@sdkwork/promotion-contracts`
 - `apps/sdkwork-promotion-pc/` — PC application root (all capability packages migrated: coupon, offer, pricing, points)
 
 ## 5. API, SDK, And Data Ownership

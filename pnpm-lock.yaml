@@ -88,7 +88,7 @@ importers:
     dependencies:
       '@sdkwork/account-service':
         specifier: workspace:*
-        version: link:../../../../packages/common/account/sdkwork-account-service
+        version: link:../../../../apps/sdkwork-promotion-common/packages/sdkwork-account-service
       '@sdkwork/appbase-pc-react':
         specifier: workspace:*
         version: link:../../../../../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react
@@ -112,11 +112,11 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
-  ../sdkwork-account/packages/common/account/sdkwork-account-contracts: {}
+  ../sdkwork-account/apps/sdkwork-account-common/packages/sdkwork-account-contracts: {}
 
-  ../sdkwork-account/packages/common/account/sdkwork-account-sdk-ports: {}
+  ../sdkwork-account/apps/sdkwork-account-common/packages/sdkwork-account-sdk-ports: {}
 
-  ../sdkwork-account/packages/common/account/sdkwork-account-service:
+  ../sdkwork-account/apps/sdkwork-account-common/packages/sdkwork-account-service:
     dependencies:
       '@sdkwork/account-sdk-ports':
         specifier: workspace:*
@@ -172,7 +172,7 @@ importers:
         version: link:../../../../../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react
       '@sdkwork/membership-service':
         specifier: workspace:*
-        version: link:../../../../packages/common/membership/sdkwork-membership-service
+        version: link:../../../../apps/sdkwork-promotion-common/packages/sdkwork-membership-service
     devDependencies:
       '@sdkwork/ui-pc-react':
         specifier: workspace:*
@@ -203,19 +203,19 @@ importers:
         version: link:../sdkwork-membership-pc-membership
       '@sdkwork/membership-service':
         specifier: workspace:*
-        version: link:../../../../packages/common/membership/sdkwork-membership-service
+        version: link:../../../../apps/sdkwork-promotion-common/packages/sdkwork-membership-service
       '@sdkwork/payment-pc-payment':
         specifier: workspace:*
         version: link:../../../../../sdkwork-payment/apps/sdkwork-payment-pc/packages/sdkwork-payment-pc-payment
       '@sdkwork/payment-service':
         specifier: workspace:*
-        version: link:../../../../../sdkwork-payment/packages/common/payment/sdkwork-payment-service
+        version: link:../../../../sdkwork-payment/apps/sdkwork-payment-common/packages/sdkwork-payment-service
       '@sdkwork/promotion-pc-coupon':
         specifier: workspace:*
         version: link:../../../../../sdkwork-promotion/apps/sdkwork-promotion-pc/packages/sdkwork-promotion-pc-coupon
       '@sdkwork/promotion-service':
         specifier: workspace:*
-        version: link:../../../../../sdkwork-promotion/packages/common/promotion/sdkwork-promotion-service
+        version: link:../../../../sdkwork-promotion/apps/sdkwork-promotion-common/packages/sdkwork-promotion-service
     devDependencies:
       '@sdkwork/ui-pc-react':
         specifier: workspace:*
@@ -236,11 +236,11 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
-  ../sdkwork-membership/packages/common/membership/sdkwork-membership-contracts: {}
+  ../sdkwork-membership/apps/sdkwork-membership-common/packages/sdkwork-membership-contracts: {}
 
-  ../sdkwork-membership/packages/common/membership/sdkwork-membership-sdk-ports: {}
+  ../sdkwork-membership/apps/sdkwork-membership-common/packages/sdkwork-membership-sdk-ports: {}
 
-  ../sdkwork-membership/packages/common/membership/sdkwork-membership-service:
+  ../sdkwork-membership/apps/sdkwork-membership-common/packages/sdkwork-membership-service:
     dependencies:
       '@sdkwork/membership-contracts':
         specifier: workspace:*
@@ -259,7 +259,7 @@ importers:
         version: link:../../../../../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react
       '@sdkwork/payment-service':
         specifier: workspace:*
-        version: link:../../../../packages/common/payment/sdkwork-payment-service
+        version: link:../../../../apps/sdkwork-promotion-common/packages/sdkwork-payment-service
     devDependencies:
       '@sdkwork/ui-pc-react':
         specifier: workspace:*
@@ -286,11 +286,11 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
-  ../sdkwork-payment/packages/common/payment/sdkwork-payment-contracts: {}
+  ../sdkwork-payment/apps/sdkwork-payment-common/packages/sdkwork-payment-contracts: {}
 
-  ../sdkwork-payment/packages/common/payment/sdkwork-payment-sdk-ports: {}
+  ../sdkwork-payment/apps/sdkwork-payment-common/packages/sdkwork-payment-sdk-ports: {}
 
-  ../sdkwork-payment/packages/common/payment/sdkwork-payment-service:
+  ../sdkwork-payment/apps/sdkwork-payment-common/packages/sdkwork-payment-service:
     dependencies:
       '@sdkwork/payment-sdk-ports':
         specifier: workspace:*
@@ -490,10 +490,10 @@ importers:
         version: link:packages/sdkwork-promotion-pc-shell
       '@sdkwork/promotion-sdk-ports':
         specifier: workspace:*
-        version: link:../../packages/common/promotion/sdkwork-promotion-sdk-ports
+        version: link:../../apps/sdkwork-promotion-common/packages/sdkwork-promotion-sdk-ports
       '@sdkwork/promotion-service':
         specifier: workspace:*
-        version: link:../../packages/common/promotion/sdkwork-promotion-service
+        version: link:../../apps/sdkwork-promotion-common/packages/sdkwork-promotion-service
       react:
         specifier: 'catalog:'
         version: 19.2.4
@@ -532,7 +532,7 @@ importers:
         version: link:../../../../../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react
       '@sdkwork/promotion-service':
         specifier: workspace:*
-        version: link:../../../../packages/common/promotion/sdkwork-promotion-service
+        version: link:../../../../apps/sdkwork-promotion-common/packages/sdkwork-promotion-service
       lucide-react:
         specifier: ^1.7.0
         version: 1.7.0(react@19.2.4)
@@ -563,7 +563,7 @@ importers:
         version: link:../../../../../sdkwork-account/apps/sdkwork-account-pc/packages/sdkwork-account-pc-wallet
       '@sdkwork/account-service':
         specifier: workspace:*
-        version: link:../../../../../sdkwork-account/packages/common/account/sdkwork-account-service
+        version: link:../../../../sdkwork-account/apps/sdkwork-account-common/packages/sdkwork-account-service
       '@sdkwork/appbase-pc-react':
         specifier: workspace:*
         version: link:../../../../../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react
@@ -575,7 +575,7 @@ importers:
         version: link:../../../../../sdkwork-membership/apps/sdkwork-membership-pc/packages/sdkwork-membership-pc-subscription
       '@sdkwork/membership-service':
         specifier: workspace:*
-        version: link:../../../../../sdkwork-membership/packages/common/membership/sdkwork-membership-service
+        version: link:../../../../sdkwork-membership/apps/sdkwork-membership-common/packages/sdkwork-membership-service
       '@sdkwork/promotion-pc-coupon':
         specifier: workspace:*
         version: link:../sdkwork-promotion-pc-coupon
@@ -584,7 +584,7 @@ importers:
         version: link:../sdkwork-promotion-pc-points
       '@sdkwork/promotion-service':
         specifier: workspace:*
-        version: link:../../../../packages/common/promotion/sdkwork-promotion-service
+        version: link:../../../../apps/sdkwork-promotion-common/packages/sdkwork-promotion-service
       lucide-react:
         specifier: ^1.7.0
         version: 1.7.0(react@19.2.4)
@@ -615,7 +615,7 @@ importers:
         version: link:../../../../../sdkwork-account/apps/sdkwork-account-pc/packages/sdkwork-account-pc-wallet
       '@sdkwork/account-service':
         specifier: workspace:*
-        version: link:../../../../../sdkwork-account/packages/common/account/sdkwork-account-service
+        version: link:../../../../sdkwork-account/apps/sdkwork-account-common/packages/sdkwork-account-service
       '@sdkwork/appbase-pc-react':
         specifier: workspace:*
         version: link:../../../../../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react
@@ -624,10 +624,10 @@ importers:
         version: link:../../../../../sdkwork-membership/apps/sdkwork-membership-pc/packages/sdkwork-membership-pc-membership
       '@sdkwork/membership-service':
         specifier: workspace:*
-        version: link:../../../../../sdkwork-membership/packages/common/membership/sdkwork-membership-service
+        version: link:../../../../sdkwork-membership/apps/sdkwork-membership-common/packages/sdkwork-membership-service
       '@sdkwork/promotion-service':
         specifier: workspace:*
-        version: link:../../../../packages/common/promotion/sdkwork-promotion-service
+        version: link:../../../../apps/sdkwork-promotion-common/packages/sdkwork-promotion-service
       lucide-react:
         specifier: ^1.7.0
         version: 1.7.0(react@19.2.4)
@@ -658,7 +658,7 @@ importers:
         version: link:../../../../../sdkwork-account/apps/sdkwork-account-pc/packages/sdkwork-account-pc-wallet
       '@sdkwork/account-service':
         specifier: workspace:*
-        version: link:../../../../../sdkwork-account/packages/common/account/sdkwork-account-service
+        version: link:../../../../../sdkwork-account/apps/sdkwork-account-common/packages/sdkwork-account-service
       '@sdkwork/appbase-pc-react':
         specifier: workspace:*
         version: link:../../../../../sdkwork-appbase/packages/pc-react/foundation/sdkwork-appbase-pc-react
@@ -667,13 +667,13 @@ importers:
         version: link:../../../../../sdkwork-membership/apps/sdkwork-membership-pc/packages/sdkwork-membership-pc-subscription
       '@sdkwork/membership-service':
         specifier: workspace:*
-        version: link:../../../../../sdkwork-membership/packages/common/membership/sdkwork-membership-service
+        version: link:../../../../../sdkwork-membership/apps/sdkwork-membership-common/packages/sdkwork-membership-service
       '@sdkwork/promotion-pc-offer':
         specifier: workspace:*
         version: link:../sdkwork-promotion-pc-offer
       '@sdkwork/promotion-service':
         specifier: workspace:*
-        version: link:../../../../packages/common/promotion/sdkwork-promotion-service
+        version: link:../../../../apps/sdkwork-promotion-common/packages/sdkwork-promotion-service
       lucide-react:
         specifier: ^1.7.0
         version: 1.7.0(react@19.2.4)
@@ -724,11 +724,11 @@ importers:
         specifier: 'catalog:'
         version: 7.18.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
 
-  packages/common/promotion/sdkwork-promotion-contracts: {}
+  apps/sdkwork-promotion-common/packages/sdkwork-promotion-contracts: {}
 
-  packages/common/promotion/sdkwork-promotion-sdk-ports: {}
+  apps/sdkwork-promotion-common/packages/sdkwork-promotion-sdk-ports: {}
 
-  packages/common/promotion/sdkwork-promotion-service:
+  apps/sdkwork-promotion-common/packages/sdkwork-promotion-service:
     dependencies:
       '@sdkwork/promotion-contracts':
         specifier: workspace:*
