@@ -4,7 +4,13 @@
   "version": "0.1.0",
   "type": "module",
   "description": "SDKWork Promotion PC app shell: route assembly, layout, and navigation for coupon/offer/pricing/points surfaces.",
-  "exports": { ".": "./src/index.tsx" },
+  "exports": {
+    ".": {
+      "types": "./src/index.tsx",
+      "import": "./src/index.tsx",
+      "default": "./src/index.tsx"
+    }
+  },
   "dependencies": {
     "@sdkwork/promotion-pc-core": "workspace:*",
     "@sdkwork/promotion-pc-coupon": "workspace:*",

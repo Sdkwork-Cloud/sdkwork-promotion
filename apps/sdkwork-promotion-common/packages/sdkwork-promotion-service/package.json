@@ -1,9 +1,15 @@
-﻿{
+{
   "name": "@sdkwork/promotion-service",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
   "dependencies": {
     "@sdkwork/promotion-sdk-ports": "workspace:*",
     "@sdkwork/promotion-contracts": "workspace:*",
