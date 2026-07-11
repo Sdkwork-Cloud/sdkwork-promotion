@@ -2,6 +2,7 @@ import type { SdkworkAccountAppService } from "@sdkwork/account-service";
 import {
   createSdkworkWalletService,
   type SdkworkWalletRechargeInput,
+  type SdkworkWalletRechargeOrderService,
   type SdkworkWalletRechargePackage,
   type SdkworkWalletService,
   type SdkworkWalletTransaction,
@@ -111,6 +112,7 @@ export interface SdkworkPointsUpgradeResult {
 
 export interface CreateSdkworkPointsServiceOptions {
   walletAppService?: SdkworkAccountAppService;
+  walletOrderAppService?: SdkworkWalletRechargeOrderService;
   membershipAppService?: SdkworkMembershipAppService;
   locale?: string | null;
   now?: () => string;
@@ -283,6 +285,10 @@ function computeMonthlyTotals(
   );
 }
 
+function toDashboardNumber(value: number | null | undefined): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
 export function createEmptySdkworkPointsDashboard(): SdkworkPointsDashboardData {
   return {
     plans: [],
@@ -323,6 +329,7 @@ export function createSdkworkPointsService(
 ): SdkworkPointsService {
   const walletService = options.walletService ?? createSdkworkWalletService({
     accountAppService: options.walletAppService,
+    orderAppService: options.walletOrderAppService,
   });
   const membershipService = options.membershipService ?? createSdkworkMembershipService({
     membershipAppService: options.membershipAppService,
@@ -356,8 +363,8 @@ export function createSdkworkPointsService(
           isAuthenticated: true,
           pointsToCashRate: overview.pointsToCashRate,
           spentThisMonth: monthlyTotals.spentThisMonth,
-          totalEarned: overview.account.totalEarned,
-          totalSpent: overview.account.totalSpent,
+          totalEarned: toDashboardNumber(overview.account.totalEarned),
+          totalSpent: toDashboardNumber(overview.account.totalSpent),
         },
         transactions,
       };

@@ -4,14 +4,17 @@ repository-kind: application
 SDKWork commerce **promotion** capability building-block repository (domain `commerce`).
 
 - Standards: `../sdkwork-specs/README.md`
-- Composition consumer: `../sdkwork-clawrouter/vendor/sdkwork-commerce (deleted)` (archived transitional platform snapshot)
 - Domain service: `crates/sdkwork-promotion-service/`
-- Repository SQL: `crates/sdkwork-commerce (deleted)-promotion-repository-sqlx/`
-- HTTP API server: `crates/sdkwork-promotion-standalone-gateway/`
+- Repository SQL: `crates/sdkwork-promotion-repository-sqlx/`
+- HTTP gateway: `crates/sdkwork-promotion-standalone-gateway/`
+- Common packages: `apps/sdkwork-promotion-common/packages/`
+- PC app root: `apps/sdkwork-promotion-pc/`
 
 ## Quick start
 
 ```bash
+pnpm install
+pnpm verify
 cargo test --workspace
 ```
 

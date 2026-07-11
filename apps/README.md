@@ -14,7 +14,8 @@ Runnable application roots live under `apps/<application-root>/`.
 
 | Directory | Surface role | Runnable | Purpose | Entry |
 | --- | --- | --- | --- | --- |
-| sdkwork-promotion-pc | pc | yes | SDKWork Promotion PC pc application root. | `sdkwork-promotion-pc/` |
+| sdkwork-promotion-common | common | no | Cross-architecture promotion contracts, service ports, and service package family. | [README](sdkwork-promotion-common/README.md) |
+| sdkwork-promotion-pc | pc | yes | SDKWork Promotion PC browser application root. | [README](sdkwork-promotion-pc/README.md) |
 
 ## Allowed Content
 

@@ -4,7 +4,7 @@
   "applicationCode": "promotion",
   "packageName": "sdkwork-promotion-gateway-assembly",
   "crateDir": "crates/sdkwork-promotion-gateway-assembly",
-  "generatedAt": "2026-06-25T13:08:05.594Z",
+  "generatedAt": "2026-07-08T01:34:21.310Z",
   "routeCrates": [
     {
       "packageName": "sdkwork-routes-promotion-app-api",

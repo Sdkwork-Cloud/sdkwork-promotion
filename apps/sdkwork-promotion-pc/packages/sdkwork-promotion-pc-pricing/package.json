@@ -29,6 +29,7 @@
     "@sdkwork/account-service": "workspace:*",
     "@sdkwork/membership-pc-subscription": "workspace:*",
     "@sdkwork/membership-service": "workspace:*",
+    "@sdkwork/promotion-pc-core": "workspace:*",
     "@sdkwork/promotion-pc-offer": "workspace:*",
     "@sdkwork/promotion-service": "workspace:*",
     "lucide-react": "^1.7.0",
@@ -37,11 +38,13 @@
   },
   "devDependencies": {
     "@sdkwork/ui-pc-react": "workspace:*",
+    "@testing-library/jest-dom": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {
+    "@sdkwork/promotion-pc-core": "*",
     "@sdkwork/promotion-service": "*",
     "@sdkwork/promotion-pc-offer": "*",
     "@sdkwork/membership-pc-subscription": "*",
@@ -51,6 +54,9 @@
     "react-dom": ">=18.2.0 <20.0.0"
   },
   "peerDependenciesMeta": {
+    "@sdkwork/promotion-pc-core": {
+      "optional": true
+    },
     "@sdkwork/promotion-service": {
       "optional": true
     },

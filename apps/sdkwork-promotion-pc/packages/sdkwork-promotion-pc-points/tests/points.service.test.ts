@@ -6,6 +6,8 @@ import {
 } from "../../../../../../sdkwork-account/apps/sdkwork-account-pc/tests/test-utils/account-service-mock";
 import {
   configureMembershipServiceMockSession,
+  configureOrderServiceMock,
+  createOrderAppServiceMock,
   createMembershipAppServiceMock,
   resetMembershipServiceMockSession,
 } from "../../../../../../sdkwork-membership/apps/sdkwork-membership-pc/tests/test-utils/membership-service-mock";
@@ -39,11 +41,14 @@ describe("sdkwork-promotion-pc-points service", () => {
               levelName: "Silver",
               status: "ACTIVE",
               statusName: "Active",
-              tokenBalance: 8,
+              tokenBankAvailable: 8,
+              tokenBankFrozen: 0,
               totalEarned: 5400,
               totalPoints: 2400,
               totalSpent: 3000,
             },
+            holds: [],
+            holdPageInfo: null,
             isAuthenticated: true,
             pointsToCashRate: 200,
             rechargePackages: [
@@ -74,6 +79,7 @@ describe("sdkwork-promotion-pc-points service", () => {
                 pointsAfter: 2400,
                 pointsBefore: 2640,
                 pointsDelta: -240,
+                tokenBankDelta: 0,
                 status: "SUCCESS",
                 statusName: "Success",
                 title: "Image generation",
@@ -87,6 +93,7 @@ describe("sdkwork-promotion-pc-points service", () => {
                 pointsAfter: 2640,
                 pointsBefore: 1440,
                 pointsDelta: 1200,
+                tokenBankDelta: 0,
                 status: "SUCCESS",
                 statusName: "Success",
                 title: "Top up points",
@@ -94,6 +101,7 @@ describe("sdkwork-promotion-pc-points service", () => {
                 transactionTypeName: "Points recharge",
               },
             ],
+            transactionPageInfo: null,
           };
         },
         rechargePoints: vi.fn().mockResolvedValue({
@@ -202,15 +210,19 @@ describe("sdkwork-promotion-pc-points service", () => {
               levelName: undefined,
               status: undefined,
               statusName: undefined,
-              tokenBalance: 0,
+              tokenBankAvailable: 0,
+              tokenBankFrozen: 0,
               totalEarned: 0,
               totalPoints: 0,
               totalSpent: 0,
             },
+            holds: [],
+            holdPageInfo: null,
             isAuthenticated: false,
             pointsToCashRate: null,
             rechargePackages: [],
             transactions: [],
+            transactionPageInfo: null,
           };
         },
         rechargePoints: vi.fn(),
@@ -261,15 +273,19 @@ describe("sdkwork-promotion-pc-points service", () => {
           levelName: undefined,
           status: undefined,
           statusName: undefined,
-          tokenBalance: 0,
+          tokenBankAvailable: 0,
+          tokenBankFrozen: 0,
           totalEarned: 0,
           totalPoints: 0,
           totalSpent: 0,
         },
+        holds: [],
+        holdPageInfo: null,
         isAuthenticated: true,
         pointsToCashRate: 200,
         rechargePackages: [],
         transactions: [],
+        transactionPageInfo: null,
       }),
       rechargePoints: vi.fn().mockResolvedValue({
         cashAmountCny: 12,
@@ -351,78 +367,138 @@ describe("sdkwork-promotion-pc-points service", () => {
 
   it("propagates injected account and membership services into default wallet and membership boundaries", async () => {
     const rechargePackages = vi.fn().mockResolvedValue({
-      code: "2000",
-      data: [
-        {
-          id: 101,
-          name: "Studio Credits",
-          pointAmount: 1000,
-          price: 9.9,
-          sortWeight: 1,
-        },
-      ],
-    });
-    const membershipPackages = vi.fn().mockResolvedValue({
-      code: "2000",
-      data: [
-        {
-          id: 3,
-          name: "Pro Monthly",
-          pointAmount: 5000,
-          price: 59,
-          recommended: true,
-          durationDays: 30,
-        },
-      ],
-    });
-    const walletAppService = createAccountAppServiceMock({
-      accounts: {
-        current: {
-          summary: {
-            retrieve: vi.fn().mockResolvedValue({
-            code: "2000",
-            data: {
-              cashAvailable: 20,
-              pointsAvailable: 1200,
-            },
-          }),
+      code: 0,
+      data: {
+        items: [
+          {
+            id: 101,
+            points: 1000,
+            priceAmount: 9.9,
+            recommended: true,
+            sortWeight: 1,
+            title: "Studio Credits",
           },
+        ],
+        pageInfo: {
+          hasMore: false,
+          mode: "offset",
         },
       },
-      wallet: {
-        exchangeRate: {
-          retrieve: vi.fn().mockResolvedValue({
-            code: "2000",
-            data: 100,
-          }),
+      traceId: "trace-recharge-packages",
+    });
+    const rechargeSettings = vi.fn().mockResolvedValue({
+      code: 0,
+      data: {
+        item: {
+          basePointsPerCny: 100,
         },
-        ledgerEntries: {
-          points: {
-            list: vi.fn().mockResolvedValue({
-              code: "2000",
+      },
+      traceId: "trace-recharge-settings",
+    });
+    const membershipPackages = vi.fn().mockResolvedValue({
+      code: 0,
+      data: {
+        items: [
+          {
+            id: 3,
+            name: "Pro Monthly",
+            pointAmount: 5000,
+            price: 59,
+            recommended: true,
+            durationDays: 30,
+          },
+        ],
+        pageInfo: {
+          hasMore: false,
+          mode: "offset",
+        },
+      },
+      traceId: "trace-membership-packages",
+    });
+    const walletAppService = createAccountAppServiceMock({
+      wallet: {
+        accounts: {
+          cash: {
+            retrieve: vi.fn().mockResolvedValue({
+              code: 0,
               data: {
-                content: [],
+                item: {
+                  availableAmount: 20,
+                  frozenAmount: 0,
+                },
               },
+              traceId: "trace-wallet-cash",
+            }),
+          },
+          points: {
+            retrieve: vi.fn().mockResolvedValue({
+              code: 0,
+              data: {
+                item: {
+                  availablePoints: 1200,
+                  frozenPoints: 0,
+                  totalPoints: 1200,
+                  status: "active",
+                },
+              },
+              traceId: "trace-wallet-points",
             }),
           },
         },
-        accounts: {
-          points: {
-          retrieve: vi.fn().mockResolvedValue({
-            code: "2000",
+        ledgerEntries: {
+          list: vi.fn().mockResolvedValue({
+            code: 0,
             data: {
-              availablePoints: 1200,
-              totalEarned: 1200,
-              totalPoints: 1200,
-              totalSpent: 0,
+              items: [],
+              pageInfo: {
+                hasMore: false,
+                mode: "offset",
+              },
             },
+            traceId: "trace-wallet-ledger",
           }),
+        },
+        points: {
+          summary: {
+            retrieve: vi.fn().mockResolvedValue({
+              code: 0,
+              data: {
+                item: {
+                  monthCreditPoints: 1200,
+                  monthDebitPoints: 0,
+                  totalPoints: 1200,
+                },
+              },
+              traceId: "trace-wallet-points-summary",
+            }),
           },
         },
       },
-      recharges: {
-        packages: {
-          list: rechargePackages,
+      tokenBank: {
+        account: {
+          retrieve: vi.fn().mockResolvedValue({
+            code: 0,
+            data: {
+              item: {
+                availableAmount: 0,
+                frozenAmount: 0,
+              },
+            },
+            traceId: "trace-token-bank-account",
+          }),
+        },
+        holds: {
+          list: vi.fn().mockResolvedValue({
+            code: 0,
+            data: {
+              items: [],
+              pageInfo: {
+                hasMore: false,
+                mode: "offset",
+              },
+            },
+            traceId: "trace-token-bank-holds",
+          }),
         },
       },
     });
@@ -430,35 +506,52 @@ describe("sdkwork-promotion-pc-points service", () => {
       memberships: {
         benefits: {
           list: vi.fn().mockResolvedValue({
-            code: "2000",
-            data: [],
+            code: 0,
+            data: {
+              items: [],
+              pageInfo: {
+                hasMore: false,
+                mode: "offset",
+              },
+            },
+            traceId: "trace-membership-benefits",
           }),
         },
         current: {
           retrieve: vi.fn().mockResolvedValue({
-            code: "2000",
+            code: 0,
             data: {
               remainingDays: 15,
               planRank: 3,
               planName: "Pro",
               membershipStatus: "ACTIVE",
             },
+            traceId: "trace-membership-current",
           }),
           status: {
             retrieve: vi.fn().mockResolvedValue({
-              code: "2000",
+              code: 0,
               data: {
+                active: true,
                 isMember: true,
                 pointBalance: 1200,
                 planRank: 3,
               },
+              traceId: "trace-membership-status",
             }),
           },
         },
         plans: {
           list: vi.fn().mockResolvedValue({
-            code: "2000",
-            data: [],
+            code: 0,
+            data: {
+              items: [],
+              pageInfo: {
+                hasMore: false,
+                mode: "offset",
+              },
+            },
+            traceId: "trace-membership-plans",
           }),
         },
         packages: {
@@ -468,6 +561,19 @@ describe("sdkwork-promotion-pc-points service", () => {
     });
     const service = createSdkworkPointsService({
       walletAppService,
+      walletOrderAppService: {
+        recharges: {
+          orders: {
+            create: vi.fn(),
+          },
+          packages: {
+            list: rechargePackages,
+          },
+          settings: {
+            retrieve: rechargeSettings,
+          },
+        },
+      },
       membershipAppService,
     });
 
@@ -488,16 +594,32 @@ describe("sdkwork-promotion-pc-points service", () => {
       packageId: 3,
     });
     expect(rechargePackages).toHaveBeenCalledOnce();
+    expect(rechargeSettings).toHaveBeenCalledOnce();
     expect(membershipPackages).toHaveBeenCalledOnce();
   });
 
   it("passes locale into the default membership mutation boundary used by plan upgrades", async () => {
+    configureOrderServiceMock(createOrderAppServiceMock({
+      memberships: {
+        orders: {
+          create: vi.fn().mockResolvedValue({
+            code: 0,
+            data: {
+              orderId: "ORDER-LOCALE-1",
+              orderNo: "REQ-LOCALE-1",
+            },
+            traceId: "trace-locale-order",
+          }),
+        },
+      },
+    }));
     const service = createSdkworkPointsService({
       membershipAppService: createMembershipAppServiceMock({
         memberships: {
           purchases: {
             create: vi.fn().mockResolvedValue({
-              code: "5000",
+              code: 5000,
+              traceId: "trace-membership-purchase-failed",
             }),
           },
         },
