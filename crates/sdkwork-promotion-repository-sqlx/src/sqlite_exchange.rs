@@ -66,10 +66,10 @@ impl SqliteCommerceExchangeStore {
                 sqlx::query(EXCHANGE_RULES_FOR_SUBJECT_SQL)
                     .bind(&subject.tenant_id)
                     .bind(&organization_id)
-                    .bind(&subject.tenant_id)
-                    .bind(&organization_id)
                     .bind(&global_tenant)
                     .bind(global_org.as_deref())
+                    .bind(&subject.tenant_id)
+                    .bind(&organization_id)
                     .fetch_all(&self.pool)
                     .await
             }
@@ -105,10 +105,10 @@ impl SqliteCommerceExchangeStore {
                 sqlx::query(EXCHANGE_RULES_FOR_SUBJECT_SQL)
                     .bind(&subject.tenant_id)
                     .bind(&organization_id)
-                    .bind(&subject.tenant_id)
-                    .bind(&organization_id)
                     .bind(&global_tenant)
                     .bind(global_org.as_deref())
+                    .bind(&subject.tenant_id)
+                    .bind(&organization_id)
                     .fetch_optional(&self.pool)
                     .await
             }
