@@ -15,3 +15,11 @@ pub async fn assemble_application_router(host: Arc<PromotionServiceHost>) -> App
     router = router.merge(sdkwork_routes_promotion_backend_api::gateway_mount(host).await);
     ApplicationAssembly { router }
 }
+
+pub async fn assemble_backend_business_router(
+    host: Arc<PromotionServiceHost>,
+) -> ApplicationAssembly {
+    ApplicationAssembly {
+        router: sdkwork_routes_promotion_backend_api::gateway_mount(host).await,
+    }
+}
