@@ -11,6 +11,7 @@
     }
   },
   "dependencies": {
+    "@sdkwork/promotion-backend-sdk": "workspace:*",
     "@sdkwork/promotion-sdk-ports": "workspace:*",
     "@sdkwork/promotion-contracts": "workspace:*",
     "@sdkwork/utils": "workspace:*"

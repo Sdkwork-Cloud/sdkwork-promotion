@@ -1,25 +1,22 @@
-use axum::routing::get;
 use axum::Router;
-use std::sync::Arc;
+use sdkwork_database_sqlx::DatabasePool;
 use sdkwork_promotion_service_host::PromotionServiceHost;
+use std::sync::Arc;
 
+use crate::operations::{
+    backend_promotion_router_with_postgres_pool, backend_promotion_router_with_sqlite_pool,
+};
 use crate::web_bootstrap::wrap_router_with_web_framework_from_env;
 
-/// 构建后端管理路由（不含 IAM web framework 层）。
-///
-/// 仅用于已被 T0 平台 IAM 包装的内部组合场景。独立部署必须使用
-/// [`build_promotion_backend_router_with_framework`] 以确保请求上下文解析生效。
-pub fn build_promotion_backend_router(_host: Arc<PromotionServiceHost>) -> Router {
-    Router::new().route(
-        "/backend/v3/api/coupons/health",
-        get(|| async { "ok" }),
-    )
+pub fn build_promotion_backend_router(host: Arc<PromotionServiceHost>) -> Router {
+    match host.database_pool() {
+        DatabasePool::Postgres(pool, _) => {
+            backend_promotion_router_with_postgres_pool(pool.clone())
+        }
+        DatabasePool::Sqlite(pool, _) => backend_promotion_router_with_sqlite_pool(pool.clone()),
+    }
 }
 
-/// 构建后端管理路由并叠加 IAM web framework 层。
-///
-/// 该函数是 `gateway_mount` 的实际入口，确保所有后端端点都经过请求身份解析，
-/// 避免无鉴权暴露。与 `build_promotion_app_router_with_framework` 保持一致。
 pub async fn build_promotion_backend_router_with_framework(
     host: Arc<PromotionServiceHost>,
 ) -> Router {

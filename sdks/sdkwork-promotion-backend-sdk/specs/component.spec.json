@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "kind": "sdkwork.component.spec",
+  "component": {
+    "name": "@sdkwork/promotion-backend-sdk",
+    "type": "typescript-sdk-family",
+    "root": "sdks/sdkwork-promotion-backend-sdk",
+    "domain": "commerce",
+    "capability": "promotion-backend",
+    "surface": "backend-api",
+    "languages": ["typescript"],
+    "generated": true
+  },
+  "contracts": {
+    "sdkDependencies": [],
+    "dependencyApiExports": [],
+    "dependencyApiSurfaces": [],
+    "apiAuthority": "sdkwork-promotion-backend-api",
+    "apiPrefix": "/backend/v3/api",
+    "authMode": "dual-token",
+    "wireProtocol": "sdkwork-v3"
+  }
+}

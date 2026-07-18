@@ -6,8 +6,98 @@
 } from "@sdkwork/promotion-sdk-ports";
 import type { SdkworkPromotionMutationStatus } from "@sdkwork/promotion-contracts";
 import { formatCurrency as formatSdkworkCurrency } from "@sdkwork/utils";
+import type {
+  CouponStock,
+  DiscountApplication,
+  PromotionCode,
+  PromotionOffer,
+  PromotionOverview,
+  SdkworkBackendClient as SdkworkPromotionBackendClient,
+} from "@sdkwork/promotion-backend-sdk";
+
+export type {
+  CouponStock,
+  DiscountApplication,
+  PromotionCode,
+  PromotionOffer,
+  PromotionOverview,
+} from "@sdkwork/promotion-backend-sdk";
 
 type ServiceTemplate = { readonly [key: string]: true | ServiceTemplate };
+
+export interface PromotionAdminListQuery {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  status?: number;
+}
+
+export interface PromotionAdminPage<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export interface SdkworkPromotionBackendService {
+  getOverview(): Promise<PromotionOverview>;
+  listOffers(query?: PromotionAdminListQuery): Promise<PromotionAdminPage<PromotionOffer>>;
+  updateOfferStatus(offerId: string, status: 0 | 1): Promise<void>;
+  listCouponStocks(query?: PromotionAdminListQuery): Promise<PromotionAdminPage<CouponStock>>;
+  listCodes(query?: PromotionAdminListQuery): Promise<PromotionAdminPage<PromotionCode>>;
+  listDiscountApplications(query?: PromotionAdminListQuery): Promise<PromotionAdminPage<DiscountApplication>>;
+}
+
+function unwrapPromotionPage<T>(value: unknown, page: number, pageSize: number): PromotionAdminPage<T> {
+  const record = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const data = record.data && typeof record.data === "object"
+    ? record.data as Record<string, unknown>
+    : record;
+  const pageInfo = data.pageInfo && typeof data.pageInfo === "object"
+    ? data.pageInfo as Record<string, unknown>
+    : {};
+  return {
+    items: Array.isArray(data.items) ? data.items as T[] : [],
+    page: Number(pageInfo.page ?? page),
+    pageSize: Number(pageInfo.pageSize ?? pageSize),
+    totalItems: Number(pageInfo.totalItems ?? 0),
+    totalPages: Number(pageInfo.totalPages ?? 0),
+  };
+}
+
+function toPromotionListParams(query: PromotionAdminListQuery = {}) {
+  return {
+    page: String(query.page ?? 1),
+    pageSize: String(query.pageSize ?? 20),
+    q: query.q?.trim() || undefined,
+    status: query.status,
+  };
+}
+
+export function createSdkworkPromotionBackendService(
+  client: SdkworkPromotionBackendClient,
+): SdkworkPromotionBackendService {
+  const list = async <T>(
+    loader: (params: ReturnType<typeof toPromotionListParams>) => Promise<unknown>,
+    query: PromotionAdminListQuery = {},
+  ) => {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 20;
+    return unwrapPromotionPage<T>(await loader(toPromotionListParams(query)), page, pageSize);
+  };
+
+  return {
+    getOverview: () => client.promotions.overview.retrieve(),
+    listOffers: (query) => list<PromotionOffer>((params) => client.promotions.offers.list(params), query),
+    async updateOfferStatus(offerId, status) {
+      await client.promotions.offers.status.update(offerId, { status });
+    },
+    listCouponStocks: (query) => list<CouponStock>((params) => client.promotions.couponStocks.list(params), query),
+    listCodes: (query) => list<PromotionCode>((params) => client.promotions.codes.list(params), query),
+    listDiscountApplications: (query) => list<DiscountApplication>((params) => client.promotions.discountApplications.list(params), query),
+  };
+}
 
 export type SdkworkPromotionPromotionsService = ClientFromMethodTree<
   (typeof APP_PROMOTION_METHOD_TREE)["promotions"]

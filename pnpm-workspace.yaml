@@ -3,6 +3,7 @@ packages:
   - "apps/sdkwork-promotion-common/packages/*"
   - "apps/sdkwork-promotion-pc"
   - "apps/sdkwork-promotion-pc/packages/*"
+  - "sdks/sdkwork-promotion-backend-sdk/sdkwork-promotion-backend-sdk-typescript"
   - "../sdkwork-iam/apps/sdkwork-iam-common/packages/sdkwork-iam-contracts"
   - "../sdkwork-iam/apps/sdkwork-iam-common/packages/sdkwork-iam-runtime"
   - "../sdkwork-iam/apps/sdkwork-iam-common/packages/sdkwork-iam-sdk-ports"

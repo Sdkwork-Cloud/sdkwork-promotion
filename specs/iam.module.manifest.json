@@ -2,8 +2,27 @@
   "schemaVersion": 1,
   "kind": "sdkwork.iam.module",
   "moduleId": "promotion",
-  "domain": "promotion",
+  "domain": "commerce",
   "permissions": {
-    "catalog": []
+    "catalog": [
+      {
+        "code": "commerce.marketing.read",
+        "name": "Read marketing campaigns",
+        "resource": "commerce.marketing",
+        "action": "read",
+        "status": "active",
+        "since": "1.0.0",
+        "replacementCode": null
+      },
+      {
+        "code": "commerce.marketing.manage",
+        "name": "Manage marketing campaigns",
+        "resource": "commerce.marketing",
+        "action": "manage",
+        "status": "active",
+        "since": "1.0.0",
+        "replacementCode": null
+      }
+    ]
   }
 }

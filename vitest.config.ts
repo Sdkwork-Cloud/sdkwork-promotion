@@ -129,6 +129,7 @@ export default defineConfig({
     include: [
       "apps/sdkwork-promotion-pc/packages/**/*.test.ts",
       "apps/sdkwork-promotion-pc/packages/**/*.test.tsx",
+      "apps/sdkwork-promotion-common/packages/**/*.test.ts",
     ],
   },
 });

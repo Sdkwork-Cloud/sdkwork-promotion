@@ -179,6 +179,9 @@ importers:
       '@sdkwork/utils':
         specifier: workspace:*
         version: link:../../../../../sdkwork-utils/packages/sdkwork-utils-typescript
+      lucide-react:
+        specifier: 'catalog:'
+        version: 1.7.0(react@19.2.4)
       react:
         specifier: '>=18.2.0 <20.0.0'
         version: 19.2.4
@@ -480,6 +483,9 @@ importers:
 
   ../sdkwork-membership/apps/sdkwork-membership-common/packages/sdkwork-membership-service:
     dependencies:
+      '@sdkwork/iam-runtime':
+        specifier: workspace:*
+        version: link:../../../../../sdkwork-iam/apps/sdkwork-iam-common/packages/sdkwork-iam-runtime
       '@sdkwork/membership-app-sdk':
         specifier: workspace:*
         version: link:../../../../sdks/sdkwork-membership-app-sdk/sdkwork-membership-app-sdk-typescript
@@ -489,9 +495,6 @@ importers:
       '@sdkwork/membership-sdk-ports':
         specifier: workspace:*
         version: link:../sdkwork-membership-sdk-ports
-      '@sdkwork/order-app-sdk':
-        specifier: workspace:*
-        version: link:../../../../../sdkwork-order/sdks/sdkwork-order-app-sdk/sdkwork-order-app-sdk-typescript
       '@sdkwork/sdk-common':
         specifier: workspace:*
         version: link:../../../../../sdkwork-sdk-commons/sdkwork-sdk-common-typescript
@@ -538,12 +541,6 @@ importers:
       '@sdkwork/membership-service':
         specifier: workspace:*
         version: link:../../../sdkwork-membership-common/packages/sdkwork-membership-service
-      '@sdkwork/payment-pc-payment':
-        specifier: workspace:*
-        version: link:../../../../../sdkwork-payment/apps/sdkwork-payment-pc/packages/sdkwork-payment-pc-payment
-      '@sdkwork/payment-service':
-        specifier: workspace:*
-        version: link:../../../../../sdkwork-payment/apps/sdkwork-payment-common/packages/sdkwork-payment-service
       '@sdkwork/promotion-pc-coupon':
         specifier: workspace:*
         version: link:../../../../../sdkwork-promotion/apps/sdkwork-promotion-pc/packages/sdkwork-promotion-pc-coupon
@@ -810,6 +807,9 @@ importers:
 
   apps/sdkwork-promotion-common/packages/sdkwork-promotion-service:
     dependencies:
+      '@sdkwork/promotion-backend-sdk':
+        specifier: workspace:*
+        version: link:../../../../sdks/sdkwork-promotion-backend-sdk/sdkwork-promotion-backend-sdk-typescript
       '@sdkwork/promotion-contracts':
         specifier: workspace:*
         version: link:../sdkwork-promotion-contracts
@@ -1099,6 +1099,12 @@ importers:
       react-router-dom:
         specifier: 'catalog:'
         version: 7.18.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+
+  sdks/sdkwork-promotion-backend-sdk/sdkwork-promotion-backend-sdk-typescript:
+    dependencies:
+      '@sdkwork/sdk-common':
+        specifier: workspace:*
+        version: link:../../../../sdkwork-sdk-commons/sdkwork-sdk-common-typescript
 
 packages:
 

@@ -1,4 +1,8 @@
+mod api_response;
+mod backend_acl;
+mod operations;
 pub mod routes;
+mod subject;
 pub mod web_bootstrap;
 
 pub use routes::build_promotion_backend_router_with_framework;

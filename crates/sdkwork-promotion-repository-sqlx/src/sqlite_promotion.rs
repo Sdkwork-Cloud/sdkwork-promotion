@@ -6,8 +6,8 @@ use sdkwork_contract_service::{
 use sdkwork_promotion_service::{
     ApplyPromotionDiscountCommand, ClaimPromotionUserCouponCommand, PointsBalance,
     PointsBalanceQuery, PointsHistoryItem, PointsHistoryQuery, PromotionCodeRedemptionCommand,
-    PromotionCodeRedemptionOutcome, PromotionUserCouponItem, PromotionUserCouponListQuery,
-    ReversePromotionDiscountCommand,
+    PromotionCodeRedemptionOutcome, PromotionOrderCouponBenefit, PromotionUserCouponItem,
+    PromotionUserCouponListQuery, ReversePromotionDiscountCommand,
 };
 use sqlx::{Row, Sqlite, SqlitePool, Transaction};
 
@@ -64,6 +64,100 @@ struct PointsAccount {
 impl SqliteCommercePromotionStore {
     pub fn new(pool: SqlitePool) -> Self {
         Self { pool }
+    }
+
+    pub async fn preview_promotion_code_for_order(
+        &self,
+        command: PromotionCodeRedemptionCommand,
+    ) -> Result<PromotionOrderCouponBenefit, CommerceServiceError> {
+        let mut tx = self.pool.begin().await.map_err(|error| {
+            store_error("failed to begin promotion order coupon preview", error)
+        })?;
+        let now = current_timestamp_string();
+        let promotion = load_promotion_for_redeem(&mut tx, &command, &now).await?;
+        ensure_promotion_can_be_redeemed(&mut tx, &command, &promotion).await?;
+        PromotionOrderCouponBenefit::new(
+            coupon_credit_points(&promotion.discount_value)?,
+            &promotion.currency_code,
+            false,
+        )
+    }
+
+    pub async fn redeem_promotion_code_for_order(
+        &self,
+        command: PromotionCodeRedemptionCommand,
+    ) -> Result<PromotionOrderCouponBenefit, CommerceServiceError> {
+        let mut tx = self.pool.begin().await.map_err(|error| {
+            store_error("failed to begin promotion order coupon redemption", error)
+        })?;
+        let coupon_id = coupon_id(&command);
+        let replay = sqlx::query(
+            r#"
+            SELECT pc.promotion_code,
+                   CAST(v.discount_value AS TEXT) AS discount_value,
+                   COALESCE(v.currency_code, 'CNY') AS currency_code
+            FROM promotion_user_coupon c
+            JOIN promotion_code pc ON pc.tenant_id = c.tenant_id AND pc.id = c.code_id
+            JOIN promotion_offer_version v
+              ON v.tenant_id = c.tenant_id AND v.id = c.offer_version_id
+            WHERE c.tenant_id = ?
+              AND ((c.organization_id = ?) OR (c.organization_id IS NULL AND ? IS NULL))
+              AND c.id = ?
+              AND c.subject_type = ?
+              AND c.subject_id = ?
+            LIMIT 1
+            "#,
+        )
+        .bind(&command.tenant_id)
+        .bind(command.organization_id.as_deref())
+        .bind(command.organization_id.as_deref())
+        .bind(&coupon_id)
+        .bind(USER_SUBJECT_TYPE)
+        .bind(&command.owner_user_id)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(|error| store_error("failed to replay promotion order coupon", error))?;
+        if let Some(row) = replay {
+            if string_cell(&row, "promotion_code") != command.code {
+                return Err(CommerceServiceError::conflict(
+                    "coupon redemption request was replayed with a different code",
+                ));
+            }
+            let benefit = PromotionOrderCouponBenefit::new(
+                coupon_credit_points(&string_cell(&row, "discount_value"))?,
+                &string_cell(&row, "currency_code"),
+                true,
+            )?;
+            tx.commit().await.map_err(|error| {
+                store_error("failed to commit promotion order coupon replay", error)
+            })?;
+            return Ok(benefit);
+        }
+
+        let now = current_timestamp_string();
+        let promotion = load_promotion_for_redeem(&mut tx, &command, &now).await?;
+        ensure_promotion_can_be_redeemed(&mut tx, &command, &promotion).await?;
+        let benefit = PromotionOrderCouponBenefit::new(
+            coupon_credit_points(&promotion.discount_value)?,
+            &promotion.currency_code,
+            false,
+        )?;
+        let coupon_ledger_entry_id = coupon_ledger_entry_id(&command);
+        insert_user_coupon(&mut tx, &command, &promotion, &coupon_id, &now).await?;
+        insert_coupon_ledger_entry(
+            &mut tx,
+            &command,
+            &promotion,
+            &coupon_id,
+            &coupon_ledger_entry_id,
+            &now,
+        )
+        .await?;
+        update_promotion_counters(&mut tx, &promotion, &now).await?;
+        tx.commit().await.map_err(|error| {
+            store_error("failed to commit promotion order coupon redemption", error)
+        })?;
+        Ok(benefit)
     }
 
     pub async fn list_promotion_user_coupons(
@@ -2774,8 +2868,7 @@ mod tests {
 
         let balance = store
             .retrieve_points_balance(
-                PointsBalanceQuery::new("100001", Some("300001"), "1")
-                    .expect("balance query"),
+                PointsBalanceQuery::new("100001", Some("300001"), "1").expect("balance query"),
             )
             .await
             .expect("points balance");
@@ -2784,8 +2877,7 @@ mod tests {
 
         let history = store
             .list_points_history(
-                PointsHistoryQuery::new("100001", Some("300001"), "1")
-                    .expect("history query"),
+                PointsHistoryQuery::new("100001", Some("300001"), "1").expect("history query"),
             )
             .await
             .expect("points history");
@@ -2846,6 +2938,56 @@ mod tests {
             .await
             .expect("other coupons");
         assert!(other_coupons.is_empty());
+    }
+
+    #[tokio::test]
+    async fn sqlite_order_coupon_redemption_is_previewed_and_replayed_without_account_credit() {
+        let pool = migrated_pool().await;
+        seed_promotion_codes(&pool).await;
+        let store = super::SqliteCommercePromotionStore::new(pool.clone());
+        let command = redeem_command("order-user", "WELCOME", "order-1001");
+
+        let preview = store
+            .preview_promotion_code_for_order(command.clone())
+            .await
+            .expect("promotion order coupon preview");
+        assert_eq!(50, preview.grant_units);
+        assert!(!preview.replayed);
+
+        let first = store
+            .redeem_promotion_code_for_order(command.clone())
+            .await
+            .expect("promotion order coupon redemption");
+        let replay = store
+            .redeem_promotion_code_for_order(command)
+            .await
+            .expect("promotion order coupon replay");
+        assert_eq!(50, first.grant_units);
+        assert!(!first.replayed);
+        assert_eq!(first.grant_units, replay.grant_units);
+        assert!(replay.replayed);
+
+        let user_coupon_count: i64 = sqlx::query_scalar(
+            "SELECT COUNT(1) FROM promotion_user_coupon WHERE tenant_id = '100001' AND owner_user_id = 'order-user'",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("promotion user coupon count");
+        let account_count: i64 = sqlx::query_scalar(
+            "SELECT COUNT(1) FROM commerce_account WHERE tenant_id = '100001' AND owner_user_id = 'order-user'",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("account count");
+        let account_ledger_count: i64 = sqlx::query_scalar(
+            "SELECT COUNT(1) FROM commerce_account_ledger_entry WHERE tenant_id = '100001' AND owner_user_id = 'order-user'",
+        )
+        .fetch_one(&pool)
+        .await
+        .expect("account ledger count");
+        assert_eq!(1, user_coupon_count);
+        assert_eq!(0, account_count);
+        assert_eq!(0, account_ledger_count);
     }
 
     #[tokio::test]

@@ -1,6 +1,4 @@
-use sdkwork_contract_service::{
-    CommerceMoney, CommerceServiceError, PromotionCouponStatus,
-};
+use sdkwork_contract_service::{CommerceMoney, CommerceServiceError, PromotionCouponStatus};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum PromotionDiscount {
@@ -89,6 +87,33 @@ pub struct PromotionCodeRedemptionOutcome {
     pub amount: CommerceMoney,
     pub credited_points: i64,
     pub balance: i64,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PromotionOrderCouponBenefit {
+    pub grant_units: i64,
+    pub currency_code: String,
+    pub replayed: bool,
+}
+
+impl PromotionOrderCouponBenefit {
+    pub fn new(
+        grant_units: i64,
+        currency_code: &str,
+        replayed: bool,
+    ) -> Result<Self, CommerceServiceError> {
+        if grant_units <= 0 {
+            return Err(CommerceServiceError::validation(
+                "promotion order coupon grant must be greater than zero",
+            ));
+        }
+        require_non_empty_service("currency_code", currency_code)?;
+        Ok(Self {
+            grant_units,
+            currency_code: currency_code.trim().to_ascii_uppercase(),
+            replayed,
+        })
+    }
 }
 
 impl PromotionDiscount {
