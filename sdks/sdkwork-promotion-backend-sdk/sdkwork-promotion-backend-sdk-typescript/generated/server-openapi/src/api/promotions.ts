@@ -5,8 +5,8 @@ import type { CouponStock, DiscountApplication, PageInfo, PromotionCode, Promoti
 
 
 export interface PromotionsDiscountApplicationsListParams {
-  page?: string;
-  pageSize?: string;
+  page?: number;
+  pageSize?: number;
   q?: string;
   status?: number;
 }
@@ -32,8 +32,8 @@ export class PromotionsDiscountApplicationsApi {
 }
 
 export interface PromotionsCodesListParams {
-  page?: string;
-  pageSize?: string;
+  page?: number;
+  pageSize?: number;
   q?: string;
   status?: number;
 }
@@ -59,8 +59,8 @@ export class PromotionsCodesApi {
 }
 
 export interface PromotionsCouponStocksListParams {
-  page?: string;
-  pageSize?: string;
+  page?: number;
+  pageSize?: number;
   q?: string;
   status?: number;
 }
@@ -100,8 +100,8 @@ export class PromotionsOffersStatusApi {
 }
 
 export interface PromotionsOffersListParams {
-  page?: string;
-  pageSize?: string;
+  page?: number;
+  pageSize?: number;
   q?: string;
   status?: number;
 }

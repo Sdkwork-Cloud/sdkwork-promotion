@@ -68,8 +68,8 @@ function unwrapPromotionPage<T>(value: unknown, page: number, pageSize: number):
 
 function toPromotionListParams(query: PromotionAdminListQuery = {}) {
   return {
-    page: String(query.page ?? 1),
-    pageSize: String(query.pageSize ?? 20),
+    page: query.page ?? 1,
+    pageSize: query.pageSize ?? 20,
     q: query.q?.trim() || undefined,
     status: query.status,
   };

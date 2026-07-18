@@ -27,6 +27,7 @@ describe("createSdkworkPromotionBackendService", () => {
 
     expect(page.items[0]?.displayName).toBe("Launch");
     expect(page.totalItems).toBe(1);
+    expect(list).toHaveBeenCalledWith({ page: 1, pageSize: 20, q: undefined, status: undefined });
   });
 
   it("updates an offer through the generated backend client", async () => {
