@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "kind": "sdkwork.component.spec",
+  "component": {
+    "name": "sdkwork-promotion-app-sdk",
+    "displayName": "SDKWork Promotion App SDK",
+    "version": "0.1.0",
+    "type": "sdk-family",
+    "root": "sdks/sdkwork-promotion-app-sdk",
+    "domain": "commerce",
+    "capability": "promotion-app-sdk",
+    "surface": "app-api",
+    "languages": ["typescript"],
+    "generated": true,
+    "private": false
+  },
+  "canonicalSpecs": [
+    { "file": "SDK_SPEC.md", "path": "../../../sdkwork-specs/SDK_SPEC.md" },
+    { "file": "SDK_WORKSPACE_GENERATION_SPEC.md", "path": "../../../sdkwork-specs/SDK_WORKSPACE_GENERATION_SPEC.md" },
+    { "file": "APP_SDK_INTEGRATION_SPEC.md", "path": "../../../sdkwork-specs/APP_SDK_INTEGRATION_SPEC.md" },
+    { "file": "API_SPEC.md", "path": "../../../sdkwork-specs/API_SPEC.md" },
+    { "file": "TEST_SPEC.md", "path": "../../../sdkwork-specs/TEST_SPEC.md" }
+  ],
+  "sdk": {
+    "family": "sdkwork-promotion-app-sdk",
+    "authority": "sdkwork-promotion-app-api",
+    "sdkOwner": "sdkwork-promotion",
+    "apiPrefix": "/app/v3/api",
+    "packageName": "@sdkwork/promotion-app-sdk",
+    "sdkName": "sdkwork-promotion-app-sdk",
+    "sdkType": "app",
+    "generatedOutput": "sdkwork-promotion-app-sdk-typescript/generated/server-openapi",
+    "standardProfile": "sdkwork-v3"
+  },
+  "contracts": {
+    "sdkDependencies": [],
+    "dependencyApiExports": [],
+    "dependencyApiSurfaces": [],
+    "apiAuthority": "sdkwork-promotion-app-api",
+    "apiPrefix": "/app/v3/api",
+    "authMode": "dual-token",
+    "wireProtocol": "sdkwork-v3"
+  }
+}

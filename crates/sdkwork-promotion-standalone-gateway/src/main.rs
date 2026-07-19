@@ -13,22 +13,12 @@ use tower_http::trace::TraceLayer;
 ///
 /// 示例：`https://console.sdkwork.com,https://admin.sdkwork.com`。
 /// 留空时不附加 CORS 层，等同拒绝所有跨域请求。
-const CORS_ORIGINS_ENV: &str = "PROMOTION_CORS_ORIGINS";
-
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
     let host = Arc::new(PromotionServiceHost::new().await);
     let business = assemble_application_router(host).await.router;
     let business = business.layer(TraceLayer::new_for_http());
-    let business = business.layer(sdkwork_web_bootstrap::application_cors_layer_from_env(
-        &["SDKWORK_PROMOTION_ENVIRONMENT", "PROMOTION_ENVIRONMENT"],
-        &[
-            CORS_ORIGINS_ENV,
-            "SDKWORK_PROMOTION_CORS_ALLOWED_ORIGINS",
-            "SDKWORK_CORS_ALLOWED_ORIGINS",
-        ],
-    ));
     let app = service_router(business, ServiceRouterConfig::default().with_always_ready());
     let addr = std::env::var("PROMOTION_API_BIND").unwrap_or_else(|_| "0.0.0.0:18097".to_owned());
     let listener = tokio::net::TcpListener::bind(&addr)

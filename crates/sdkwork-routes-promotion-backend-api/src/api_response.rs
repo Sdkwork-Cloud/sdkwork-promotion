@@ -24,6 +24,23 @@ pub(crate) fn success_item<T: serde::Serialize>(
     attach_trace((StatusCode::OK, Json(envelope)).into_response(), &trace_id)
 }
 
+pub(crate) fn success_created<T: serde::Serialize>(
+    context: Option<&WebRequestContext>,
+    item: T,
+) -> Response {
+    let trace_id = trace_id(context);
+    let envelope = SdkWorkApiResponse::success(SdkWorkResourceData { item }, trace_id.clone());
+    attach_trace(
+        (StatusCode::CREATED, Json(envelope)).into_response(),
+        &trace_id,
+    )
+}
+
+pub(crate) fn no_content(context: Option<&WebRequestContext>) -> Response {
+    let trace_id = trace_id(context);
+    attach_trace(StatusCode::NO_CONTENT.into_response(), &trace_id)
+}
+
 pub(crate) fn success_items<T: serde::Serialize>(
     context: Option<&WebRequestContext>,
     items: Vec<T>,

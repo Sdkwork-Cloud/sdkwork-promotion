@@ -11,8 +11,9 @@ pub struct ApplicationAssembly {
 
 pub async fn assemble_application_router(host: Arc<PromotionServiceHost>) -> ApplicationAssembly {
     let mut router = Router::new();
-    router = router.merge(sdkwork_routes_promotion_app_api::gateway_mount(host.clone()).await);
-    router = router.merge(sdkwork_routes_promotion_backend_api::gateway_mount(host).await);
+    router =
+        router.merge(sdkwork_routes_promotion_app_api::gateway_mount_business(host.clone()).await);
+    router = router.merge(sdkwork_routes_promotion_backend_api::gateway_mount_business(host).await);
     ApplicationAssembly { router }
 }
 
@@ -20,6 +21,6 @@ pub async fn assemble_backend_business_router(
     host: Arc<PromotionServiceHost>,
 ) -> ApplicationAssembly {
     ApplicationAssembly {
-        router: sdkwork_routes_promotion_backend_api::gateway_mount(host).await,
+        router: sdkwork_routes_promotion_backend_api::gateway_mount_business(host).await,
     }
 }

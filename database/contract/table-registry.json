@@ -3,49 +3,70 @@
   "kind": "sdkwork.database.table-registry",
   "tables": [
     {
-      "name": "commerce_account",
-      "owner": "sdkwork-commerce-platform",
-      "profile": "user_entity",
-      "complianceLevel": "L2",
-      "engine": ["postgres", "sqlite"],
-      "migration": "commerce-initial",
-      "referenceOnly": true
+      "table_name": "promotion_campaign",
+      "owner": "sdkwork-promotion",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
     },
     {
-      "name": "commerce_account_ledger_entry",
-      "owner": "sdkwork-commerce-platform",
-      "profile": "event_log",
-      "complianceLevel": "L2",
-      "engine": ["postgres", "sqlite"],
-      "migration": "commerce-initial",
-      "referenceOnly": true
+      "table_name": "promotion_offer",
+      "owner": "sdkwork-promotion",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
     },
     {
-      "name": "commerce_billing_history",
-      "owner": "sdkwork-commerce-platform",
-      "profile": "event_log",
-      "complianceLevel": "L2",
-      "engine": ["postgres", "sqlite"],
-      "migration": "commerce-initial",
-      "referenceOnly": true
+      "table_name": "promotion_offer_version",
+      "owner": "sdkwork-promotion",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
     },
     {
-      "name": "commerce_idempotency_key",
-      "owner": "sdkwork-commerce-platform",
-      "profile": "tenant_entity",
-      "complianceLevel": "L2",
-      "engine": ["postgres", "sqlite"],
-      "migration": "commerce-initial",
-      "referenceOnly": true
+      "table_name": "promotion_coupon_stock",
+      "owner": "sdkwork-promotion",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
     },
     {
-      "name": "commerce_order",
-      "owner": "sdkwork-commerce-platform",
-      "profile": "user_entity",
-      "complianceLevel": "L2",
-      "engine": ["postgres", "sqlite"],
-      "migration": "commerce-initial",
-      "referenceOnly": true
+      "table_name": "promotion_code_batch",
+      "owner": "sdkwork-promotion",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "promotion_code",
+      "owner": "sdkwork-promotion",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "promotion_user_coupon",
+      "owner": "sdkwork-promotion",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "promotion_distribution_task",
+      "owner": "sdkwork-promotion",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "promotion_distribution_record",
+      "owner": "sdkwork-promotion",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "promotion_coupon_ledger_entry",
+      "owner": "sdkwork-promotion",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
+    },
+    {
+      "table_name": "promotion_discount_application",
+      "owner": "sdkwork-promotion",
+      "compliance_level": "L2",
+      "lifecycle_status": "active"
     }
   ]
 }

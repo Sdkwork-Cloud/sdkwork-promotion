@@ -3,17 +3,17 @@ use axum::http::HeaderMap;
 use axum::response::Response;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use sdkwork_contract_service::CommerceServiceError;
-use sdkwork_promotion_service::{
+use sdkwork_commerce_promotion_repository_sqlx::{
+    PostgresCommerceExchangeStore, PostgresCommercePromotionStore, SqliteCommerceExchangeStore,
+    SqliteCommercePromotionStore,
+};
+use sdkwork_commerce_promotion_service::{
     ApplyPromotionDiscountCommand, ClaimPromotionUserCouponCommand, PointsBalance,
     PointsBalanceQuery, PointsHistoryItem, PointsHistoryQuery, PromotionCodeRedemptionCommand,
     PromotionCodeRedemptionOutcome, PromotionUserCouponItem, PromotionUserCouponListQuery,
     ReversePromotionDiscountCommand,
 };
-use sdkwork_promotion_repository_sqlx::{
-    PostgresCommerceExchangeStore, PostgresCommercePromotionStore, SqliteCommerceExchangeStore,
-    SqliteCommercePromotionStore,
-};
+use sdkwork_contract_service::CommerceServiceError;
 use sdkwork_iam_context_service::IamAppContext;
 use sdkwork_web_core::WebRequestContext;
 use serde::{Deserialize, Serialize};
@@ -243,79 +243,78 @@ impl CommercePromotionStore for PostgresCommercePromotionStore {
 }
 
 pub fn app_promotion_router_with_sqlite_pool(pool: SqlitePool) -> Router {
-    build_app_promotion_router(Arc::new(SqliteCommercePromotionStore::new(pool.clone())))
-        .merge(crate::exchange_router::build_app_exchange_router(Arc::new(
+    build_app_promotion_router(Arc::new(SqliteCommercePromotionStore::new(pool.clone()))).merge(
+        crate::exchange_router::build_app_exchange_router(Arc::new(
             SqliteCommerceExchangeStore::new(pool),
-        )))
+        )),
+    )
 }
 
 pub fn app_promotion_router_with_postgres_pool(pool: PgPool) -> Router {
-    build_app_promotion_router(Arc::new(PostgresCommercePromotionStore::new(pool.clone())))
-        .merge(crate::exchange_router::build_app_exchange_router(Arc::new(
+    build_app_promotion_router(Arc::new(PostgresCommercePromotionStore::new(pool.clone()))).merge(
+        crate::exchange_router::build_app_exchange_router(Arc::new(
             PostgresCommerceExchangeStore::new(pool),
-        )))
+        )),
+    )
 }
 
 pub fn build_app_promotion_router(store: Arc<dyn CommercePromotionStore>) -> Router {
     Router::new()
-            .route(
-                "/app/v3/api/promotions/user_coupons",
-                get(fetch_promotion_user_coupons),
-            )
-            .route(
-                "/app/v3/api/promotions/user_coupons/{userCouponId}",
-                get(retrieve_promotion_user_coupon),
-            )
-            .route(
-                "/app/v3/api/promotions/user_coupons/wallet",
-                get(fetch_promotion_user_coupon_wallet),
-            )
-            .route(
-                "/app/v3/api/promotions/user_coupons/wallet/{userCouponId}",
-                get(retrieve_promotion_user_coupon_wallet_item),
-            )
-            .route(
-                "/app/v3/api/promotions/offers",
-                get(fetch_promotion_offers),
-            )
-            .route(
-                "/app/v3/api/promotions/offers/{offerId}",
-                get(retrieve_promotion_offer),
-            )
-            .route("/app/v3/api/wallet/points", get(fetch_points_balance))
-            .route(
-                "/app/v3/api/wallet/points/history",
-                get(fetch_points_history),
-            )
-            .route(
-                "/app/v3/api/promotions/user_coupon_claims",
-                post(claim_promotion_user_coupon),
-            )
-            .route(
-                "/app/v3/api/promotions/codes/redemptions",
-                post(redeem_promotion_code),
-            )
-            .route(
-                "/app/v3/api/promotions/discount_applications",
-                post(apply_promotion_discount),
-            )
-            .route(
-                "/app/v3/api/promotions/discount_applications/{applicationId}/releases",
-                post(release_promotion_discount),
-            )
-            .route(
-                "/app/v3/api/promotions/discount_applications/{applicationId}/rollback",
-                post(rollback_promotion_discount),
-            )
-            .route(
-                "/app/v3/api/promotions/discount_applications/{applicationId}/settlements",
-                post(settle_promotion_discount),
-            )
-            .route(
-                "/app/v3/api/promotions/discount_applications/reversals",
-                post(reverse_promotion_discount),
-            )
-            .with_state(AppPromotionState { store })
+        .route(
+            "/app/v3/api/promotions/user_coupons",
+            get(fetch_promotion_user_coupons),
+        )
+        .route(
+            "/app/v3/api/promotions/user_coupons/{userCouponId}",
+            get(retrieve_promotion_user_coupon),
+        )
+        .route(
+            "/app/v3/api/promotions/user_coupons/wallet",
+            get(fetch_promotion_user_coupon_wallet),
+        )
+        .route(
+            "/app/v3/api/promotions/user_coupons/wallet/{userCouponId}",
+            get(retrieve_promotion_user_coupon_wallet_item),
+        )
+        .route("/app/v3/api/promotions/offers", get(fetch_promotion_offers))
+        .route(
+            "/app/v3/api/promotions/offers/{offerId}",
+            get(retrieve_promotion_offer),
+        )
+        .route("/app/v3/api/wallet/points", get(fetch_points_balance))
+        .route(
+            "/app/v3/api/wallet/points/history",
+            get(fetch_points_history),
+        )
+        .route(
+            "/app/v3/api/promotions/user_coupon_claims",
+            post(claim_promotion_user_coupon),
+        )
+        .route(
+            "/app/v3/api/promotions/codes/redemptions",
+            post(redeem_promotion_code),
+        )
+        .route(
+            "/app/v3/api/promotions/discount_applications",
+            post(apply_promotion_discount),
+        )
+        .route(
+            "/app/v3/api/promotions/discount_applications/{applicationId}/releases",
+            post(release_promotion_discount),
+        )
+        .route(
+            "/app/v3/api/promotions/discount_applications/{applicationId}/rollback",
+            post(rollback_promotion_discount),
+        )
+        .route(
+            "/app/v3/api/promotions/discount_applications/{applicationId}/settlements",
+            post(settle_promotion_discount),
+        )
+        .route(
+            "/app/v3/api/promotions/discount_applications/reversals",
+            post(reverse_promotion_discount),
+        )
+        .with_state(AppPromotionState { store })
 }
 
 async fn fetch_promotion_user_coupons(
@@ -580,10 +579,9 @@ async fn redeem_promotion_code(
     };
 
     match state.store.redeem_promotion_code(command).await {
-        Ok(outcome) => crate::api_response::success_item(
-            ctx,
-            map_promotion_code_redemption_outcome(outcome),
-        ),
+        Ok(outcome) => {
+            crate::api_response::success_item(ctx, map_promotion_code_redemption_outcome(outcome))
+        }
         Err(error) => crate::api_response::map_service_error(ctx, error),
     }
 }

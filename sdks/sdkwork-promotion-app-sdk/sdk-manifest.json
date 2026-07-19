@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "sdkFamily": "sdkwork-promotion-app-sdk",
+  "sdkName": "sdkwork-promotion-app-sdk",
+  "packageName": "@sdkwork/promotion-app-sdk",
+  "transportPackageName": "sdkwork-promotion-app-sdk-generated-typescript",
+  "typescript": {
+    "composedRoot": "sdkwork-promotion-app-sdk-typescript",
+    "composedEntry": "sdkwork-promotion-app-sdk-typescript/src/index.ts",
+    "transportRoot": "sdkwork-promotion-app-sdk-typescript/generated/server-openapi",
+    "transportEntry": "sdkwork-promotion-app-sdk-typescript/generated/server-openapi/src/index.ts"
+  },
+  "workspace": "sdkwork-promotion-app-sdk",
+  "title": "SDKWork Promotion App API SDK",
+  "apiVersion": "0.1.0",
+  "openapiVersion": "3.1.2",
+  "authoritySpec": "openapi/sdkwork-promotion-app-api.openapi.json",
+  "generationInputSpec": "openapi/sdkwork-promotion-app-api.sdkgen.json",
+  "derivedSpecs": {
+    "sdk-generator": "openapi/sdkwork-promotion-app-api.sdkgen.json"
+  },
+  "sdkOwner": "sdkwork-promotion",
+  "apiAuthority": "sdkwork-promotion-app-api",
+  "discoverySurface": {
+    "sdkTarget": "app",
+    "apiPrefix": "/app/v3/api",
+    "generatedProtocols": [
+      "http-openapi"
+    ],
+    "manualTransports": []
+  },
+  "sdkDependencies": [],
+  "ownerOnlyOperationCount": 13,
+  "languages": [
+    {
+      "language": "typescript",
+      "workspace": "sdkwork-promotion-app-sdk-typescript",
+      "generationState": "generated",
+      "releaseState": "not_published",
+      "packagePath": "sdkwork-promotion-app-sdk-typescript",
+      "generatedPath": "sdkwork-promotion-app-sdk-typescript/generated/server-openapi",
+      "manifestPath": "sdkwork-promotion-app-sdk-typescript/package.json",
+      "name": "@sdkwork/promotion-app-sdk",
+      "version": "0.1.0"
+    }
+  ]
+}

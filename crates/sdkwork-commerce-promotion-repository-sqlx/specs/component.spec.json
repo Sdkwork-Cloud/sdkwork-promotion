@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "kind": "sdkwork.component.spec",
+  "component": {
+    "name": "sdkwork-commerce-promotion-repository-sqlx",
+    "displayName": "SDKWork Commerce Promotion SQLx Repository",
+    "version": "0.1.0",
+    "type": "web-backend-service",
+    "root": "crates/sdkwork-commerce-promotion-repository-sqlx",
+    "domain": "commerce",
+    "capability": "promotion",
+    "surface": "repository",
+    "languages": ["rust"],
+    "generated": false,
+    "manifests": ["Cargo.toml"]
+  },
+  "canonicalSpecs": [
+    { "file": "COMPONENT_SPEC.md", "path": "../../../sdkwork-specs/COMPONENT_SPEC.md" },
+    { "file": "CODE_STYLE_SPEC.md", "path": "../../../sdkwork-specs/CODE_STYLE_SPEC.md" },
+    { "file": "NAMING_SPEC.md", "path": "../../../sdkwork-specs/NAMING_SPEC.md" },
+    { "file": "RUST_CODE_SPEC.md", "path": "../../../sdkwork-specs/RUST_CODE_SPEC.md" },
+    { "file": "WEB_BACKEND_SPEC.md", "path": "../../../sdkwork-specs/WEB_BACKEND_SPEC.md" },
+    { "file": "DATABASE_SPEC.md", "path": "../../../sdkwork-specs/DATABASE_SPEC.md" },
+    { "file": "DATABASE_FRAMEWORK_SPEC.md", "path": "../../../sdkwork-specs/DATABASE_FRAMEWORK_SPEC.md" },
+    { "file": "TEST_SPEC.md", "path": "../../../sdkwork-specs/TEST_SPEC.md" }
+  ],
+  "contracts": {
+    "layerRole": "backend-repository",
+    "publicExports": ["."],
+    "providedPorts": [
+      { "name": "promotionAdminRepository", "export": "." }
+    ],
+    "requiredPorts": [
+      { "name": "promotionAdminRepositoryPort", "export": "." }
+    ],
+    "runtimeEntrypoints": [],
+    "routeManifest": null,
+    "sdkClients": [],
+    "sdkDependencies": [],
+    "dependencyApiExports": [],
+    "dependencyApiSurfaces": [],
+    "events": [],
+    "configKeys": []
+  },
+  "verification": {
+    "commands": ["cargo test -p sdkwork-commerce-promotion-repository-sqlx"]
+  }
+}

@@ -41,14 +41,14 @@
     "typescript": "catalog:"
   },
   "peerDependencies": {
-    "@sdkwork/promotion-pc-core": "*",
-    "@sdkwork/promotion-service": "*",
-    "@sdkwork/promotion-pc-coupon": "*",
-    "@sdkwork/promotion-pc-points": "*",
-    "@sdkwork/membership-pc-subscription": "*",
-    "@sdkwork/membership-pc-membership": "*",
-    "@sdkwork/account-pc-wallet": "*",
-    "@sdkwork/ui-pc-react": "*",
+    "@sdkwork/promotion-pc-core": "workspace:*",
+    "@sdkwork/promotion-service": "workspace:*",
+    "@sdkwork/promotion-pc-coupon": "workspace:*",
+    "@sdkwork/promotion-pc-points": "workspace:*",
+    "@sdkwork/membership-pc-subscription": "workspace:*",
+    "@sdkwork/membership-pc-membership": "workspace:*",
+    "@sdkwork/account-pc-wallet": "workspace:*",
+    "@sdkwork/ui-pc-react": "workspace:*",
     "react": ">=18.2.0 <20.0.0",
     "react-dom": ">=18.2.0 <20.0.0"
   },

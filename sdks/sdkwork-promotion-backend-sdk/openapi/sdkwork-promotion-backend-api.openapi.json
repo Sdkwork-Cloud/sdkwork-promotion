@@ -8,174 +8,2673 @@
     "x-sdkwork-sdk-family": "sdkwork-promotion-backend-sdk",
     "x-sdkwork-owner": "sdkwork-promotion"
   },
-  "servers": [{ "url": "/" }],
-  "tags": [{ "name": "promotions", "description": "Promotion operations" }],
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "tags": [
+    {
+      "name": "promotions",
+      "description": "Promotion operations"
+    }
+  ],
   "paths": {
     "/backend/v3/api/promotions/overview": {
       "get": {
-        "operationId": "promotions.overview.retrieve",
+        "operationId": "overview.retrieve",
         "summary": "Retrieve the promotion operations overview",
-        "tags": ["promotions"],
+        "tags": [
+          "promotions"
+        ],
         "x-sdkwork-owner": "sdkwork-promotion",
         "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
         "x-sdkwork-api-surface": "backend-api",
         "x-sdkwork-permission": "commerce.marketing.read",
         "responses": {
-          "200": { "$ref": "#/components/responses/PromotionOverviewResponse" },
-          "default": { "$ref": "#/components/responses/ProblemResponse" }
+          "200": {
+            "$ref": "#/components/responses/PromotionOverviewResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
         },
-        "security": [{ "AuthToken": [], "AccessToken": [] }]
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
       }
     },
     "/backend/v3/api/promotions/offers": {
       "get": {
-        "operationId": "promotions.offers.list",
+        "operationId": "offers.list",
         "summary": "List promotion offers",
-        "tags": ["promotions"],
+        "tags": [
+          "promotions"
+        ],
         "x-sdkwork-owner": "sdkwork-promotion",
         "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
         "x-sdkwork-api-surface": "backend-api",
         "x-sdkwork-permission": "commerce.marketing.read",
         "parameters": [
-          { "$ref": "#/components/parameters/Page" },
-          { "$ref": "#/components/parameters/PageSize" },
-          { "$ref": "#/components/parameters/Search" },
-          { "$ref": "#/components/parameters/Status" }
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "$ref": "#/components/parameters/Status"
+          }
         ],
         "responses": {
-          "200": { "$ref": "#/components/responses/PromotionOfferListResponse" },
-          "default": { "$ref": "#/components/responses/ProblemResponse" }
+          "200": {
+            "$ref": "#/components/responses/PromotionOfferListResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
         },
-        "security": [{ "AuthToken": [], "AccessToken": [] }]
-      }
-    },
-    "/backend/v3/api/promotions/offers/{offerId}/status": {
-      "patch": {
-        "operationId": "promotions.offers.status.update",
-        "summary": "Enable or disable a promotion offer",
-        "tags": ["promotions"],
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "offers.create",
+        "summary": "offers.create",
+        "tags": [
+          "promotions"
+        ],
         "x-sdkwork-owner": "sdkwork-promotion",
         "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
         "x-sdkwork-api-surface": "backend-api",
         "x-sdkwork-permission": "commerce.marketing.manage",
-        "parameters": [{ "name": "offerId", "in": "path", "required": true, "schema": { "type": "string" } }],
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UpdatePromotionStatusRequest" } } }
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionOfferRequest"
+              }
+            }
+          }
         },
         "responses": {
-          "200": { "$ref": "#/components/responses/CommandResponse" },
-          "default": { "$ref": "#/components/responses/ProblemResponse" }
+          "201": {
+            "$ref": "#/components/responses/PromotionOfferResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
         },
-        "security": [{ "AuthToken": [], "AccessToken": [] }]
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/promotions/offers/{offerId}/status": {
+      "patch": {
+        "operationId": "offers.status.update",
+        "summary": "Enable or disable a promotion offer",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.manage",
+        "parameters": [
+          {
+            "name": "offerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePromotionStatusRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CommandResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
       }
     },
     "/backend/v3/api/promotions/coupon_stocks": {
       "get": {
-        "operationId": "promotions.couponStocks.list",
+        "operationId": "couponStocks.list",
         "summary": "List coupon stock",
-        "tags": ["promotions"],
+        "tags": [
+          "promotions"
+        ],
         "x-sdkwork-owner": "sdkwork-promotion",
         "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
         "x-sdkwork-api-surface": "backend-api",
         "x-sdkwork-permission": "commerce.marketing.read",
         "parameters": [
-          { "$ref": "#/components/parameters/Page" },
-          { "$ref": "#/components/parameters/PageSize" },
-          { "$ref": "#/components/parameters/Search" },
-          { "$ref": "#/components/parameters/Status" }
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "$ref": "#/components/parameters/Status"
+          }
         ],
         "responses": {
-          "200": { "$ref": "#/components/responses/CouponStockListResponse" },
-          "default": { "$ref": "#/components/responses/ProblemResponse" }
+          "200": {
+            "$ref": "#/components/responses/CouponStockListResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
         },
-        "security": [{ "AuthToken": [], "AccessToken": [] }]
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "couponStocks.create",
+        "summary": "couponStocks.create",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouponStockRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/CouponStockResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
       }
     },
     "/backend/v3/api/promotions/codes": {
       "get": {
-        "operationId": "promotions.codes.list",
+        "operationId": "codes.list",
         "summary": "List promotion codes",
-        "tags": ["promotions"],
+        "tags": [
+          "promotions"
+        ],
         "x-sdkwork-owner": "sdkwork-promotion",
         "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
         "x-sdkwork-api-surface": "backend-api",
         "x-sdkwork-permission": "commerce.marketing.read",
         "parameters": [
-          { "$ref": "#/components/parameters/Page" },
-          { "$ref": "#/components/parameters/PageSize" },
-          { "$ref": "#/components/parameters/Search" },
-          { "$ref": "#/components/parameters/Status" }
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "$ref": "#/components/parameters/Status"
+          }
         ],
         "responses": {
-          "200": { "$ref": "#/components/responses/PromotionCodeListResponse" },
-          "default": { "$ref": "#/components/responses/ProblemResponse" }
+          "200": {
+            "$ref": "#/components/responses/PromotionCodeListResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
         },
-        "security": [{ "AuthToken": [], "AccessToken": [] }]
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
       }
     },
     "/backend/v3/api/promotions/discount_applications": {
       "get": {
-        "operationId": "promotions.discountApplications.list",
+        "operationId": "discountApplications.list",
         "summary": "List discount applications",
-        "tags": ["promotions"],
+        "tags": [
+          "promotions"
+        ],
         "x-sdkwork-owner": "sdkwork-promotion",
         "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
         "x-sdkwork-api-surface": "backend-api",
         "x-sdkwork-permission": "commerce.marketing.read",
         "parameters": [
-          { "$ref": "#/components/parameters/Page" },
-          { "$ref": "#/components/parameters/PageSize" },
-          { "$ref": "#/components/parameters/Search" },
-          { "$ref": "#/components/parameters/Status" }
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "$ref": "#/components/parameters/Status"
+          }
         ],
         "responses": {
-          "200": { "$ref": "#/components/responses/DiscountApplicationListResponse" },
-          "default": { "$ref": "#/components/responses/ProblemResponse" }
+          "200": {
+            "$ref": "#/components/responses/DiscountApplicationListResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
         },
-        "security": [{ "AuthToken": [], "AccessToken": [] }]
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/promotions/campaigns": {
+      "get": {
+        "operationId": "campaigns.list",
+        "summary": "campaigns.list",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "$ref": "#/components/parameters/Status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PromotionCampaignListResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "campaigns.create",
+        "summary": "campaigns.create",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionCampaignRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/PromotionCampaignResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/promotions/campaigns/{campaignId}": {
+      "get": {
+        "operationId": "campaigns.retrieve",
+        "summary": "campaigns.retrieve",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.read",
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PromotionCampaignResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "campaigns.update",
+        "summary": "campaigns.update",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.manage",
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionCampaignRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PromotionCampaignResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "campaigns.delete",
+        "summary": "campaigns.delete",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.manage",
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/promotions/offers/{offerId}": {
+      "get": {
+        "operationId": "offers.retrieve",
+        "summary": "offers.retrieve",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.read",
+        "parameters": [
+          {
+            "name": "offerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PromotionOfferResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "offers.update",
+        "summary": "offers.update",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.manage",
+        "parameters": [
+          {
+            "name": "offerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionOfferRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PromotionOfferResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "offers.delete",
+        "summary": "offers.delete",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.manage",
+        "parameters": [
+          {
+            "name": "offerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/promotions/code_batches": {
+      "get": {
+        "operationId": "codeBatches.list",
+        "summary": "codeBatches.list",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "$ref": "#/components/parameters/Status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PromotionCodeBatchListResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "codeBatches.create",
+        "summary": "codeBatches.create",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionCodeBatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/PromotionCodeBatchResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/promotions/distribution_tasks": {
+      "get": {
+        "operationId": "distributionTasks.list",
+        "summary": "distributionTasks.list",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "$ref": "#/components/parameters/Status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PromotionDistributionTaskListResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "distributionTasks.create",
+        "summary": "distributionTasks.create",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.manage",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionDistributionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/PromotionDistributionTaskResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/promotions/user_coupons": {
+      "get": {
+        "operationId": "userCoupons.list",
+        "summary": "userCoupons.list",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "$ref": "#/components/parameters/Status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PromotionUserCouponListResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/backend/v3/api/promotions/coupon_ledger_entries": {
+      "get": {
+        "operationId": "couponLedgerEntries.list",
+        "summary": "couponLedgerEntries.list",
+        "tags": [
+          "promotions"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-backend-api",
+        "x-sdkwork-api-surface": "backend-api",
+        "x-sdkwork-permission": "commerce.marketing.read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/PageSize"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          },
+          {
+            "$ref": "#/components/parameters/Status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/PromotionCouponLedgerEntryListResponse"
+          },
+          "default": {
+            "$ref": "#/components/responses/ProblemResponse"
+          }
+        },
+        "security": [
+          {
+            "AuthToken": [],
+            "AccessToken": []
+          }
+        ]
       }
     }
   },
   "components": {
     "securitySchemes": {
-      "AuthToken": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" },
-      "AccessToken": { "type": "apiKey", "in": "header", "name": "Access-Token" }
+      "AuthToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "AccessToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Access-Token"
+      }
     },
     "parameters": {
-      "Page": { "name": "page", "in": "query", "schema": { "type": "integer", "format": "int32", "minimum": 1, "default": 1 } },
-      "PageSize": { "name": "page_size", "in": "query", "schema": { "type": "integer", "format": "int32", "minimum": 1, "maximum": 200, "default": 20 } },
-      "Search": { "name": "q", "in": "query", "schema": { "type": "string" } },
-      "Status": { "name": "status", "in": "query", "schema": { "type": "integer", "format": "int32" } }
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "format": "int32",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      "PageSize": {
+        "name": "page_size",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "format": "int32",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 20
+        }
+      },
+      "Search": {
+        "name": "q",
+        "in": "query",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "Status": {
+        "name": "status",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
     },
     "responses": {
       "ProblemResponse": {
         "description": "Problem detail",
-        "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/ProblemDetail" } } }
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProblemDetail"
+            }
+          }
+        }
       },
-      "PromotionOverviewResponse": { "description": "Promotion overview", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromotionOverviewEnvelope" } } } },
-      "PromotionOfferListResponse": { "description": "Promotion offer list", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromotionOfferListEnvelope" } } } },
-      "CouponStockListResponse": { "description": "Coupon stock list", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CouponStockListEnvelope" } } } },
-      "PromotionCodeListResponse": { "description": "Promotion code list", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PromotionCodeListEnvelope" } } } },
-      "DiscountApplicationListResponse": { "description": "Discount application list", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DiscountApplicationListEnvelope" } } } },
-      "CommandResponse": { "description": "Command accepted", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CommandEnvelope" } } } }
+      "PromotionOverviewResponse": {
+        "description": "Promotion overview",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PromotionOverviewEnvelope"
+            }
+          }
+        }
+      },
+      "PromotionOfferListResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PromotionOfferListEnvelope"
+            }
+          }
+        }
+      },
+      "CouponStockListResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CouponStockListEnvelope"
+            }
+          }
+        }
+      },
+      "PromotionCodeListResponse": {
+        "description": "Promotion code list",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PromotionCodeListEnvelope"
+            }
+          }
+        }
+      },
+      "DiscountApplicationListResponse": {
+        "description": "Discount application list",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/DiscountApplicationListEnvelope"
+            }
+          }
+        }
+      },
+      "CommandResponse": {
+        "description": "Command accepted",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CommandEnvelope"
+            }
+          }
+        }
+      },
+      "PromotionCampaignResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PromotionCampaignEnvelope"
+            }
+          }
+        }
+      },
+      "PromotionCampaignListResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PromotionCampaignListEnvelope"
+            }
+          }
+        }
+      },
+      "PromotionOfferResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PromotionOfferEnvelope"
+            }
+          }
+        }
+      },
+      "CouponStockResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CouponStockEnvelope"
+            }
+          }
+        }
+      },
+      "PromotionCodeBatchResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PromotionCodeBatchEnvelope"
+            }
+          }
+        }
+      },
+      "PromotionCodeBatchListResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PromotionCodeBatchListEnvelope"
+            }
+          }
+        }
+      },
+      "PromotionDistributionTaskResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PromotionDistributionTaskEnvelope"
+            }
+          }
+        }
+      },
+      "PromotionDistributionTaskListResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PromotionDistributionTaskListEnvelope"
+            }
+          }
+        }
+      },
+      "PromotionUserCouponListResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PromotionUserCouponListEnvelope"
+            }
+          }
+        }
+      },
+      "PromotionCouponLedgerEntryListResponse": {
+        "description": "Success",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/PromotionCouponLedgerEntryListEnvelope"
+            }
+          }
+        }
+      }
     },
     "schemas": {
-      "ProblemDetail": { "type": "object", "required": ["type", "title", "status", "detail", "code", "traceId"], "properties": { "type": { "type": "string" }, "title": { "type": "string" }, "status": { "type": "integer", "format": "int32" }, "detail": { "type": "string" }, "code": { "type": "integer", "format": "int32" }, "traceId": { "type": "string" } } },
-      "PageInfo": { "type": "object", "required": ["mode", "page", "pageSize", "totalItems", "totalPages", "hasMore"], "properties": { "mode": { "type": "string", "enum": ["offset"] }, "page": { "type": "integer", "format": "int64" }, "pageSize": { "type": "integer", "format": "int64" }, "totalItems": { "type": "integer", "format": "int64" }, "totalPages": { "type": "integer", "format": "int64" }, "hasMore": { "type": "boolean" } } },
-      "UpdatePromotionStatusRequest": { "type": "object", "required": ["status"], "properties": { "status": { "type": "integer", "format": "int32", "enum": [0, 1] } } },
-      "PromotionOverview": { "type": "object", "required": ["activeOffers", "totalOffers", "totalCouponStock", "availableCoupons", "claimedCoupons", "redeemedCoupons", "activeCodes", "discountApplications"], "properties": { "activeOffers": { "type": "integer", "format": "int64" }, "totalOffers": { "type": "integer", "format": "int64" }, "totalCouponStock": { "type": "integer", "format": "int64" }, "availableCoupons": { "type": "integer", "format": "int64" }, "claimedCoupons": { "type": "integer", "format": "int64" }, "redeemedCoupons": { "type": "integer", "format": "int64" }, "activeCodes": { "type": "integer", "format": "int64" }, "discountApplications": { "type": "integer", "format": "int64" } } },
-      "PromotionOffer": { "type": "object", "required": ["id", "offerNo", "offerType", "displayName", "priority", "startsAt", "status", "updatedAt"], "properties": { "id": { "type": "string" }, "offerNo": { "type": "string" }, "offerCode": { "type": ["string", "null"] }, "offerType": { "type": "string" }, "displayName": { "type": "string" }, "description": { "type": ["string", "null"] }, "priority": { "type": "integer", "format": "int32" }, "startsAt": { "type": "string" }, "endsAt": { "type": ["string", "null"] }, "status": { "type": "integer", "format": "int32" }, "updatedAt": { "type": "string" } } },
-      "CouponStock": { "type": "object", "required": ["id", "offerId", "stockNo", "stockType", "totalQuantity", "availableQuantity", "claimedQuantity", "redeemedQuantity", "lockedQuantity", "perUserLimit", "status"], "properties": { "id": { "type": "string" }, "offerId": { "type": "string" }, "stockNo": { "type": "string" }, "stockType": { "type": "string" }, "totalQuantity": { "type": "integer", "format": "int64" }, "availableQuantity": { "type": "integer", "format": "int64" }, "claimedQuantity": { "type": "integer", "format": "int64" }, "redeemedQuantity": { "type": "integer", "format": "int64" }, "lockedQuantity": { "type": "integer", "format": "int64" }, "perUserLimit": { "type": "integer", "format": "int32" }, "claimStartsAt": { "type": ["string", "null"] }, "claimEndsAt": { "type": ["string", "null"] }, "status": { "type": "integer", "format": "int32" } } },
-      "PromotionCode": { "type": "object", "required": ["id", "stockId", "offerId", "codeNo", "promotionCode", "codeType", "maxClaims", "claimedQuantity", "status"], "properties": { "id": { "type": "string" }, "stockId": { "type": "string" }, "offerId": { "type": "string" }, "codeNo": { "type": "string" }, "promotionCode": { "type": "string" }, "codeType": { "type": "string" }, "maxClaims": { "type": "integer", "format": "int32" }, "claimedQuantity": { "type": "integer", "format": "int32" }, "startsAt": { "type": ["string", "null"] }, "expiresAt": { "type": ["string", "null"] }, "status": { "type": "integer", "format": "int32" } } },
-      "DiscountApplication": { "type": "object", "required": ["id", "applicationNo", "orderId", "offerId", "discountType", "discountAmount", "currencyCode", "status", "appliedAt"], "properties": { "id": { "type": "string" }, "applicationNo": { "type": "string" }, "orderId": { "type": "string" }, "orderNo": { "type": ["string", "null"] }, "offerId": { "type": "string" }, "discountType": { "type": "string" }, "discountAmount": { "type": "string" }, "currencyCode": { "type": "string" }, "status": { "type": "integer", "format": "int32" }, "appliedAt": { "type": "string" }, "settledAt": { "type": ["string", "null"] }, "releasedAt": { "type": ["string", "null"] }, "rolledBackAt": { "type": ["string", "null"] } } },
-      "SdkWorkApiResponse": { "type": "object", "required": ["code", "data", "traceId"], "properties": { "code": { "type": "integer", "format": "int32", "const": 0 }, "data": {}, "traceId": { "type": "string" } } },
-      "PromotionOverviewEnvelope": { "allOf": [{ "$ref": "#/components/schemas/SdkWorkApiResponse" }, { "type": "object", "required": ["data"], "properties": { "data": { "type": "object", "required": ["item"], "properties": { "item": { "$ref": "#/components/schemas/PromotionOverview" } } } } }] },
-      "PromotionOfferListEnvelope": { "type": "object", "required": ["code", "data", "traceId"], "properties": { "code": { "type": "integer", "format": "int32", "const": 0 }, "data": { "type": "object", "required": ["items", "pageInfo"], "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/PromotionOffer" } }, "pageInfo": { "$ref": "#/components/schemas/PageInfo" } } }, "traceId": { "type": "string" } } },
-      "CouponStockListEnvelope": { "type": "object", "required": ["code", "data", "traceId"], "properties": { "code": { "type": "integer", "format": "int32", "const": 0 }, "data": { "type": "object", "required": ["items", "pageInfo"], "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/CouponStock" } }, "pageInfo": { "$ref": "#/components/schemas/PageInfo" } } }, "traceId": { "type": "string" } } },
-      "PromotionCodeListEnvelope": { "type": "object", "required": ["code", "data", "traceId"], "properties": { "code": { "type": "integer", "format": "int32", "const": 0 }, "data": { "type": "object", "required": ["items", "pageInfo"], "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/PromotionCode" } }, "pageInfo": { "$ref": "#/components/schemas/PageInfo" } } }, "traceId": { "type": "string" } } },
-      "DiscountApplicationListEnvelope": { "type": "object", "required": ["code", "data", "traceId"], "properties": { "code": { "type": "integer", "format": "int32", "const": 0 }, "data": { "type": "object", "required": ["items", "pageInfo"], "properties": { "items": { "type": "array", "items": { "$ref": "#/components/schemas/DiscountApplication" } }, "pageInfo": { "$ref": "#/components/schemas/PageInfo" } } }, "traceId": { "type": "string" } } },
-      "CommandEnvelope": { "type": "object", "required": ["code", "data", "traceId"], "properties": { "code": { "type": "integer", "format": "int32", "const": 0 }, "data": { "type": "object", "required": ["accepted"], "properties": { "accepted": { "type": "boolean" }, "resourceId": { "type": "string" }, "status": { "type": "string" } } }, "traceId": { "type": "string" } } }
+      "ProblemDetail": {
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "code",
+          "traceId"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PageInfo": {
+        "type": "object",
+        "required": [
+          "mode",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages",
+          "hasMore"
+        ],
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "offset"
+            ]
+          },
+          "page": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalItems": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdatePromotionStatusRequest": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      },
+      "PromotionOverview": {
+        "type": "object",
+        "required": [
+          "activeOffers",
+          "totalOffers",
+          "totalCouponStock",
+          "availableCoupons",
+          "claimedCoupons",
+          "redeemedCoupons",
+          "activeCodes",
+          "discountApplications"
+        ],
+        "properties": {
+          "activeOffers": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalOffers": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalCouponStock": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "availableCoupons": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "claimedCoupons": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "redeemedCoupons": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "activeCodes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "discountApplications": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "PromotionOffer": {
+        "type": "object",
+        "required": [
+          "id",
+          "offerNo",
+          "offerType",
+          "displayName",
+          "priority",
+          "startsAt",
+          "status",
+          "updatedAt",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "offerNo": {
+            "type": "string"
+          },
+          "offerCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "offerType": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startsAt": {
+            "type": "string"
+          },
+          "endsAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "campaignId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "discountType": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "discountValue": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "minimumAmount": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "maximumDiscountAmount": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "currencyCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "CouponStock": {
+        "type": "object",
+        "required": [
+          "id",
+          "offerId",
+          "stockNo",
+          "stockType",
+          "totalQuantity",
+          "availableQuantity",
+          "claimedQuantity",
+          "redeemedQuantity",
+          "lockedQuantity",
+          "perUserLimit",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "stockNo": {
+            "type": "string"
+          },
+          "stockType": {
+            "type": "string"
+          },
+          "totalQuantity": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "availableQuantity": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "claimedQuantity": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "redeemedQuantity": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lockedQuantity": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "perUserLimit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "claimStartsAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "claimEndsAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PromotionCode": {
+        "type": "object",
+        "required": [
+          "id",
+          "stockId",
+          "offerId",
+          "codeNo",
+          "promotionCode",
+          "codeType",
+          "maxClaims",
+          "claimedQuantity",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "stockId": {
+            "type": "string"
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "codeNo": {
+            "type": "string"
+          },
+          "promotionCode": {
+            "type": "string"
+          },
+          "codeType": {
+            "type": "string"
+          },
+          "maxClaims": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "claimedQuantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startsAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "DiscountApplication": {
+        "type": "object",
+        "required": [
+          "id",
+          "applicationNo",
+          "orderId",
+          "offerId",
+          "discountType",
+          "discountAmount",
+          "currencyCode",
+          "status",
+          "appliedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "applicationNo": {
+            "type": "string"
+          },
+          "orderId": {
+            "type": "string"
+          },
+          "orderNo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "discountType": {
+            "type": "string"
+          },
+          "discountAmount": {
+            "type": "string"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "appliedAt": {
+            "type": "string"
+          },
+          "settledAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "releasedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rolledBackAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "SdkWorkApiResponse": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {},
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionOverviewEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "type": "object",
+            "required": [
+              "data"
+            ],
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "item"
+                ],
+                "properties": {
+                  "item": {
+                    "$ref": "#/components/schemas/PromotionOverview"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "PromotionOfferListEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PromotionOffer"
+                }
+              },
+              "pageInfo": {
+                "$ref": "#/components/schemas/PageInfo"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "CouponStockListEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/CouponStock"
+                }
+              },
+              "pageInfo": {
+                "$ref": "#/components/schemas/PageInfo"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionCodeListEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PromotionCode"
+                }
+              },
+              "pageInfo": {
+                "$ref": "#/components/schemas/PageInfo"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "DiscountApplicationListEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DiscountApplication"
+                }
+              },
+              "pageInfo": {
+                "$ref": "#/components/schemas/PageInfo"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "CommandEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "accepted"
+            ],
+            "properties": {
+              "accepted": {
+                "type": "boolean"
+              },
+              "resourceId": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionCampaign": {
+        "type": "object",
+        "required": [
+          "id",
+          "campaignNo",
+          "displayName",
+          "channelScope",
+          "audienceScope",
+          "startsAt",
+          "status",
+          "version",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "campaignNo": {
+            "type": "string"
+          },
+          "campaignCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "channelScope": {
+            "type": "string"
+          },
+          "audienceScope": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string"
+          },
+          "endsAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "SCHEDULED",
+              "ACTIVE",
+              "PAUSED",
+              "ENDED",
+              "CANCELLED",
+              "ARCHIVED"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionCampaignRequest": {
+        "type": "object",
+        "required": [
+          "displayName",
+          "channelScope",
+          "audienceScope",
+          "startsAt",
+          "status"
+        ],
+        "properties": {
+          "campaignCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "channelScope": {
+            "type": "string"
+          },
+          "audienceScope": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string"
+          },
+          "endsAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "version": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "PromotionOfferRequest": {
+        "type": "object",
+        "required": [
+          "offerType",
+          "displayName",
+          "audienceScope",
+          "combinability",
+          "goodsScope",
+          "priority",
+          "startsAt",
+          "status",
+          "discountType",
+          "discountValue",
+          "minimumAmount",
+          "currencyCode"
+        ],
+        "properties": {
+          "campaignId": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "offerCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "offerType": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "audienceScope": {
+            "type": "string"
+          },
+          "combinability": {
+            "type": "string"
+          },
+          "goodsScope": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "startsAt": {
+            "type": "string"
+          },
+          "endsAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "discountType": {
+            "type": "string"
+          },
+          "discountValue": {
+            "type": "string"
+          },
+          "minimumAmount": {
+            "type": "string"
+          },
+          "maximumDiscountAmount": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "version": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "CouponStockRequest": {
+        "type": "object",
+        "required": [
+          "offerId",
+          "stockType",
+          "totalQuantity",
+          "perUserLimit",
+          "status"
+        ],
+        "properties": {
+          "offerId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "stockType": {
+            "type": "string",
+            "enum": [
+              "LIMITED",
+              "UNLIMITED"
+            ]
+          },
+          "totalQuantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1
+          },
+          "perUserLimit": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          },
+          "claimStartsAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "claimEndsAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      },
+      "PromotionCodeBatch": {
+        "type": "object",
+        "required": [
+          "id",
+          "stockId",
+          "offerId",
+          "batchNo",
+          "codeType",
+          "requestedQuantity",
+          "generatedQuantity",
+          "codeLength",
+          "codePrefix",
+          "status",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "stockId": {
+            "type": "string"
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "batchNo": {
+            "type": "string"
+          },
+          "codeType": {
+            "type": "string"
+          },
+          "requestedQuantity": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "generatedQuantity": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "codeLength": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "codePrefix": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionCodeBatchRequest": {
+        "type": "object",
+        "required": [
+          "stockId",
+          "codeType",
+          "quantity",
+          "codeLength",
+          "codePrefix",
+          "idempotencyKey"
+        ],
+        "properties": {
+          "stockId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "codeType": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 5000
+          },
+          "codeLength": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 12,
+            "maximum": 32
+          },
+          "codePrefix": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "idempotencyKey": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionDistributionTask": {
+        "type": "object",
+        "required": [
+          "id",
+          "stockId",
+          "offerId",
+          "taskNo",
+          "distributionType",
+          "requestedQuantity",
+          "succeededQuantity",
+          "failedQuantity",
+          "status",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "stockId": {
+            "type": "string"
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "taskNo": {
+            "type": "string"
+          },
+          "distributionType": {
+            "type": "string"
+          },
+          "requestedQuantity": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "succeededQuantity": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "failedQuantity": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PromotionDistributionRequest": {
+        "type": "object",
+        "required": [
+          "stockId",
+          "ownerUserIds",
+          "idempotencyKey"
+        ],
+        "properties": {
+          "stockId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ownerUserIds": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 200,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "idempotencyKey": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionUserCoupon": {
+        "type": "object",
+        "required": [
+          "id",
+          "couponNo",
+          "stockId",
+          "offerId",
+          "ownerUserId",
+          "couponCode",
+          "status",
+          "claimedAt",
+          "validFrom"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "couponNo": {
+            "type": "string"
+          },
+          "stockId": {
+            "type": "string"
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "ownerUserId": {
+            "type": "string"
+          },
+          "couponCode": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "claimedAt": {
+            "type": "string"
+          },
+          "validFrom": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "redeemedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sourceType": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sourceId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PromotionCouponLedgerEntry": {
+        "type": "object",
+        "required": [
+          "id",
+          "stockId",
+          "offerId",
+          "direction",
+          "quantityDelta",
+          "balanceAfter",
+          "businessType",
+          "businessNo",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "stockId": {
+            "type": "string"
+          },
+          "userCouponId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "offerId": {
+            "type": "string"
+          },
+          "subjectId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "direction": {
+            "type": "string"
+          },
+          "quantityDelta": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "balanceAfter": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "businessType": {
+            "type": "string"
+          },
+          "businessNo": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionCampaignEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "item": {
+                "$ref": "#/components/schemas/PromotionCampaign"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionCampaignListEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PromotionCampaign"
+                }
+              },
+              "pageInfo": {
+                "$ref": "#/components/schemas/PageInfo"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionOfferEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "item": {
+                "$ref": "#/components/schemas/PromotionOffer"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "CouponStockEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "item": {
+                "$ref": "#/components/schemas/CouponStock"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionCodeBatchEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "item": {
+                "$ref": "#/components/schemas/PromotionCodeBatch"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionCodeBatchListEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PromotionCodeBatch"
+                }
+              },
+              "pageInfo": {
+                "$ref": "#/components/schemas/PageInfo"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionDistributionTaskEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "item"
+            ],
+            "properties": {
+              "item": {
+                "$ref": "#/components/schemas/PromotionDistributionTask"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionDistributionTaskListEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PromotionDistributionTask"
+                }
+              },
+              "pageInfo": {
+                "$ref": "#/components/schemas/PageInfo"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionUserCouponListEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PromotionUserCoupon"
+                }
+              },
+              "pageInfo": {
+                "$ref": "#/components/schemas/PageInfo"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PromotionCouponLedgerEntryListEnvelope": {
+        "type": "object",
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32",
+            "const": 0
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "items",
+              "pageInfo"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PromotionCouponLedgerEntry"
+                }
+              },
+              "pageInfo": {
+                "$ref": "#/components/schemas/PageInfo"
+              }
+            }
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      }
     }
   }
 }

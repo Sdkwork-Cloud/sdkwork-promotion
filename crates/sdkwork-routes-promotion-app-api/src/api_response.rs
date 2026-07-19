@@ -37,10 +37,7 @@ fn problem_for_context(
     attach_trace_header((status, Json(problem)).into_response(), &trace_id)
 }
 
-pub fn success_item<T: serde::Serialize>(
-    context: Option<&WebRequestContext>,
-    item: T,
-) -> Response {
+pub fn success_item<T: serde::Serialize>(context: Option<&WebRequestContext>, item: T) -> Response {
     let trace_id = resolve_trace_id(context);
     let envelope = SdkWorkApiResponse::success(SdkWorkResourceData { item }, trace_id.clone());
     attach_trace_header((StatusCode::OK, Json(envelope)).into_response(), &trace_id)
@@ -140,10 +137,9 @@ pub fn not_found(context: Option<&WebRequestContext>, detail: impl Into<String>)
 fn attach_trace_header(response: Response, trace_id: &str) -> Response {
     let mut response = response;
     if let Ok(value) = HeaderValue::from_str(trace_id) {
-        response.headers_mut().insert(
-            HeaderName::from_static("x-sdkwork-trace-id"),
-            value,
-        );
+        response
+            .headers_mut()
+            .insert(HeaderName::from_static("x-sdkwork-trace-id"), value);
     }
     response
 }

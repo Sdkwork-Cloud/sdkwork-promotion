@@ -10,4 +10,11 @@ export interface PromotionOffer {
   endsAt?: string | null;
   status: number;
   updatedAt: string;
+  campaignId?: string | null;
+  discountType?: string | null;
+  discountValue?: string | null;
+  minimumAmount?: string | null;
+  maximumDiscountAmount?: string | null;
+  currencyCode?: string | null;
+  version: string;
 }

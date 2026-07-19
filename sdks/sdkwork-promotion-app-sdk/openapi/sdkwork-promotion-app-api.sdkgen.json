@@ -1,0 +1,1742 @@
+{
+  "openapi": "3.1.2",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "info": {
+    "title": "SDKWork Promotion App API",
+    "version": "0.1.0",
+    "description": "Owner-only app API authority for SDKWork promotion and coupon capabilities.",
+    "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+    "x-sdkwork-sdk-family": "sdkwork-promotion-app-sdk",
+    "x-sdkwork-owner": "sdkwork-promotion",
+    "x-sdkwork-audience": "Authenticated SDKWork promotion clients"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:18095",
+      "description": "Local promotion gateway"
+    }
+  ],
+  "security": [
+    {
+      "AccessToken": [],
+      "AuthToken": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "promotions",
+      "description": "Promotion and coupon resources.",
+      "x-sdk-nested-resource-surface": true
+    }
+  ],
+  "paths": {
+    "/app/v3/api/promotions/codes/redemptions": {
+      "post": {
+        "description": "Create. Reads system. Writes ops_audit_log. File targets none.",
+        "operationId": "promotions.codes.redemptions.create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionsCodesRedemptionsCreateRequest"
+              }
+            }
+          },
+          "description": "Typed request payload for create.",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionsCodesRedemptionsCreateResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Server Error"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Error response."
+          }
+        },
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "summary": "Create",
+        "tags": [
+          "promotions"
+        ],
+        "x-contract-kind": "create",
+        "x-file-targets": [],
+        "x-read-sources": [
+          "system"
+        ],
+        "x-route-scope": "console",
+        "x-sdk-domain": "promotion",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.codes.redemptions",
+        "x-source-file": "tools/bootstrap_frontend_contract_from_route_manifest.py",
+        "x-write-tables": [
+          "ops_audit_log"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.codes.redemptions.access"
+      }
+    },
+    "/app/v3/api/promotions/discount_applications": {
+      "post": {
+        "description": "Create. Reads system. Writes ops_audit_log. File targets none.",
+        "operationId": "promotions.discountApplications.create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionsDiscountApplicationsCreateResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Server Error"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Error response."
+          }
+        },
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "summary": "Create",
+        "tags": [
+          "promotions"
+        ],
+        "x-contract-kind": "create",
+        "x-file-targets": [],
+        "x-read-sources": [
+          "system"
+        ],
+        "x-route-scope": "console",
+        "x-sdk-domain": "promotion",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.discountApplications",
+        "x-source-file": "tools/bootstrap_frontend_contract_from_route_manifest.py",
+        "x-write-tables": [
+          "ops_audit_log"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.discountApplications.access"
+      }
+    },
+    "/app/v3/api/promotions/discount_applications/reversals": {
+      "post": {
+        "description": "Create. Reads system. Writes ops_audit_log. File targets none.",
+        "operationId": "promotions.discountApplications.reversals.create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionsDiscountApplicationsReversalsCreateResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Server Error"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Error response."
+          }
+        },
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "summary": "Create",
+        "tags": [
+          "promotions"
+        ],
+        "x-contract-kind": "create",
+        "x-file-targets": [],
+        "x-read-sources": [
+          "system"
+        ],
+        "x-route-scope": "console",
+        "x-sdk-domain": "promotion",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.discountApplications.reversals",
+        "x-source-file": "tools/bootstrap_frontend_contract_from_route_manifest.py",
+        "x-write-tables": [
+          "ops_audit_log"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.discountApplications.reversals.access"
+      }
+    },
+    "/app/v3/api/promotions/discount_applications/{applicationId}/releases": {
+      "post": {
+        "description": "Release. Reads system. Writes ops_audit_log. File targets none.",
+        "operationId": "promotions.discountApplications.releases.create",
+        "parameters": [
+          {
+            "description": "Application id path parameter.",
+            "in": "path",
+            "name": "applicationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionsDiscountApplicationsReleasesCreateResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Server Error"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Error response."
+          }
+        },
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "summary": "Release",
+        "tags": [
+          "promotions"
+        ],
+        "x-contract-kind": "create",
+        "x-file-targets": [],
+        "x-read-sources": [
+          "system"
+        ],
+        "x-route-scope": "console",
+        "x-sdk-domain": "promotion",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.discountApplications.releases",
+        "x-source-file": "tools/bootstrap_frontend_contract_from_route_manifest.py",
+        "x-write-tables": [
+          "ops_audit_log"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.discountApplications.releases.access"
+      }
+    },
+    "/app/v3/api/promotions/discount_applications/{applicationId}/rollback": {
+      "post": {
+        "description": "Rollback. Reads system. Writes ops_audit_log. File targets none.",
+        "operationId": "promotions.discountApplications.rollback",
+        "parameters": [
+          {
+            "description": "Application id path parameter.",
+            "in": "path",
+            "name": "applicationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionsDiscountApplicationsRollbackResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Server Error"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Error response."
+          }
+        },
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "summary": "Rollback",
+        "tags": [
+          "promotions"
+        ],
+        "x-contract-kind": "create",
+        "x-file-targets": [],
+        "x-read-sources": [
+          "system"
+        ],
+        "x-route-scope": "console",
+        "x-sdk-domain": "promotion",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.discountApplications",
+        "x-source-file": "tools/bootstrap_frontend_contract_from_route_manifest.py",
+        "x-write-tables": [
+          "ops_audit_log"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.discountApplications.access"
+      }
+    },
+    "/app/v3/api/promotions/discount_applications/{applicationId}/settlements": {
+      "post": {
+        "description": "Settle. Reads system. Writes ops_audit_log. File targets none.",
+        "operationId": "promotions.discountApplications.settlements.create",
+        "parameters": [
+          {
+            "description": "Application id path parameter.",
+            "in": "path",
+            "name": "applicationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionsDiscountApplicationsSettlementsCreateResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Server Error"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Error response."
+          }
+        },
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "summary": "Settle",
+        "tags": [
+          "promotions"
+        ],
+        "x-contract-kind": "create",
+        "x-file-targets": [],
+        "x-read-sources": [
+          "system"
+        ],
+        "x-route-scope": "console",
+        "x-sdk-domain": "promotion",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.discountApplications.settlements",
+        "x-source-file": "tools/bootstrap_frontend_contract_from_route_manifest.py",
+        "x-write-tables": [
+          "ops_audit_log"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.discountApplications.settlements.access"
+      }
+    },
+    "/app/v3/api/promotions/offers": {
+      "get": {
+        "description": "List. Reads system. Writes none. File targets none.",
+        "operationId": "promotions.offers.list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionsOffersListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Server Error"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Error response."
+          }
+        },
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "summary": "List",
+        "tags": [
+          "promotions"
+        ],
+        "x-contract-kind": "read",
+        "x-file-targets": [],
+        "x-read-sources": [
+          "system"
+        ],
+        "x-route-scope": "console",
+        "x-sdk-domain": "promotion",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.offers",
+        "x-source-file": "tools/bootstrap_frontend_contract_from_route_manifest.py",
+        "x-write-tables": [],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.offers.access"
+      }
+    },
+    "/app/v3/api/promotions/offers/{offerId}": {
+      "get": {
+        "description": "Retrieve. Reads system. Writes none. File targets none.",
+        "operationId": "promotions.offers.retrieve",
+        "parameters": [
+          {
+            "description": "Offer id path parameter.",
+            "in": "path",
+            "name": "offerId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionsOffersRetrieveResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Server Error"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Error response."
+          }
+        },
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "summary": "Retrieve",
+        "tags": [
+          "promotions"
+        ],
+        "x-contract-kind": "read",
+        "x-file-targets": [],
+        "x-read-sources": [
+          "system"
+        ],
+        "x-route-scope": "console",
+        "x-sdk-domain": "promotion",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.offers",
+        "x-source-file": "tools/bootstrap_frontend_contract_from_route_manifest.py",
+        "x-write-tables": [],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.offers.access"
+      }
+    },
+    "/app/v3/api/promotions/user_coupon_claims": {
+      "post": {
+        "description": "Create. Reads system. Writes ops_audit_log. File targets none.",
+        "operationId": "promotions.userCoupons.claims.create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionsUserCouponsClaimsCreateResult"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Server Error"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Error response."
+          }
+        },
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "summary": "Create",
+        "tags": [
+          "promotions"
+        ],
+        "x-contract-kind": "create",
+        "x-file-targets": [],
+        "x-read-sources": [
+          "system"
+        ],
+        "x-route-scope": "console",
+        "x-sdk-domain": "promotion",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.userCoupons.claims",
+        "x-source-file": "tools/bootstrap_frontend_contract_from_route_manifest.py",
+        "x-write-tables": [
+          "ops_audit_log"
+        ],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.userCoupons.claims.access"
+      }
+    },
+    "/app/v3/api/promotions/user_coupons": {
+      "get": {
+        "description": "List. Reads system. Writes none. File targets none.",
+        "operationId": "promotions.userCoupons.list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionsUserCouponsListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Server Error"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Error response."
+          }
+        },
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "summary": "List",
+        "tags": [
+          "promotions"
+        ],
+        "x-contract-kind": "read",
+        "x-file-targets": [],
+        "x-read-sources": [
+          "system"
+        ],
+        "x-route-scope": "console",
+        "x-sdk-domain": "promotion",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.userCoupons",
+        "x-source-file": "tools/bootstrap_frontend_contract_from_route_manifest.py",
+        "x-write-tables": [],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.userCoupons.access"
+      }
+    },
+    "/app/v3/api/promotions/user_coupons/wallet": {
+      "get": {
+        "description": "List. Reads system. Writes none. File targets none.",
+        "operationId": "promotions.userCoupons.wallet.list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionsUserCouponsWalletListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Server Error"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Error response."
+          }
+        },
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "summary": "List",
+        "tags": [
+          "promotions"
+        ],
+        "x-contract-kind": "read",
+        "x-file-targets": [],
+        "x-read-sources": [
+          "system"
+        ],
+        "x-route-scope": "console",
+        "x-sdk-domain": "promotion",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.userCoupons.wallet",
+        "x-source-file": "tools/bootstrap_frontend_contract_from_route_manifest.py",
+        "x-write-tables": [],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.userCoupons.wallet.access"
+      }
+    },
+    "/app/v3/api/promotions/user_coupons/wallet/{userCouponId}": {
+      "get": {
+        "description": "Retrieve. Reads system. Writes none. File targets none.",
+        "operationId": "promotions.userCoupons.wallet.retrieve",
+        "parameters": [
+          {
+            "description": "User coupon id path parameter.",
+            "in": "path",
+            "name": "userCouponId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionsUserCouponsWalletRetrieveResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Server Error"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Error response."
+          }
+        },
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "summary": "Retrieve",
+        "tags": [
+          "promotions"
+        ],
+        "x-contract-kind": "read",
+        "x-file-targets": [],
+        "x-read-sources": [
+          "system"
+        ],
+        "x-route-scope": "console",
+        "x-sdk-domain": "promotion",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.userCoupons.wallet",
+        "x-source-file": "tools/bootstrap_frontend_contract_from_route_manifest.py",
+        "x-write-tables": [],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.userCoupons.wallet.access"
+      }
+    },
+    "/app/v3/api/promotions/user_coupons/{userCouponId}": {
+      "get": {
+        "description": "Retrieve. Reads system. Writes none. File targets none.",
+        "operationId": "promotions.userCoupons.retrieve",
+        "parameters": [
+          {
+            "description": "User coupon id path parameter.",
+            "in": "path",
+            "name": "userCouponId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionsUserCouponsRetrieveResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Server Error"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Error response."
+          }
+        },
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ],
+        "summary": "Retrieve",
+        "tags": [
+          "promotions"
+        ],
+        "x-contract-kind": "read",
+        "x-file-targets": [],
+        "x-read-sources": [
+          "system"
+        ],
+        "x-route-scope": "console",
+        "x-sdk-domain": "promotion",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.userCoupons",
+        "x-source-file": "tools/bootstrap_frontend_contract_from_route_manifest.py",
+        "x-write-tables": [],
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.userCoupons.access"
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "WriteCommandIdempotencyFingerprint": {
+        "description": "Stable request-body fingerprint required by the SDKWork idempotency framework for write commands with a payload.",
+        "in": "header",
+        "name": "X-Idempotency-Fingerprint",
+        "required": true,
+        "schema": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "WriteCommandIdempotencyKey": {
+        "description": "Client retry key scoped by tenant, principal, method, and path.",
+        "in": "header",
+        "name": "Idempotency-Key",
+        "required": true,
+        "schema": {
+          "maxLength": 128,
+          "minLength": 8,
+          "type": "string"
+        }
+      },
+      "WriteCommandRequestHash": {
+        "description": "Stable digest of the canonical command payload; must match the request body and route params where applicable.",
+        "in": "header",
+        "name": "Sdkwork-Request-Hash",
+        "required": true,
+        "schema": {
+          "minLength": 1,
+          "type": "string"
+        }
+      }
+    },
+    "schemas": {
+      "FieldError": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "format": "int32",
+            "maximum": 40099,
+            "minimum": 40011,
+            "type": "integer"
+          },
+          "field": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "message"
+        ],
+        "type": "object"
+      },
+      "NoData": {
+        "additionalProperties": false,
+        "description": "Closed empty payload for operations that complete without business data.",
+        "properties": {},
+        "type": "object"
+      },
+      "ProblemDetail": {
+        "additionalProperties": true,
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/SdkWorkPlatformErrorCode"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/FieldError"
+            },
+            "type": "array"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "status": {
+            "maximum": 599,
+            "minimum": 100,
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "traceId": {
+            "description": "Server-owned request correlation id.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "type": {
+            "format": "uri-reference",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code",
+          "traceId"
+        ],
+        "type": "object"
+      },
+      "PromotionsCodesRedemptionsCreateRequest": {
+        "additionalProperties": false,
+        "description": "Promotions codes redemptions create request schema exposed by Claw Router.",
+        "properties": {
+          "channel": {
+            "description": "Channel field on promotions codes redemptions create request.",
+            "maxLength": 64,
+            "type": "string"
+          },
+          "code": {
+            "description": "Code field on promotions codes redemptions create request.",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "type": "object"
+      },
+      "PromotionsCodesRedemptionsCreateResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by promotions codes redemptions create result.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/PromotionsCodesRedemptionsCreateResult"
+                  }
+                ],
+                "description": "Data field on promotions codes redemptions create result."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Promotions codes redemptions create result schema exposed by Claw Router.",
+        "x-operation-id": "promotions.codes.redemptions.create"
+      },
+      "PromotionsDiscountApplicationsCreateResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by promotions discount applications create result.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Promotions discount applications create result schema exposed by Claw Router.",
+        "x-operation-id": "promotions.discountApplications.create"
+      },
+      "PromotionsDiscountApplicationsReleasesCreateResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by promotions discount applications releases create result.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Promotions discount applications releases create result schema exposed by Claw Router.",
+        "x-operation-id": "promotions.discountApplications.releases.create"
+      },
+      "PromotionsDiscountApplicationsReversalsCreateResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by promotions discount applications reversals create result.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Promotions discount applications reversals create result schema exposed by Claw Router.",
+        "x-operation-id": "promotions.discountApplications.reversals.create"
+      },
+      "PromotionsDiscountApplicationsRollbackResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by promotions discount applications rollback result.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Promotions discount applications rollback result schema exposed by Claw Router.",
+        "x-operation-id": "promotions.discountApplications.rollback"
+      },
+      "PromotionsDiscountApplicationsSettlementsCreateResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by promotions discount applications settlements create result.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Promotions discount applications settlements create result schema exposed by Claw Router.",
+        "x-operation-id": "promotions.discountApplications.settlements.create"
+      },
+      "PromotionsOffersListResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by promotions offers list result.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Promotions offers list result schema exposed by Claw Router.",
+        "x-operation-id": "promotions.offers.list"
+      },
+      "PromotionsOffersRetrieveResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by promotions offers retrieve result.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Promotions offers retrieve result schema exposed by Claw Router.",
+        "x-operation-id": "promotions.offers.retrieve"
+      },
+      "PromotionsUserCouponsClaimsCreateResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by promotions user coupons claims create result.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Promotions user coupons claims create result schema exposed by Claw Router.",
+        "x-operation-id": "promotions.userCoupons.claims.create"
+      },
+      "PromotionsUserCouponsListResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by promotions user coupons list result.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Promotions user coupons list result schema exposed by Claw Router.",
+        "x-operation-id": "promotions.userCoupons.list"
+      },
+      "PromotionsUserCouponsRetrieveResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by promotions user coupons retrieve result.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Promotions user coupons retrieve result schema exposed by Claw Router.",
+        "x-operation-id": "promotions.userCoupons.retrieve"
+      },
+      "PromotionsUserCouponsWalletListResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by promotions user coupons wallet list result.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Promotions user coupons wallet list result schema exposed by Claw Router.",
+        "x-operation-id": "promotions.userCoupons.wallet.list"
+      },
+      "PromotionsUserCouponsWalletRetrieveResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by promotions user coupons wallet retrieve result.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Promotions user coupons wallet retrieve result schema exposed by Claw Router.",
+        "x-operation-id": "promotions.userCoupons.wallet.retrieve"
+      },
+      "SdkWorkApiResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "default": 0,
+            "enum": [
+              0
+            ],
+            "format": "int32",
+            "maximum": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "data": {
+            "description": "Operation-specific payload typed per response schema."
+          },
+          "traceId": {
+            "description": "Server-owned request correlation id.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "data",
+          "traceId"
+        ],
+        "type": "object"
+      },
+      "SdkWorkPlatformErrorCode": {
+        "description": "Platform or domain error code per API_SPEC.md §15.3.",
+        "format": "int32",
+        "maximum": 79999,
+        "minimum": 40001,
+        "type": "integer"
+      }
+    },
+    "securitySchemes": {
+      "AccessToken": {
+        "description": "SDKWork access isolation token.",
+        "in": "header",
+        "name": "Access-Token",
+        "type": "apiKey"
+      },
+      "AuthToken": {
+        "bearerFormat": "JWT",
+        "description": "SDKWork auth token carried as Authorization: Bearer <auth_token>.",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  }
+}

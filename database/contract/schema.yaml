@@ -9,9 +9,36 @@ engines:
   - sqlite
 table_prefix: commerce_
 tables:
-  - name: commerce_promotion_campaign
-    write_owner: sdkwork-commerce-platform
-    reference_only: true
-  - name: commerce_promotion_coupon
-    write_owner: sdkwork-commerce-platform
-    reference_only: true
+  - name: promotion_campaign
+    lifecycle_status: active
+    owner: sdkwork-promotion
+  - name: promotion_offer
+    lifecycle_status: active
+    owner: sdkwork-promotion
+  - name: promotion_offer_version
+    lifecycle_status: active
+    owner: sdkwork-promotion
+  - name: promotion_coupon_stock
+    lifecycle_status: active
+    owner: sdkwork-promotion
+  - name: promotion_code_batch
+    lifecycle_status: active
+    owner: sdkwork-promotion
+  - name: promotion_code
+    lifecycle_status: active
+    owner: sdkwork-promotion
+  - name: promotion_user_coupon
+    lifecycle_status: active
+    owner: sdkwork-promotion
+  - name: promotion_distribution_task
+    lifecycle_status: active
+    owner: sdkwork-promotion
+  - name: promotion_distribution_record
+    lifecycle_status: active
+    owner: sdkwork-promotion
+  - name: promotion_coupon_ledger_entry
+    lifecycle_status: active
+    owner: sdkwork-promotion
+  - name: promotion_discount_application
+    lifecycle_status: active
+    owner: sdkwork-promotion

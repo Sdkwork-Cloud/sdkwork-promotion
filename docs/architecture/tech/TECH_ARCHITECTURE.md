@@ -29,8 +29,8 @@ Migration status: complete for active promotion ownership. Release workflow gove
 
 | Layer | Owner | Notes |
 | --- | --- | --- |
-| Domain commands/queries | `sdkwork-promotion-service` | Business validation and ports |
-| SQL repositories | `sdkwork-promotion-repository-sqlx` | Tenant-scoped PostgreSQL/SQLite persistence |
+| Domain commands/queries | `sdkwork-commerce-promotion-service` | Business validation and ports |
+| SQL repositories | `sdkwork-commerce-promotion-repository-sqlx` | Tenant-scoped PostgreSQL/SQLite persistence |
 | HTTP route builders | `sdkwork-routes-promotion-app-api`, `sdkwork-routes-promotion-backend-api` | `build_*_router` exports without IAM |
 | IAM / gateway composition | `sdkwork-promotion-standalone-gateway` | IAM middleware at the standalone gateway |
 | Gateway assembly | `sdkwork-promotion-gateway-assembly` | Deterministic route composition inputs |
@@ -42,8 +42,8 @@ Migration status: complete for active promotion ownership. Release workflow gove
 
 Standard capability workspace:
 
-- `crates/sdkwork-promotion-service/`
-- `crates/sdkwork-promotion-repository-sqlx/`
+- `crates/sdkwork-commerce-promotion-service/`
+- `crates/sdkwork-commerce-promotion-repository-sqlx/`
 - `crates/sdkwork-routes-promotion-app-api/`
 - `crates/sdkwork-routes-promotion-backend-api/`
 - `crates/sdkwork-promotion-database-host/`

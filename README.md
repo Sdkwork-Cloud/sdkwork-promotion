@@ -4,8 +4,8 @@ repository-kind: application
 SDKWork commerce **promotion** capability building-block repository (domain `commerce`).
 
 - Standards: `../sdkwork-specs/README.md`
-- Domain service: `crates/sdkwork-promotion-service/`
-- Repository SQL: `crates/sdkwork-promotion-repository-sqlx/`
+- Domain service: `crates/sdkwork-commerce-promotion-service/`
+- Repository SQL: `crates/sdkwork-commerce-promotion-repository-sqlx/`
 - HTTP gateway: `crates/sdkwork-promotion-standalone-gateway/`
 - Common packages: `apps/sdkwork-promotion-common/packages/`
 - PC app root: `apps/sdkwork-promotion-pc/`

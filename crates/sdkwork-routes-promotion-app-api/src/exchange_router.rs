@@ -7,13 +7,13 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use axum::{Json, Router};
-use sdkwork_contract_service::CommerceServiceError;
-use sdkwork_promotion_repository_sqlx::{
+use sdkwork_commerce_promotion_repository_sqlx::{
     PostgresCommerceExchangeStore, SqliteCommerceExchangeStore,
 };
-use sdkwork_promotion_service::{
+use sdkwork_commerce_promotion_service::{
     AppCommerceExchangeRuleItem, AppCommerceExchangeRuleQuery, AppCommerceSubject,
 };
+use sdkwork_contract_service::CommerceServiceError;
 use sdkwork_iam_context_service::IamAppContext;
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, SqlitePool};
@@ -220,8 +220,8 @@ async fn points_exchange_rules(
 fn resolve_subject(
     runtime_context: Option<Extension<IamAppContext>>,
 ) -> Result<AppCommerceSubject, Response> {
-    let subject = app_runtime_subject_from_extension(runtime_context)
-        .map_err(unauthorized_response)?;
+    let subject =
+        app_runtime_subject_from_extension(runtime_context).map_err(unauthorized_response)?;
     Ok(AppCommerceSubject {
         tenant_id: subject.tenant_id,
         organization_id: subject.organization_id,

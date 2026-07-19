@@ -8,19 +8,39 @@ import type { SdkworkPromotionMutationStatus } from "@sdkwork/promotion-contract
 import { formatCurrency as formatSdkworkCurrency } from "@sdkwork/utils";
 import type {
   CouponStock,
+  CouponStockRequest,
   DiscountApplication,
+  PromotionCampaign,
+  PromotionCampaignRequest,
   PromotionCode,
+  PromotionCodeBatch,
+  PromotionCodeBatchRequest,
+  PromotionCouponLedgerEntry,
+  PromotionDistributionRequest,
+  PromotionDistributionTask,
   PromotionOffer,
+  PromotionOfferRequest,
   PromotionOverview,
+  PromotionUserCoupon,
   SdkworkBackendClient as SdkworkPromotionBackendClient,
 } from "@sdkwork/promotion-backend-sdk";
 
 export type {
   CouponStock,
+  CouponStockRequest,
   DiscountApplication,
+  PromotionCampaign,
+  PromotionCampaignRequest,
   PromotionCode,
+  PromotionCodeBatch,
+  PromotionCodeBatchRequest,
+  PromotionCouponLedgerEntry,
+  PromotionDistributionRequest,
+  PromotionDistributionTask,
   PromotionOffer,
+  PromotionOfferRequest,
   PromotionOverview,
+  PromotionUserCoupon,
 } from "@sdkwork/promotion-backend-sdk";
 
 type ServiceTemplate = { readonly [key: string]: true | ServiceTemplate };
@@ -42,10 +62,26 @@ export interface PromotionAdminPage<T> {
 
 export interface SdkworkPromotionBackendService {
   getOverview(): Promise<PromotionOverview>;
+  listCampaigns(query?: PromotionAdminListQuery): Promise<PromotionAdminPage<PromotionCampaign>>;
+  getCampaign(campaignId: string): Promise<PromotionCampaign>;
+  createCampaign(input: PromotionCampaignRequest): Promise<PromotionCampaign>;
+  updateCampaign(campaignId: string, input: PromotionCampaignRequest): Promise<PromotionCampaign>;
+  deleteCampaign(campaignId: string): Promise<void>;
   listOffers(query?: PromotionAdminListQuery): Promise<PromotionAdminPage<PromotionOffer>>;
+  getOffer(offerId: string): Promise<PromotionOffer>;
+  createOffer(input: PromotionOfferRequest): Promise<PromotionOffer>;
+  updateOffer(offerId: string, input: PromotionOfferRequest): Promise<PromotionOffer>;
   updateOfferStatus(offerId: string, status: 0 | 1): Promise<void>;
+  deleteOffer(offerId: string): Promise<void>;
   listCouponStocks(query?: PromotionAdminListQuery): Promise<PromotionAdminPage<CouponStock>>;
+  createCouponStock(input: CouponStockRequest): Promise<CouponStock>;
+  listCodeBatches(query?: PromotionAdminListQuery): Promise<PromotionAdminPage<PromotionCodeBatch>>;
+  createCodeBatch(input: PromotionCodeBatchRequest): Promise<PromotionCodeBatch>;
   listCodes(query?: PromotionAdminListQuery): Promise<PromotionAdminPage<PromotionCode>>;
+  listDistributionTasks(query?: PromotionAdminListQuery): Promise<PromotionAdminPage<PromotionDistributionTask>>;
+  createDistributionTask(input: PromotionDistributionRequest): Promise<PromotionDistributionTask>;
+  listUserCoupons(query?: PromotionAdminListQuery): Promise<PromotionAdminPage<PromotionUserCoupon>>;
+  listCouponLedger(query?: PromotionAdminListQuery): Promise<PromotionAdminPage<PromotionCouponLedgerEntry>>;
   listDiscountApplications(query?: PromotionAdminListQuery): Promise<PromotionAdminPage<DiscountApplication>>;
 }
 
@@ -89,12 +125,28 @@ export function createSdkworkPromotionBackendService(
 
   return {
     getOverview: () => client.promotions.overview.retrieve(),
+    listCampaigns: (query) => list<PromotionCampaign>((params) => client.promotions.campaigns.list(params), query),
+    getCampaign: (campaignId) => client.promotions.campaigns.retrieve(campaignId),
+    createCampaign: (input) => client.promotions.campaigns.create(input),
+    updateCampaign: (campaignId, input) => client.promotions.campaigns.update(campaignId, input),
+    deleteCampaign: (campaignId) => client.promotions.campaigns.delete(campaignId),
     listOffers: (query) => list<PromotionOffer>((params) => client.promotions.offers.list(params), query),
+    getOffer: (offerId) => client.promotions.offers.retrieve(offerId),
+    createOffer: (input) => client.promotions.offers.create(input),
+    updateOffer: (offerId, input) => client.promotions.offers.update(offerId, input),
     async updateOfferStatus(offerId, status) {
       await client.promotions.offers.status.update(offerId, { status });
     },
+    deleteOffer: (offerId) => client.promotions.offers.delete(offerId),
     listCouponStocks: (query) => list<CouponStock>((params) => client.promotions.couponStocks.list(params), query),
+    createCouponStock: (input) => client.promotions.couponStocks.create(input),
+    listCodeBatches: (query) => list<PromotionCodeBatch>((params) => client.promotions.codeBatches.list(params), query),
+    createCodeBatch: (input) => client.promotions.codeBatches.create(input),
     listCodes: (query) => list<PromotionCode>((params) => client.promotions.codes.list(params), query),
+    listDistributionTasks: (query) => list<PromotionDistributionTask>((params) => client.promotions.distributionTasks.list(params), query),
+    createDistributionTask: (input) => client.promotions.distributionTasks.create(input),
+    listUserCoupons: (query) => list<PromotionUserCoupon>((params) => client.promotions.userCoupons.list(params), query),
+    listCouponLedger: (query) => list<PromotionCouponLedgerEntry>((params) => client.promotions.couponLedgerEntries.list(params), query),
     listDiscountApplications: (query) => list<DiscountApplication>((params) => client.promotions.discountApplications.list(params), query),
   };
 }

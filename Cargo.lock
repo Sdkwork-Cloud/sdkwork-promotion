@@ -1610,6 +1610,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+name = "sdkwork-commerce-promotion-repository-sqlx"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "sdkwork-commerce-promotion-service",
+ "sdkwork-contract-service",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "sdkwork-commerce-promotion-service"
+version = "0.1.0"
+dependencies = [
+ "sdkwork-contract-service",
+]
+
+[[package]]
 name = "sdkwork-contract-service"
 version = "0.1.0"
 
@@ -1794,28 +1815,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "sdkwork-promotion-repository-sqlx"
-version = "0.1.0"
-dependencies = [
- "sdkwork-contract-service",
- "sdkwork-promotion-service",
- "serde",
- "serde_json",
- "sqlx",
- "tokio",
-]
-
-[[package]]
-name = "sdkwork-promotion-service"
-version = "0.1.0"
-dependencies = [
- "sdkwork-contract-service",
-]
-
-[[package]]
 name = "sdkwork-promotion-service-host"
 version = "0.1.0"
 dependencies = [
+ "sdkwork-commerce-promotion-repository-sqlx",
+ "sdkwork-commerce-promotion-service",
  "sdkwork-database-spi",
  "sdkwork-database-sqlx",
  "sdkwork-promotion-database-host",
@@ -1829,8 +1833,6 @@ dependencies = [
  "http",
  "sdkwork-promotion-gateway-assembly",
  "sdkwork-promotion-service-host",
- "sdkwork-routes-promotion-app-api",
- "sdkwork-routes-promotion-backend-api",
  "sdkwork-web-bootstrap",
  "tokio",
  "tower-http 0.5.2",
@@ -1843,12 +1845,12 @@ name = "sdkwork-routes-promotion-app-api"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "sdkwork-commerce-promotion-repository-sqlx",
+ "sdkwork-commerce-promotion-service",
  "sdkwork-contract-service",
  "sdkwork-database-sqlx",
  "sdkwork-iam-context-service",
  "sdkwork-iam-web-adapter",
- "sdkwork-promotion-repository-sqlx",
- "sdkwork-promotion-service",
  "sdkwork-promotion-service-host",
  "sdkwork-utils-rust",
  "sdkwork-web-axum",
@@ -1864,10 +1866,10 @@ name = "sdkwork-routes-promotion-backend-api"
 version = "0.1.0"
 dependencies = [
  "axum",
- "sdkwork-database-sqlx",
+ "sdkwork-commerce-promotion-service",
+ "sdkwork-contract-service",
  "sdkwork-iam-context-service",
  "sdkwork-iam-web-adapter",
- "sdkwork-promotion-service",
  "sdkwork-promotion-service-host",
  "sdkwork-utils-rust",
  "sdkwork-web-axum",
@@ -1875,8 +1877,9 @@ dependencies = [
  "sdkwork-web-core",
  "serde",
  "serde_json",
- "sqlx",
  "tokio",
+ "tower",
+ "tracing",
 ]
 
 [[package]]
@@ -2797,6 +2800,7 @@ checksum = "144d6b123cef80b301b8f72a9e2ca4370ddec21950d0a103dd22c437006d2db7"
 dependencies = [
  "getrandom 0.4.3",
  "js-sys",
+ "serde_core",
  "sha1_smol",
  "wasm-bindgen",
 ]

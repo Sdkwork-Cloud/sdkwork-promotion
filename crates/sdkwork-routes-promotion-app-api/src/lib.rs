@@ -21,6 +21,10 @@ use axum::Router;
 use sdkwork_promotion_service_host::PromotionServiceHost;
 use std::sync::Arc;
 
-pub async fn gateway_mount(host: Arc<PromotionServiceHost>) -> Router {
+pub async fn gateway_mount_business(host: Arc<PromotionServiceHost>) -> Router {
     build_promotion_app_router_with_framework(host).await
+}
+
+pub async fn gateway_mount(host: Arc<PromotionServiceHost>) -> Router {
+    gateway_mount_business(host).await
 }

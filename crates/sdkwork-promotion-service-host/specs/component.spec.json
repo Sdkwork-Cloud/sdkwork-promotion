@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "kind": "sdkwork.component.spec",
+  "component": {
+    "name": "sdkwork-promotion-service-host",
+    "displayName": "SDKWork Promotion Service Host",
+    "version": "0.1.0",
+    "type": "rust-crate",
+    "root": "crates/sdkwork-promotion-service-host",
+    "domain": "commerce",
+    "capability": "promotion",
+    "surface": "host",
+    "languages": ["rust"],
+    "generated": false,
+    "manifests": ["Cargo.toml"]
+  },
+  "canonicalSpecs": [
+    { "file": "COMPONENT_SPEC.md", "path": "../../../sdkwork-specs/COMPONENT_SPEC.md" },
+    { "file": "CODE_STYLE_SPEC.md", "path": "../../../sdkwork-specs/CODE_STYLE_SPEC.md" },
+    { "file": "NAMING_SPEC.md", "path": "../../../sdkwork-specs/NAMING_SPEC.md" },
+    { "file": "RUST_CODE_SPEC.md", "path": "../../../sdkwork-specs/RUST_CODE_SPEC.md" },
+    { "file": "WEB_BACKEND_SPEC.md", "path": "../../../sdkwork-specs/WEB_BACKEND_SPEC.md" },
+    { "file": "DATABASE_FRAMEWORK_SPEC.md", "path": "../../../sdkwork-specs/DATABASE_FRAMEWORK_SPEC.md" },
+    { "file": "TEST_SPEC.md", "path": "../../../sdkwork-specs/TEST_SPEC.md" }
+  ],
+  "contracts": {
+    "layerRole": "runtime-service-host",
+    "publicExports": ["."],
+    "providedPorts": [
+      { "name": "promotionServiceHost", "export": "." },
+      { "name": "promotionAdminService", "export": "." }
+    ],
+    "requiredPorts": [
+      { "name": "promotionAdminRepository", "export": "." },
+      { "name": "promotionDatabaseModule", "export": "." }
+    ],
+    "runtimeEntrypoints": ["PromotionServiceHost::from_env"],
+    "routeManifest": null,
+    "sdkClients": [],
+    "sdkDependencies": [],
+    "dependencyApiExports": [],
+    "dependencyApiSurfaces": [],
+    "events": [],
+    "configKeys": ["SDKWORK_PROMOTION_DATABASE_URL", "SDKWORK_DATABASE_URL"]
+  },
+  "verification": {
+    "commands": ["cargo test -p sdkwork-promotion-service-host"]
+  }
+}
