@@ -11,7 +11,7 @@ Specs: ARCHITECTURE_DECISION_SPEC.md, RUST_CODE_SPEC.md, API_SPEC.md, WEB_FRAMEW
 
 ```text
 sdkwork-routes-promotion-* -> build_*_router() without IAM
-sdkwork-promotion-standalone-gateway -> sdkwork-web-framework IAM/request-context middleware
+sdkwork-api-promotion-standalone-gateway -> sdkwork-web-framework IAM/request-context middleware
 apps/sdkwork-promotion-pc -> PC React feature packages and shell
 ```
 
@@ -32,8 +32,8 @@ Migration status: complete for active promotion ownership. Release workflow gove
 | Domain commands/queries | `sdkwork-commerce-promotion-service` | Business validation and ports |
 | SQL repositories | `sdkwork-commerce-promotion-repository-sqlx` | Tenant-scoped PostgreSQL/SQLite persistence |
 | HTTP route builders | `sdkwork-routes-promotion-app-api`, `sdkwork-routes-promotion-backend-api` | `build_*_router` exports without IAM |
-| IAM / gateway composition | `sdkwork-promotion-standalone-gateway` | IAM middleware at the standalone gateway |
-| Gateway assembly | `sdkwork-promotion-gateway-assembly` | Deterministic route composition inputs |
+| IAM / gateway composition | `sdkwork-api-promotion-standalone-gateway` | IAM middleware at the standalone gateway |
+| Gateway assembly | `sdkwork-api-promotion-assembly` | Deterministic route composition inputs |
 | Common TypeScript packages | `apps/sdkwork-promotion-common/packages/` | Contracts, SDK ports, and service package family |
 | PC app packages | `apps/sdkwork-promotion-pc/packages/` | Coupon, offer, pricing, points, core, and shell packages |
 | OpenAPI / SDK authority | `sdkwork-promotion/sdks/` | Per-capability SDK families |
@@ -48,8 +48,8 @@ Standard capability workspace:
 - `crates/sdkwork-routes-promotion-backend-api/`
 - `crates/sdkwork-promotion-database-host/`
 - `crates/sdkwork-promotion-service-host/`
-- `crates/sdkwork-promotion-gateway-assembly/`
-- `crates/sdkwork-promotion-standalone-gateway/`
+- `crates/sdkwork-api-promotion-assembly/`
+- `crates/sdkwork-api-promotion-standalone-gateway/`
 - `apps/sdkwork-promotion-common/packages/`
 - `apps/sdkwork-promotion-pc/`
 
@@ -72,7 +72,7 @@ Standard capability workspace:
 ## 7. Deployment And Runtime Topology
 
 - Local development: `pnpm dev` for the PC application and `cargo test --workspace` for Rust crates.
-- Standalone runtime: `sdkwork-promotion-standalone-gateway`.
+- Standalone runtime: `sdkwork-api-promotion-standalone-gateway`.
 - Production packaging: not yet complete. `sdkwork.workflow.json` and `.github/workflows/package.yml` are required by `GITHUB_WORKFLOW_SPEC.md` before commercial release readiness can be claimed.
 
 ## 8. Verification

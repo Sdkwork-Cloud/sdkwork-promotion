@@ -2,14 +2,14 @@
 resolver = "2"
 members = [
     "crates/sdkwork-api-promotion-assembly",
-    "crates/sdkwork-promotion-gateway-assembly",
+    "crates/sdkwork-api-promotion-assembly",
   "crates/sdkwork-commerce-promotion-service",
   "crates/sdkwork-commerce-promotion-repository-sqlx",
   "crates/sdkwork-routes-promotion-app-api",
   "crates/sdkwork-routes-promotion-backend-api",
   "crates/sdkwork-promotion-database-host",
   "crates/sdkwork-promotion-service-host",
-  "crates/sdkwork-promotion-standalone-gateway",
+  "crates/sdkwork-api-promotion-standalone-gateway",
 ]
 
 [workspace.package]
@@ -51,5 +51,5 @@ sdkwork_routes_promotion_app_api = { path = "crates/sdkwork-routes-promotion-app
 sdkwork_routes_promotion_backend_api = { path = "crates/sdkwork-routes-promotion-backend-api", package = "sdkwork-routes-promotion-backend-api" }
 sdkwork_promotion_database_host = { path = "crates/sdkwork-promotion-database-host", package = "sdkwork-promotion-database-host" }
 sdkwork_promotion_service_host = { path = "crates/sdkwork-promotion-service-host", package = "sdkwork-promotion-service-host" }
-sdkwork_promotion_gateway_assembly = { path = "crates/sdkwork-promotion-gateway-assembly", package = "sdkwork-promotion-gateway-assembly" }
+sdkwork_api_promotion_assembly = { path = "crates/sdkwork-api-promotion-assembly", package = "sdkwork-api-promotion-assembly" }
 sdkwork-utils-rust = { path = "../sdkwork-utils/packages/sdkwork-utils-rust" }

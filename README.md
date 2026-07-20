@@ -6,7 +6,7 @@ SDKWork commerce **promotion** capability building-block repository (domain `com
 - Standards: `../sdkwork-specs/README.md`
 - Domain service: `crates/sdkwork-commerce-promotion-service/`
 - Repository SQL: `crates/sdkwork-commerce-promotion-repository-sqlx/`
-- HTTP gateway: `crates/sdkwork-promotion-standalone-gateway/`
+- HTTP gateway: `crates/sdkwork-api-promotion-standalone-gateway/`
 - Common packages: `apps/sdkwork-promotion-common/packages/`
 - PC app root: `apps/sdkwork-promotion-pc/`
 
