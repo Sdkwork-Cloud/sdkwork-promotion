@@ -57,7 +57,7 @@
   },
   "verification": {
     "commands": [
-      "pnpm run gateway:assembly:validate",
+      "pnpm run api:assembly:validate",
       "cargo check -p sdkwork-promotion-gateway-assembly"
     ]
   }
