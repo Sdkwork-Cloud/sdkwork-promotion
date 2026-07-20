@@ -1,0 +1,32 @@
+{
+  "kind": "sdkwork.api.assembly",
+  "schemaVersion": 1,
+  "applicationCode": "promotion",
+  "apiMode": "served",
+  "packageName": "sdkwork-api-promotion-assembly",
+  "crateDir": "crates/sdkwork-api-promotion-assembly",
+  "routeCrates": [
+    {
+      "packageName": "sdkwork-routes-promotion-app-api",
+      "memberDir": "crates/sdkwork-routes-promotion-app-api",
+      "libName": "sdkwork_routes_promotion_app_api",
+      "surface": "app-api",
+      "pathPrefix": null,
+      "mountOrder": 0,
+      "componentRef": "crates/sdkwork-routes-promotion-app-api/specs/component.spec.json",
+      "routeManifestRef": "crates/sdkwork-routes-promotion-app-api/sdks/_route-manifests/app-api/sdkwork-routes-promotion-app-api.route-manifest.json",
+      "sourceRef": "crates/sdkwork-routes-promotion-app-api/Cargo.toml"
+    },
+    {
+      "packageName": "sdkwork-routes-promotion-backend-api",
+      "memberDir": "crates/sdkwork-routes-promotion-backend-api",
+      "libName": "sdkwork_routes_promotion_backend_api",
+      "surface": "backend-api",
+      "pathPrefix": null,
+      "mountOrder": 1,
+      "componentRef": "crates/sdkwork-routes-promotion-backend-api/specs/component.spec.json",
+      "routeManifestRef": "crates/sdkwork-routes-promotion-backend-api/src/http_route_manifest.rs#backend_route_manifest",
+      "sourceRef": "crates/sdkwork-routes-promotion-backend-api/Cargo.toml"
+    }
+  ]
+}
