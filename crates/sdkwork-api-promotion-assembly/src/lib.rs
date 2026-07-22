@@ -5,9 +5,15 @@
 mod bootstrap;
 mod generated;
 
-pub use bootstrap::{
-    assemble_api_router, assemble_backend_business_router, ApiAssembly,
-};
+pub use bootstrap::{assemble_api_router, ApiAssembly};
+
+pub async fn assemble_backend_business_router(
+    host: std::sync::Arc<sdkwork_promotion_service_host::PromotionServiceHost>,
+) -> ApiAssembly {
+    ApiAssembly {
+        router: sdkwork_routes_promotion_backend_api::gateway_mount_business(host).await,
+    }
+}
 
 pub async fn assemble_api_router_from_env() -> Result<ApiAssembly, String> {
     let host = std::sync::Arc::new(

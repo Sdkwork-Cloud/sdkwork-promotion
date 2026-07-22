@@ -14,7 +14,7 @@
       "pathPrefix": null,
       "mountOrder": 0,
       "componentRef": "crates/sdkwork-routes-promotion-app-api/specs/component.spec.json",
-      "routeManifestRef": "crates/sdkwork-routes-promotion-app-api/sdks/_route-manifests/app-api/sdkwork-routes-promotion-app-api.route-manifest.json",
+      "routeManifestRef": "apis/app-api/promotion/sdkwork-promotion-app-api.openapi.json",
       "sourceRef": "crates/sdkwork-routes-promotion-app-api/Cargo.toml"
     },
     {
