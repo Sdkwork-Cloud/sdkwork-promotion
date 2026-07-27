@@ -11,6 +11,8 @@ use sdkwork_contract_service::{
 };
 use sqlx::{Row, Sqlite, SqlitePool, Transaction};
 
+use crate::coupon_benefit::parse_order_coupon_benefit;
+
 const POINTS_CURRENCY_CODE: &str = "POINT";
 const PROMOTION_CODE_REDEMPTION_SCOPE: &str = "promotions.codes.redemptions.create";
 const PROMOTION_USER_COUPON_CLAIM_SCOPE: &str = "promotions.userCoupons.claims.create";
@@ -34,6 +36,7 @@ struct RedeemPromotion {
     stock_type: String,
     discount_value: String,
     currency_code: String,
+    rule_json: Option<String>,
     total_quantity: Option<i64>,
     available_quantity: i64,
     stock_claimed_quantity: i64,
@@ -76,8 +79,9 @@ impl SqliteCommercePromotionStore {
         let now = current_timestamp_string();
         let promotion = load_promotion_for_redeem(&mut tx, &command, &now).await?;
         ensure_promotion_can_be_redeemed(&mut tx, &command, &promotion).await?;
-        PromotionOrderCouponBenefit::new(
-            coupon_credit_points(&promotion.discount_value)?,
+        parse_order_coupon_benefit(
+            promotion.rule_json.as_deref(),
+            &promotion.discount_value,
             &promotion.currency_code,
             false,
         )
@@ -95,7 +99,8 @@ impl SqliteCommercePromotionStore {
             r#"
             SELECT pc.promotion_code,
                    CAST(v.discount_value AS TEXT) AS discount_value,
-                   COALESCE(v.currency_code, 'CNY') AS currency_code
+                   COALESCE(v.currency_code, 'CNY') AS currency_code,
+                   v.rule_json AS rule_json
             FROM promotion_user_coupon c
             JOIN promotion_code pc ON pc.tenant_id = c.tenant_id AND pc.id = c.code_id
             JOIN promotion_offer_version v
@@ -123,8 +128,9 @@ impl SqliteCommercePromotionStore {
                     "coupon redemption request was replayed with a different code",
                 ));
             }
-            let benefit = PromotionOrderCouponBenefit::new(
-                coupon_credit_points(&string_cell(&row, "discount_value"))?,
+            let benefit = parse_order_coupon_benefit(
+                optional_string_cell(&row, "rule_json").as_deref(),
+                &string_cell(&row, "discount_value"),
                 &string_cell(&row, "currency_code"),
                 true,
             )?;
@@ -137,8 +143,9 @@ impl SqliteCommercePromotionStore {
         let now = current_timestamp_string();
         let promotion = load_promotion_for_redeem(&mut tx, &command, &now).await?;
         ensure_promotion_can_be_redeemed(&mut tx, &command, &promotion).await?;
-        let benefit = PromotionOrderCouponBenefit::new(
-            coupon_credit_points(&promotion.discount_value)?,
+        let benefit = parse_order_coupon_benefit(
+            promotion.rule_json.as_deref(),
+            &promotion.discount_value,
             &promotion.currency_code,
             false,
         )?;
@@ -1436,6 +1443,7 @@ async fn load_promotion_for_redeem(
                s.stock_type AS stock_type,
                CAST(v.discount_value AS TEXT) AS discount_value,
                COALESCE(v.currency_code, 'CNY') AS currency_code,
+               v.rule_json AS rule_json,
                s.total_quantity AS total_quantity,
                COALESCE(s.available_quantity, 0) AS available_quantity,
                COALESCE(s.claimed_quantity, 0) AS stock_claimed_quantity,
@@ -1492,6 +1500,7 @@ async fn load_promotion_for_redeem(
         stock_type: string_cell(&row, "stock_type"),
         discount_value: string_cell(&row, "discount_value"),
         currency_code: string_cell(&row, "currency_code"),
+        rule_json: optional_string_cell(&row, "rule_json"),
         total_quantity: optional_integer_cell(&row, "total_quantity"),
         available_quantity: integer_cell(&row, "available_quantity"),
         stock_claimed_quantity: integer_cell(&row, "stock_claimed_quantity"),
@@ -2706,7 +2715,7 @@ fn civil_from_days(days: i64) -> (i64, i64, i64) {
 mod tests {
     use sdkwork_commerce_promotion_service::{
         PointsBalanceQuery, PointsHistoryQuery, PromotionCodeRedemptionCommand,
-        PromotionUserCouponListQuery,
+        PromotionOrderCouponBenefitKind, PromotionUserCouponListQuery,
     };
     use sqlx::{Row, SqlitePool};
 
@@ -2977,7 +2986,13 @@ mod tests {
             .preview_promotion_code_for_order(command.clone())
             .await
             .expect("promotion order coupon preview");
-        assert_eq!(50, preview.grant_units);
+        assert!(matches!(
+            &preview.kind,
+            PromotionOrderCouponBenefitKind::TokenBankCredit {
+                grant_units: 50,
+                ..
+            }
+        ));
         assert!(!preview.replayed);
 
         let first = store
@@ -2988,9 +3003,15 @@ mod tests {
             .redeem_promotion_code_for_order(command)
             .await
             .expect("promotion order coupon replay");
-        assert_eq!(50, first.grant_units);
+        assert!(matches!(
+            &first.kind,
+            PromotionOrderCouponBenefitKind::TokenBankCredit {
+                grant_units: 50,
+                ..
+            }
+        ));
         assert!(!first.replayed);
-        assert_eq!(first.grant_units, replay.grant_units);
+        assert_eq!(first.kind, replay.kind);
         assert!(replay.replayed);
 
         let user_coupon_count: i64 = sqlx::query_scalar(

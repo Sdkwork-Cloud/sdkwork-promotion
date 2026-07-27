@@ -4,6 +4,8 @@ use std::sync::Arc;
 
 use sdkwork_contract_service::CommerceServiceError;
 
+use crate::domain::PromotionCouponBenefit;
+
 pub type PromotionAdminFuture<'a, T> =
     Pin<Box<dyn Future<Output = Result<T, CommerceServiceError>> + Send + 'a>>;
 
@@ -161,6 +163,7 @@ pub struct PromotionOfferItem {
     pub minimum_amount: Option<String>,
     pub maximum_discount_amount: Option<String>,
     pub currency_code: Option<String>,
+    pub coupon_benefit: Option<PromotionCouponBenefit>,
     pub version: i64,
     pub updated_at: String,
 }
@@ -184,6 +187,7 @@ pub struct PromotionOfferInput {
     pub minimum_amount: String,
     pub maximum_discount_amount: Option<String>,
     pub currency_code: String,
+    pub coupon_benefit: Option<PromotionCouponBenefit>,
     pub version: Option<i64>,
 }
 
@@ -689,7 +693,11 @@ fn validate_offer(input: &PromotionOfferInput) -> Result<(), CommerceServiceErro
     required("discount_type", &input.discount_type)?;
     required("discount_value", &input.discount_value)?;
     required("starts_at", &input.starts_at)?;
-    binary_status(input.status)
+    binary_status(input.status)?;
+    if let Some(coupon_benefit) = &input.coupon_benefit {
+        coupon_benefit.validate()?;
+    }
+    Ok(())
 }
 
 fn positive_id(name: &str, value: i64) -> Result<(), CommerceServiceError> {

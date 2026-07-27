@@ -3,6 +3,6 @@ import type { PromotionCampaign } from './promotion-campaign';
 
 export interface PromotionCampaignListEnvelope {
   code: 0;
-  data: Record<string, unknown>;
+  data: { items: PromotionCampaign[]; pageInfo: PageInfo; };
   traceId: string;
 }

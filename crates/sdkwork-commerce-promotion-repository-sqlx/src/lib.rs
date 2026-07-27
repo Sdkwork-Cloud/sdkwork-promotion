@@ -1,3 +1,4 @@
+mod coupon_benefit;
 pub mod postgres_exchange;
 pub mod postgres_promotion;
 pub mod promotion_admin;

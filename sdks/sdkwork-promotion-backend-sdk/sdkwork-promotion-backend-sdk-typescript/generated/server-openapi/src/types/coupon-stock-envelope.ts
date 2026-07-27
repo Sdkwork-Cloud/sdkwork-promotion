@@ -2,6 +2,6 @@ import type { CouponStock } from './coupon-stock';
 
 export interface CouponStockEnvelope {
   code: 0;
-  data: Record<string, unknown>;
+  data: { item: CouponStock; };
   traceId: string;
 }

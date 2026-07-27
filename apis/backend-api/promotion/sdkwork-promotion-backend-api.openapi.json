@@ -1325,9 +1325,149 @@
               "null"
             ]
           },
+          "couponBenefit": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PromotionCouponBenefit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "version": {
             "type": "integer",
             "format": "int64"
+          }
+        }
+      },
+      "PromotionCouponBenefit": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/PromotionTokenBankCouponBenefit"
+          },
+          {
+            "$ref": "#/components/schemas/PromotionSubscriptionCouponBenefit"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "token_bank_credit": "#/components/schemas/PromotionTokenBankCouponBenefit",
+            "subscription": "#/components/schemas/PromotionSubscriptionCouponBenefit"
+          }
+        }
+      },
+      "PromotionCouponBenefitRequest": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/PromotionTokenBankCouponBenefitRequest"
+          },
+          {
+            "$ref": "#/components/schemas/PromotionSubscriptionCouponBenefit"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "token_bank_credit": "#/components/schemas/PromotionTokenBankCouponBenefitRequest",
+            "subscription": "#/components/schemas/PromotionSubscriptionCouponBenefit"
+          }
+        }
+      },
+      "PromotionTokenBankCouponBenefitRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "grantAmount"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "token_bank_credit"
+          },
+          "grantAmount": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          }
+        }
+      },
+      "PromotionTokenBankCouponBenefit": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "targetAsset",
+          "grantAmount"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "token_bank_credit"
+          },
+          "targetAsset": {
+            "type": "string",
+            "const": "token_bank"
+          },
+          "grantAmount": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          }
+        }
+      },
+      "PromotionSubscriptionCouponBenefit": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "productId",
+          "skuId",
+          "packageId",
+          "period",
+          "durationDays",
+          "dailyQuota",
+          "totalQuota"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "subscription"
+          },
+          "productId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "skuId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "packageId": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "period": {
+            "type": "string",
+            "enum": [
+              "day",
+              "week",
+              "month",
+              "year"
+            ]
+          },
+          "durationDays": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 366
+          },
+          "dailyQuota": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "totalQuota": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
           }
         }
       },
@@ -1963,6 +2103,9 @@
           },
           "currencyCode": {
             "type": "string"
+          },
+          "couponBenefit": {
+            "$ref": "#/components/schemas/PromotionCouponBenefitRequest"
           },
           "version": {
             "type": [

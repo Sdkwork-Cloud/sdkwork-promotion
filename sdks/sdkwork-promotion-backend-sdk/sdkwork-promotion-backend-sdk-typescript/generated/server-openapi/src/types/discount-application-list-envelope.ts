@@ -3,6 +3,6 @@ import type { PageInfo } from './page-info';
 
 export interface DiscountApplicationListEnvelope {
   code: 0;
-  data: Record<string, unknown>;
+  data: { items: DiscountApplication[]; pageInfo: PageInfo; };
   traceId: string;
 }

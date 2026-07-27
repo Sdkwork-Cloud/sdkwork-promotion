@@ -7,10 +7,10 @@ use axum::{Json, Router};
 use sdkwork_commerce_promotion_service::{
     PromotionAdminListQuery, PromotionAdminPage, PromotionAdminService,
     PromotionAdminUserCouponItem, PromotionCampaignInput, PromotionCampaignItem,
-    PromotionCodeBatchInput, PromotionCodeBatchItem, PromotionCodeItem, PromotionCouponLedgerItem,
-    PromotionCouponStockInput, PromotionCouponStockItem, PromotionDiscountApplicationItem,
-    PromotionDistributionInput, PromotionDistributionTaskItem, PromotionOfferInput,
-    PromotionOfferItem, PromotionOverview,
+    PromotionCodeBatchInput, PromotionCodeBatchItem, PromotionCodeItem, PromotionCouponBenefit,
+    PromotionCouponLedgerItem, PromotionCouponStockInput, PromotionCouponStockItem,
+    PromotionDiscountApplicationItem, PromotionDistributionInput, PromotionDistributionTaskItem,
+    PromotionOfferInput, PromotionOfferItem, PromotionOverview, PromotionSubscriptionPeriod,
 };
 use sdkwork_contract_service::CommerceServiceError;
 use sdkwork_iam_context_service::IamAppContext;
@@ -74,7 +74,29 @@ struct OfferRequest {
     minimum_amount: String,
     maximum_discount_amount: Option<String>,
     currency_code: String,
+    coupon_benefit: Option<CouponBenefitRequest>,
     version: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(
+    tag = "kind",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase"
+)]
+enum CouponBenefitRequest {
+    TokenBankCredit {
+        grant_amount: String,
+    },
+    Subscription {
+        product_id: String,
+        sku_id: String,
+        package_id: String,
+        period: String,
+        duration_days: i64,
+        daily_quota: String,
+        total_quota: String,
+    },
 }
 
 #[derive(Debug, Deserialize)]
@@ -205,6 +227,7 @@ struct OfferResponse {
     minimum_amount: Option<String>,
     maximum_discount_amount: Option<String>,
     currency_code: Option<String>,
+    coupon_benefit: Option<CouponBenefitResponse>,
     version: i64,
     updated_at: String,
 }
@@ -227,8 +250,59 @@ impl From<PromotionOfferItem> for OfferResponse {
             minimum_amount: v.minimum_amount,
             maximum_discount_amount: v.maximum_discount_amount,
             currency_code: v.currency_code,
+            coupon_benefit: v.coupon_benefit.map(CouponBenefitResponse::from),
             version: v.version,
             updated_at: v.updated_at,
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(
+    tag = "kind",
+    rename_all = "snake_case",
+    rename_all_fields = "camelCase"
+)]
+enum CouponBenefitResponse {
+    TokenBankCredit {
+        target_asset: &'static str,
+        grant_amount: String,
+    },
+    Subscription {
+        product_id: String,
+        sku_id: String,
+        package_id: String,
+        period: &'static str,
+        duration_days: i64,
+        daily_quota: String,
+        total_quota: String,
+    },
+}
+
+impl From<PromotionCouponBenefit> for CouponBenefitResponse {
+    fn from(value: PromotionCouponBenefit) -> Self {
+        match value {
+            PromotionCouponBenefit::TokenBankCredit { grant_amount } => Self::TokenBankCredit {
+                target_asset: "token_bank",
+                grant_amount: grant_amount.to_string(),
+            },
+            PromotionCouponBenefit::Subscription {
+                product_id,
+                sku_id,
+                package_id,
+                period,
+                duration_days,
+                daily_quota,
+                total_quota,
+            } => Self::Subscription {
+                product_id,
+                sku_id,
+                package_id: package_id.to_string(),
+                period: period.as_str(),
+                duration_days,
+                daily_quota: daily_quota.to_string(),
+                total_quota: total_quota.to_string(),
+            },
         }
     }
 }
@@ -904,8 +978,39 @@ fn offer_input(b: OfferRequest) -> Result<PromotionOfferInput, CommerceServiceEr
         minimum_amount: b.minimum_amount,
         maximum_discount_amount: b.maximum_discount_amount,
         currency_code: b.currency_code,
+        coupon_benefit: b.coupon_benefit.map(coupon_benefit_input).transpose()?,
         version: parse_optional_i64(b.version.as_deref(), "version")?,
     })
+}
+
+fn coupon_benefit_input(
+    benefit: CouponBenefitRequest,
+) -> Result<PromotionCouponBenefit, CommerceServiceError> {
+    match benefit {
+        CouponBenefitRequest::TokenBankCredit { grant_amount } => {
+            PromotionCouponBenefit::token_bank_credit(parse_i64_field(
+                &grant_amount,
+                "couponBenefit.grantAmount",
+            )?)
+        }
+        CouponBenefitRequest::Subscription {
+            product_id,
+            sku_id,
+            package_id,
+            period,
+            duration_days,
+            daily_quota,
+            total_quota,
+        } => PromotionCouponBenefit::subscription(
+            &product_id,
+            &sku_id,
+            parse_i64_field(&package_id, "couponBenefit.packageId")?,
+            PromotionSubscriptionPeriod::parse(&period)?,
+            duration_days,
+            parse_i64_field(&daily_quota, "couponBenefit.dailyQuota")?,
+            parse_i64_field(&total_quota, "couponBenefit.totalQuota")?,
+        ),
+    }
 }
 
 fn parse_i64_field(value: &str, name: &str) -> Result<i64, CommerceServiceError> {
@@ -987,5 +1092,46 @@ fn service_error(
         "unauthenticated" => unauthorized(c, "authentication is required"),
         "unauthorized" => forbidden(c, "permission is required"),
         _ => internal_error(c, "promotion data operation failed"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn subscription_coupon_request_maps_to_validated_domain_benefit() {
+        let request: CouponBenefitRequest = serde_json::from_value(json!({
+            "kind": "subscription",
+            "productId": "seed-product-membership",
+            "skuId": "sku-standard-monthly",
+            "packageId": "1002",
+            "period": "month",
+            "durationDays": 30,
+            "dailyQuota": "1000",
+            "totalQuota": "30000"
+        }))
+        .expect("coupon request");
+        assert!(matches!(
+            coupon_benefit_input(request).expect("coupon benefit"),
+            PromotionCouponBenefit::Subscription {
+                package_id: 1002,
+                daily_quota: 1000,
+                total_quota: 30000,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn token_bank_coupon_response_keeps_target_asset_server_controlled() {
+        let response = CouponBenefitResponse::from(
+            PromotionCouponBenefit::token_bank_credit(500).expect("coupon benefit"),
+        );
+        let payload = serde_json::to_value(response).expect("coupon response");
+        assert_eq!(payload["kind"], "token_bank_credit");
+        assert_eq!(payload["targetAsset"], "token_bank");
+        assert_eq!(payload["grantAmount"], "500");
     }
 }

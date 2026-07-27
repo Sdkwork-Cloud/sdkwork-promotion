@@ -1,5 +1,5 @@
 export interface CommandEnvelope {
   code: 0;
-  data: Record<string, unknown>;
+  data: { accepted: boolean; resourceId?: string; status?: string; };
   traceId: string;
 }

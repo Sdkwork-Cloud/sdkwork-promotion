@@ -89,11 +89,179 @@ pub struct PromotionCodeRedemptionOutcome {
     pub balance: i64,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PromotionSubscriptionPeriod {
+    Day,
+    Week,
+    Month,
+    Year,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum PromotionCouponBenefit {
+    TokenBankCredit {
+        grant_amount: i64,
+    },
+    Subscription {
+        product_id: String,
+        sku_id: String,
+        package_id: i64,
+        period: PromotionSubscriptionPeriod,
+        duration_days: i64,
+        daily_quota: i64,
+        total_quota: i64,
+    },
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum PromotionOrderCouponBenefitKind {
+    TokenBankCredit {
+        grant_units: i64,
+        currency_code: String,
+    },
+    Subscription {
+        product_id: String,
+        sku_id: String,
+        package_id: i64,
+        period: PromotionSubscriptionPeriod,
+        duration_days: i64,
+        daily_quota: i64,
+        total_quota: i64,
+    },
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PromotionOrderCouponBenefit {
-    pub grant_units: i64,
-    pub currency_code: String,
+    pub kind: PromotionOrderCouponBenefitKind,
     pub replayed: bool,
+}
+
+impl PromotionSubscriptionPeriod {
+    pub fn parse(value: &str) -> Result<Self, CommerceServiceError> {
+        match value.trim().to_ascii_lowercase().as_str() {
+            "day" | "daily" => Ok(Self::Day),
+            "week" | "weekly" => Ok(Self::Week),
+            "month" | "monthly" => Ok(Self::Month),
+            "year" | "yearly" => Ok(Self::Year),
+            _ => Err(CommerceServiceError::validation(
+                "promotion subscription coupon period must be day, week, month, or year",
+            )),
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Day => "day",
+            Self::Week => "week",
+            Self::Month => "month",
+            Self::Year => "year",
+        }
+    }
+
+    pub fn validate_duration_days(self, duration_days: i64) -> Result<(), CommerceServiceError> {
+        let valid = match self {
+            Self::Day => duration_days == 1,
+            Self::Week => duration_days == 7,
+            Self::Month => (28..=31).contains(&duration_days),
+            Self::Year => (365..=366).contains(&duration_days),
+        };
+        if valid {
+            Ok(())
+        } else {
+            Err(CommerceServiceError::validation(format!(
+                "promotion {} subscription coupon duration_days is invalid",
+                self.as_str()
+            )))
+        }
+    }
+}
+
+impl PromotionCouponBenefit {
+    pub fn token_bank_credit(grant_amount: i64) -> Result<Self, CommerceServiceError> {
+        let benefit = Self::TokenBankCredit { grant_amount };
+        benefit.validate()?;
+        Ok(benefit)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn subscription(
+        product_id: &str,
+        sku_id: &str,
+        package_id: i64,
+        period: PromotionSubscriptionPeriod,
+        duration_days: i64,
+        daily_quota: i64,
+        total_quota: i64,
+    ) -> Result<Self, CommerceServiceError> {
+        let benefit = Self::Subscription {
+            product_id: product_id.trim().to_owned(),
+            sku_id: sku_id.trim().to_owned(),
+            package_id,
+            period,
+            duration_days,
+            daily_quota,
+            total_quota,
+        };
+        benefit.validate()?;
+        Ok(benefit)
+    }
+
+    pub fn validate(&self) -> Result<(), CommerceServiceError> {
+        match self {
+            Self::TokenBankCredit { grant_amount } => {
+                if *grant_amount <= 0 {
+                    return Err(CommerceServiceError::validation(
+                        "promotion Token Bank coupon grant amount must be greater than zero",
+                    ));
+                }
+            }
+            Self::Subscription {
+                product_id,
+                sku_id,
+                package_id,
+                period,
+                duration_days,
+                daily_quota,
+                total_quota,
+            } => {
+                require_non_empty_service("product_id", product_id)?;
+                require_non_empty_service("sku_id", sku_id)?;
+                if *package_id <= 0 {
+                    return Err(CommerceServiceError::validation(
+                        "promotion subscription coupon package id must be greater than zero",
+                    ));
+                }
+                period.validate_duration_days(*duration_days)?;
+                if *daily_quota <= 0 || *total_quota <= 0 {
+                    return Err(CommerceServiceError::validation(
+                        "promotion subscription coupon quotas must be greater than zero",
+                    ));
+                }
+                if total_quota < daily_quota {
+                    return Err(CommerceServiceError::validation(
+                        "promotion subscription coupon total quota must not be less than daily quota",
+                    ));
+                }
+                let maximum_usable_quota =
+                    daily_quota.checked_mul(*duration_days).ok_or_else(|| {
+                        CommerceServiceError::validation(
+                            "promotion subscription coupon quota exceeds the supported range",
+                        )
+                    })?;
+                if *total_quota > maximum_usable_quota {
+                    return Err(CommerceServiceError::validation(
+                        "promotion subscription coupon total quota must not exceed daily quota multiplied by duration days",
+                    ));
+                }
+                if *period == PromotionSubscriptionPeriod::Day && total_quota != daily_quota {
+                    return Err(CommerceServiceError::validation(
+                        "daily subscription coupon total quota must equal its daily quota",
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 impl PromotionOrderCouponBenefit {
@@ -109,8 +277,44 @@ impl PromotionOrderCouponBenefit {
         }
         require_non_empty_service("currency_code", currency_code)?;
         Ok(Self {
-            grant_units,
-            currency_code: currency_code.trim().to_ascii_uppercase(),
+            kind: PromotionOrderCouponBenefitKind::TokenBankCredit {
+                grant_units,
+                currency_code: currency_code.trim().to_ascii_uppercase(),
+            },
+            replayed,
+        })
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn subscription(
+        product_id: &str,
+        sku_id: &str,
+        package_id: i64,
+        period: PromotionSubscriptionPeriod,
+        duration_days: i64,
+        daily_quota: i64,
+        total_quota: i64,
+        replayed: bool,
+    ) -> Result<Self, CommerceServiceError> {
+        PromotionCouponBenefit::subscription(
+            product_id,
+            sku_id,
+            package_id,
+            period,
+            duration_days,
+            daily_quota,
+            total_quota,
+        )?;
+        Ok(Self {
+            kind: PromotionOrderCouponBenefitKind::Subscription {
+                product_id: product_id.trim().to_owned(),
+                sku_id: sku_id.trim().to_owned(),
+                package_id,
+                period,
+                duration_days,
+                daily_quota,
+                total_quota,
+            },
             replayed,
         })
     }
@@ -363,4 +567,37 @@ impl PromotionCodeRedemptionOutcome {
 
 fn require_non_empty_service(field_name: &str, value: &str) -> Result<(), CommerceServiceError> {
     crate::validation::require_non_empty(field_name, value)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn subscription_coupon_rejects_quota_that_cannot_be_consumed_before_expiry() {
+        assert!(PromotionCouponBenefit::subscription(
+            "seed-product-membership",
+            "sku-weekly",
+            1001,
+            PromotionSubscriptionPeriod::Week,
+            7,
+            100,
+            701,
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn daily_subscription_coupon_requires_equal_daily_and_total_quota() {
+        assert!(PromotionCouponBenefit::subscription(
+            "seed-product-membership",
+            "sku-daily",
+            1001,
+            PromotionSubscriptionPeriod::Day,
+            1,
+            100,
+            99,
+        )
+        .is_err());
+    }
 }

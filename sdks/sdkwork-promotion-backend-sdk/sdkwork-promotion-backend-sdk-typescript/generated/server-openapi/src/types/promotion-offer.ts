@@ -1,3 +1,5 @@
+import type { PromotionCouponBenefit } from './promotion-coupon-benefit';
+
 export interface PromotionOffer {
   id: string;
   offerNo: string;
@@ -16,5 +18,6 @@ export interface PromotionOffer {
   minimumAmount?: string | null;
   maximumDiscountAmount?: string | null;
   currencyCode?: string | null;
+  couponBenefit?: PromotionCouponBenefit | null;
   version: string;
 }

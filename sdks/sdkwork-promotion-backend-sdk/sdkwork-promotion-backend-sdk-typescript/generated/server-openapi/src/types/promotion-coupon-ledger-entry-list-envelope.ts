@@ -3,6 +3,6 @@ import type { PromotionCouponLedgerEntry } from './promotion-coupon-ledger-entry
 
 export interface PromotionCouponLedgerEntryListEnvelope {
   code: 0;
-  data: Record<string, unknown>;
+  data: { items: PromotionCouponLedgerEntry[]; pageInfo: PageInfo; };
   traceId: string;
 }

@@ -1,5 +1,5 @@
 import { backendApiPath } from './paths';
-import type { HttpClient } from '../http/client';
+import type { ApiRequestOptions, HttpClient } from '../http/client';
 
 import type { CouponStock, CouponStockRequest, DiscountApplication, PageInfo, PromotionCampaign, PromotionCampaignRequest, PromotionCode, PromotionCodeBatch, PromotionCodeBatchRequest, PromotionCouponLedgerEntry, PromotionDistributionRequest, PromotionDistributionTask, PromotionOffer, PromotionOfferRequest, PromotionOverview, PromotionUserCoupon, UpdatePromotionStatusRequest } from '../types';
 
@@ -20,14 +20,14 @@ export class PromotionsCouponLedgerEntriesApi {
 
 
 /** couponLedgerEntries.list */
-  async list(params?: PromotionsCouponLedgerEntriesListParams): Promise<Record<string, unknown>> {
+  async list(params?: PromotionsCouponLedgerEntriesListParams, requestOptions?: ApiRequestOptions): Promise<{ items: PromotionCouponLedgerEntry[]; pageInfo: PageInfo; }> {
     const query = buildQueryString([
       { name: 'page', value: params?.page, style: 'form', explode: true, allowReserved: false },
       { name: 'page_size', value: params?.pageSize, style: 'form', explode: true, allowReserved: false },
       { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.get<Record<string, unknown>>(appendQueryString(backendApiPath(`/promotions/coupon_ledger_entries`), query));
+    return this.client.request<{ items: PromotionCouponLedgerEntry[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/promotions/coupon_ledger_entries`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any });
   }
 }
 
@@ -47,14 +47,14 @@ export class PromotionsUserCouponsApi {
 
 
 /** userCoupons.list */
-  async list(params?: PromotionsUserCouponsListParams): Promise<Record<string, unknown>> {
+  async list(params?: PromotionsUserCouponsListParams, requestOptions?: ApiRequestOptions): Promise<{ items: PromotionUserCoupon[]; pageInfo: PageInfo; }> {
     const query = buildQueryString([
       { name: 'page', value: params?.page, style: 'form', explode: true, allowReserved: false },
       { name: 'page_size', value: params?.pageSize, style: 'form', explode: true, allowReserved: false },
       { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.get<Record<string, unknown>>(appendQueryString(backendApiPath(`/promotions/user_coupons`), query));
+    return this.client.request<{ items: PromotionUserCoupon[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/promotions/user_coupons`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any });
   }
 }
 
@@ -74,19 +74,19 @@ export class PromotionsDistributionTasksApi {
 
 
 /** distributionTasks.list */
-  async list(params?: PromotionsDistributionTasksListParams): Promise<Record<string, unknown>> {
+  async list(params?: PromotionsDistributionTasksListParams, requestOptions?: ApiRequestOptions): Promise<{ items: PromotionDistributionTask[]; pageInfo: PageInfo; }> {
     const query = buildQueryString([
       { name: 'page', value: params?.page, style: 'form', explode: true, allowReserved: false },
       { name: 'page_size', value: params?.pageSize, style: 'form', explode: true, allowReserved: false },
       { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.get<Record<string, unknown>>(appendQueryString(backendApiPath(`/promotions/distribution_tasks`), query));
+    return this.client.request<{ items: PromotionDistributionTask[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/promotions/distribution_tasks`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any });
   }
 
 /** distributionTasks.create */
-  async create(body: PromotionDistributionRequest): Promise<PromotionDistributionTask> {
-    return this.client.post<PromotionDistributionTask>(backendApiPath(`/promotions/distribution_tasks`), body, undefined, undefined, 'application/json');
+  async create(body: PromotionDistributionRequest, requestOptions?: ApiRequestOptions): Promise<PromotionDistributionTask> {
+    return this.client.request<PromotionDistributionTask>(backendApiPath(`/promotions/distribution_tasks`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json' });
   }
 }
 
@@ -106,19 +106,19 @@ export class PromotionsCodeBatchesApi {
 
 
 /** codeBatches.list */
-  async list(params?: PromotionsCodeBatchesListParams): Promise<Record<string, unknown>> {
+  async list(params?: PromotionsCodeBatchesListParams, requestOptions?: ApiRequestOptions): Promise<{ items: PromotionCodeBatch[]; pageInfo: PageInfo; }> {
     const query = buildQueryString([
       { name: 'page', value: params?.page, style: 'form', explode: true, allowReserved: false },
       { name: 'page_size', value: params?.pageSize, style: 'form', explode: true, allowReserved: false },
       { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.get<Record<string, unknown>>(appendQueryString(backendApiPath(`/promotions/code_batches`), query));
+    return this.client.request<{ items: PromotionCodeBatch[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/promotions/code_batches`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any });
   }
 
 /** codeBatches.create */
-  async create(body: PromotionCodeBatchRequest): Promise<PromotionCodeBatch> {
-    return this.client.post<PromotionCodeBatch>(backendApiPath(`/promotions/code_batches`), body, undefined, undefined, 'application/json');
+  async create(body: PromotionCodeBatchRequest, requestOptions?: ApiRequestOptions): Promise<PromotionCodeBatch> {
+    return this.client.request<PromotionCodeBatch>(backendApiPath(`/promotions/code_batches`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json' });
   }
 }
 
@@ -138,34 +138,34 @@ export class PromotionsCampaignsApi {
 
 
 /** campaigns.list */
-  async list(params?: PromotionsCampaignsListParams): Promise<Record<string, unknown>> {
+  async list(params?: PromotionsCampaignsListParams, requestOptions?: ApiRequestOptions): Promise<{ items: PromotionCampaign[]; pageInfo: PageInfo; }> {
     const query = buildQueryString([
       { name: 'page', value: params?.page, style: 'form', explode: true, allowReserved: false },
       { name: 'page_size', value: params?.pageSize, style: 'form', explode: true, allowReserved: false },
       { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.get<Record<string, unknown>>(appendQueryString(backendApiPath(`/promotions/campaigns`), query));
+    return this.client.request<{ items: PromotionCampaign[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/promotions/campaigns`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any });
   }
 
 /** campaigns.create */
-  async create(body: PromotionCampaignRequest): Promise<PromotionCampaign> {
-    return this.client.post<PromotionCampaign>(backendApiPath(`/promotions/campaigns`), body, undefined, undefined, 'application/json');
+  async create(body: PromotionCampaignRequest, requestOptions?: ApiRequestOptions): Promise<PromotionCampaign> {
+    return this.client.request<PromotionCampaign>(backendApiPath(`/promotions/campaigns`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json' });
   }
 
 /** campaigns.retrieve */
-  async retrieve(campaignId: string): Promise<PromotionCampaign> {
-    return this.client.get<PromotionCampaign>(backendApiPath(`/promotions/campaigns/${serializePathParameter(campaignId, { name: 'campaignId', style: 'simple', explode: false })}`));
+  async retrieve(campaignId: string, requestOptions?: ApiRequestOptions): Promise<PromotionCampaign> {
+    return this.client.request<PromotionCampaign>(backendApiPath(`/promotions/campaigns/${serializePathParameter(campaignId, { name: 'campaignId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any });
   }
 
 /** campaigns.update */
-  async update(campaignId: string, body: PromotionCampaignRequest): Promise<PromotionCampaign> {
-    return this.client.patch<PromotionCampaign>(backendApiPath(`/promotions/campaigns/${serializePathParameter(campaignId, { name: 'campaignId', style: 'simple', explode: false })}`), body, undefined, undefined, 'application/json');
+  async update(campaignId: string, body: PromotionCampaignRequest, requestOptions?: ApiRequestOptions): Promise<PromotionCampaign> {
+    return this.client.request<PromotionCampaign>(backendApiPath(`/promotions/campaigns/${serializePathParameter(campaignId, { name: 'campaignId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'PATCH' as any, body, contentType: 'application/json' });
   }
 
 /** campaigns.delete */
-  async delete(campaignId: string): Promise<void> {
-    return this.client.delete<void>(backendApiPath(`/promotions/campaigns/${serializePathParameter(campaignId, { name: 'campaignId', style: 'simple', explode: false })}`));
+  async delete(campaignId: string, requestOptions?: ApiRequestOptions): Promise<void> {
+    return this.client.request<void>(backendApiPath(`/promotions/campaigns/${serializePathParameter(campaignId, { name: 'campaignId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'DELETE' as any });
   }
 }
 
@@ -185,14 +185,14 @@ export class PromotionsDiscountApplicationsApi {
 
 
 /** List discount applications */
-  async list(params?: PromotionsDiscountApplicationsListParams): Promise<Record<string, unknown>> {
+  async list(params?: PromotionsDiscountApplicationsListParams, requestOptions?: ApiRequestOptions): Promise<{ items: DiscountApplication[]; pageInfo: PageInfo; }> {
     const query = buildQueryString([
       { name: 'page', value: params?.page, style: 'form', explode: true, allowReserved: false },
       { name: 'page_size', value: params?.pageSize, style: 'form', explode: true, allowReserved: false },
       { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.get<Record<string, unknown>>(appendQueryString(backendApiPath(`/promotions/discount_applications`), query));
+    return this.client.request<{ items: DiscountApplication[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/promotions/discount_applications`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any });
   }
 }
 
@@ -212,14 +212,14 @@ export class PromotionsCodesApi {
 
 
 /** List promotion codes */
-  async list(params?: PromotionsCodesListParams): Promise<Record<string, unknown>> {
+  async list(params?: PromotionsCodesListParams, requestOptions?: ApiRequestOptions): Promise<{ items: PromotionCode[]; pageInfo: PageInfo; }> {
     const query = buildQueryString([
       { name: 'page', value: params?.page, style: 'form', explode: true, allowReserved: false },
       { name: 'page_size', value: params?.pageSize, style: 'form', explode: true, allowReserved: false },
       { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.get<Record<string, unknown>>(appendQueryString(backendApiPath(`/promotions/codes`), query));
+    return this.client.request<{ items: PromotionCode[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/promotions/codes`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any });
   }
 }
 
@@ -239,19 +239,19 @@ export class PromotionsCouponStocksApi {
 
 
 /** List coupon stock */
-  async list(params?: PromotionsCouponStocksListParams): Promise<Record<string, unknown>> {
+  async list(params?: PromotionsCouponStocksListParams, requestOptions?: ApiRequestOptions): Promise<{ items: CouponStock[]; pageInfo: PageInfo; }> {
     const query = buildQueryString([
       { name: 'page', value: params?.page, style: 'form', explode: true, allowReserved: false },
       { name: 'page_size', value: params?.pageSize, style: 'form', explode: true, allowReserved: false },
       { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.get<Record<string, unknown>>(appendQueryString(backendApiPath(`/promotions/coupon_stocks`), query));
+    return this.client.request<{ items: CouponStock[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/promotions/coupon_stocks`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any });
   }
 
 /** couponStocks.create */
-  async create(body: CouponStockRequest): Promise<CouponStock> {
-    return this.client.post<CouponStock>(backendApiPath(`/promotions/coupon_stocks`), body, undefined, undefined, 'application/json');
+  async create(body: CouponStockRequest, requestOptions?: ApiRequestOptions): Promise<CouponStock> {
+    return this.client.request<CouponStock>(backendApiPath(`/promotions/coupon_stocks`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json' });
   }
 }
 
@@ -264,8 +264,8 @@ export class PromotionsOffersStatusApi {
 
 
 /** Enable or disable a promotion offer */
-  async update(offerId: string, body: UpdatePromotionStatusRequest): Promise<Record<string, unknown>> {
-    return this.client.patch<Record<string, unknown>>(backendApiPath(`/promotions/offers/${serializePathParameter(offerId, { name: 'offerId', style: 'simple', explode: false })}/status`), body, undefined, undefined, 'application/json');
+  async update(offerId: string, body: UpdatePromotionStatusRequest, requestOptions?: ApiRequestOptions): Promise<{ accepted: boolean; resourceId?: string; status?: string; }> {
+    return this.client.request<{ accepted: boolean; resourceId?: string; status?: string; }>(backendApiPath(`/promotions/offers/${serializePathParameter(offerId, { name: 'offerId', style: 'simple', explode: false })}/status`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'PATCH' as any, body, contentType: 'application/json' });
   }
 }
 
@@ -287,34 +287,34 @@ export class PromotionsOffersApi {
 
 
 /** List promotion offers */
-  async list(params?: PromotionsOffersListParams): Promise<Record<string, unknown>> {
+  async list(params?: PromotionsOffersListParams, requestOptions?: ApiRequestOptions): Promise<{ items: PromotionOffer[]; pageInfo: PageInfo; }> {
     const query = buildQueryString([
       { name: 'page', value: params?.page, style: 'form', explode: true, allowReserved: false },
       { name: 'page_size', value: params?.pageSize, style: 'form', explode: true, allowReserved: false },
       { name: 'q', value: params?.q, style: 'form', explode: true, allowReserved: false },
       { name: 'status', value: params?.status, style: 'form', explode: true, allowReserved: false },
     ]);
-    return this.client.get<Record<string, unknown>>(appendQueryString(backendApiPath(`/promotions/offers`), query));
+    return this.client.request<{ items: PromotionOffer[]; pageInfo: PageInfo; }>(appendQueryString(backendApiPath(`/promotions/offers`), query), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any });
   }
 
 /** offers.create */
-  async create(body: PromotionOfferRequest): Promise<PromotionOffer> {
-    return this.client.post<PromotionOffer>(backendApiPath(`/promotions/offers`), body, undefined, undefined, 'application/json');
+  async create(body: PromotionOfferRequest, requestOptions?: ApiRequestOptions): Promise<PromotionOffer> {
+    return this.client.request<PromotionOffer>(backendApiPath(`/promotions/offers`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json' });
   }
 
 /** offers.retrieve */
-  async retrieve(offerId: string): Promise<PromotionOffer> {
-    return this.client.get<PromotionOffer>(backendApiPath(`/promotions/offers/${serializePathParameter(offerId, { name: 'offerId', style: 'simple', explode: false })}`));
+  async retrieve(offerId: string, requestOptions?: ApiRequestOptions): Promise<PromotionOffer> {
+    return this.client.request<PromotionOffer>(backendApiPath(`/promotions/offers/${serializePathParameter(offerId, { name: 'offerId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any });
   }
 
 /** offers.update */
-  async update(offerId: string, body: PromotionOfferRequest): Promise<PromotionOffer> {
-    return this.client.patch<PromotionOffer>(backendApiPath(`/promotions/offers/${serializePathParameter(offerId, { name: 'offerId', style: 'simple', explode: false })}`), body, undefined, undefined, 'application/json');
+  async update(offerId: string, body: PromotionOfferRequest, requestOptions?: ApiRequestOptions): Promise<PromotionOffer> {
+    return this.client.request<PromotionOffer>(backendApiPath(`/promotions/offers/${serializePathParameter(offerId, { name: 'offerId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'PATCH' as any, body, contentType: 'application/json' });
   }
 
 /** offers.delete */
-  async delete(offerId: string): Promise<void> {
-    return this.client.delete<void>(backendApiPath(`/promotions/offers/${serializePathParameter(offerId, { name: 'offerId', style: 'simple', explode: false })}`));
+  async delete(offerId: string, requestOptions?: ApiRequestOptions): Promise<void> {
+    return this.client.request<void>(backendApiPath(`/promotions/offers/${serializePathParameter(offerId, { name: 'offerId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'DELETE' as any });
   }
 }
 
@@ -327,8 +327,8 @@ export class PromotionsOverviewApi {
 
 
 /** Retrieve the promotion operations overview */
-  async retrieve(): Promise<PromotionOverview> {
-    return this.client.get<PromotionOverview>(backendApiPath(`/promotions/overview`));
+  async retrieve(requestOptions?: ApiRequestOptions): Promise<PromotionOverview> {
+    return this.client.request<PromotionOverview>(backendApiPath(`/promotions/overview`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any });
   }
 }
 

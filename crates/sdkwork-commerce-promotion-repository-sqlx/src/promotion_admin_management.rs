@@ -10,10 +10,11 @@ use sdkwork_contract_service::CommerceServiceError;
 use sqlx::{PgPool, Row, SqlitePool};
 use uuid::Uuid;
 
+use crate::coupon_benefit::{parse_admin_coupon_benefit, serialize_admin_coupon_benefit};
 use crate::promotion_admin::AdminPool;
 
 const CAMPAIGN_COLUMNS: &str = "id, campaign_no, campaign_code, display_name, description, channel_scope, audience_scope, CAST(starts_at AS TEXT) AS starts_at, CAST(ends_at AS TEXT) AS ends_at, status, version, CAST(updated_at AS TEXT) AS updated_at";
-const OFFER_COLUMNS: &str = "o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.display_name, o.description, o.priority, CAST(o.starts_at AS TEXT) AS starts_at, CAST(o.ends_at AS TEXT) AS ends_at, o.status, v.discount_type, CAST(v.discount_value AS TEXT) AS discount_value, CAST(v.minimum_amount AS TEXT) AS minimum_amount, CAST(v.maximum_discount_amount AS TEXT) AS maximum_discount_amount, v.currency_code, o.version, CAST(o.updated_at AS TEXT) AS updated_at";
+const OFFER_COLUMNS: &str = "o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.display_name, o.description, o.priority, CAST(o.starts_at AS TEXT) AS starts_at, CAST(o.ends_at AS TEXT) AS ends_at, o.status, v.discount_type, CAST(v.discount_value AS TEXT) AS discount_value, CAST(v.minimum_amount AS TEXT) AS minimum_amount, CAST(v.maximum_discount_amount AS TEXT) AS maximum_discount_amount, v.currency_code, CAST(v.rule_json AS TEXT) AS rule_json, o.version, CAST(o.updated_at AS TEXT) AS updated_at";
 
 pub(crate) async fn list_campaigns(
     pool: &AdminPool,
@@ -496,8 +497,9 @@ async fn insert_offer_version_postgres(
     version_no: i32,
     input: &PromotionOfferInput,
 ) -> Result<(), CommerceServiceError> {
-    sqlx::query("INSERT INTO promotion_offer_version (id,uuid,tenant_id,offer_id,version_no,discount_type,discount_value,minimum_amount,maximum_discount_amount,maximum_quantity_per_order,currency_code,rule_json,stack_rule_json,created_at) VALUES ($1,$2,$3,$4,$5,$6,CAST($7 AS NUMERIC),CAST($8 AS NUMERIC),CAST($9 AS NUMERIC),1,$10,NULL,NULL,CURRENT_TIMESTAMP)")
-        .bind(version_id).bind(uuid).bind(tenant_id).bind(offer_id).bind(version_no).bind(input.discount_type.trim()).bind(input.discount_value.trim()).bind(input.minimum_amount.trim()).bind(trimmed(&input.maximum_discount_amount)).bind(input.currency_code.trim())
+    let rule_json = serialize_admin_coupon_benefit(input.coupon_benefit.as_ref())?;
+    sqlx::query("INSERT INTO promotion_offer_version (id,uuid,tenant_id,offer_id,version_no,discount_type,discount_value,minimum_amount,maximum_discount_amount,maximum_quantity_per_order,currency_code,rule_json,stack_rule_json,created_at) VALUES ($1,$2,$3,$4,$5,$6,CAST($7 AS NUMERIC),CAST($8 AS NUMERIC),CAST($9 AS NUMERIC),1,$10,CAST($11 AS JSONB),NULL,CURRENT_TIMESTAMP)")
+        .bind(version_id).bind(uuid).bind(tenant_id).bind(offer_id).bind(version_no).bind(input.discount_type.trim()).bind(input.discount_value.trim()).bind(input.minimum_amount.trim()).bind(trimmed(&input.maximum_discount_amount)).bind(input.currency_code.trim()).bind(rule_json)
         .execute(&mut **tx).await.map_err(|error| storage("insert offer version", error))?;
     Ok(())
 }
@@ -511,8 +513,9 @@ async fn insert_offer_version_sqlite(
     version_no: i32,
     input: &PromotionOfferInput,
 ) -> Result<(), CommerceServiceError> {
-    sqlx::query("INSERT INTO promotion_offer_version (id,uuid,tenant_id,offer_id,version_no,discount_type,discount_value,minimum_amount,maximum_discount_amount,maximum_quantity_per_order,currency_code,rule_json,stack_rule_json,created_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,1,?10,NULL,NULL,CURRENT_TIMESTAMP)")
-        .bind(version_id).bind(uuid).bind(tenant_id).bind(offer_id).bind(version_no).bind(input.discount_type.trim()).bind(input.discount_value.trim()).bind(input.minimum_amount.trim()).bind(trimmed(&input.maximum_discount_amount)).bind(input.currency_code.trim())
+    let rule_json = serialize_admin_coupon_benefit(input.coupon_benefit.as_ref())?;
+    sqlx::query("INSERT INTO promotion_offer_version (id,uuid,tenant_id,offer_id,version_no,discount_type,discount_value,minimum_amount,maximum_discount_amount,maximum_quantity_per_order,currency_code,rule_json,stack_rule_json,created_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,1,?10,?11,NULL,CURRENT_TIMESTAMP)")
+        .bind(version_id).bind(uuid).bind(tenant_id).bind(offer_id).bind(version_no).bind(input.discount_type.trim()).bind(input.discount_value.trim()).bind(input.minimum_amount.trim()).bind(trimmed(&input.maximum_discount_amount)).bind(input.currency_code.trim()).bind(rule_json)
         .execute(&mut **tx).await.map_err(|error| storage("insert offer version", error))?;
     Ok(())
 }
@@ -1271,6 +1274,7 @@ fn map_campaign(row: ManagementRow) -> Result<PromotionCampaignItem, CommerceSer
 }
 
 fn map_offer(row: ManagementRow) -> Result<PromotionOfferItem, CommerceServiceError> {
+    let coupon_benefit = parse_admin_coupon_benefit(row.optional_string("rule_json")?.as_deref())?;
     Ok(PromotionOfferItem {
         id: row.i64("id")?.to_string(),
         campaign_id: row
@@ -1290,6 +1294,7 @@ fn map_offer(row: ManagementRow) -> Result<PromotionOfferItem, CommerceServiceEr
         minimum_amount: row.optional_string("minimum_amount")?,
         maximum_discount_amount: row.optional_string("maximum_discount_amount")?,
         currency_code: row.optional_string("currency_code")?,
+        coupon_benefit,
         version: row.i64("version")?,
         updated_at: row.string("updated_at")?,
     })
@@ -1450,4 +1455,91 @@ fn storage(context: &str, error: sqlx::Error) -> CommerceServiceError {
 }
 fn decode(column: &str, error: sqlx::Error) -> CommerceServiceError {
     CommerceServiceError::storage(format!("decode promotion admin column {column}: {error}"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use sdkwork_commerce_promotion_service::{PromotionCouponBenefit, PromotionSubscriptionPeriod};
+
+    #[tokio::test]
+    async fn sqlite_offer_creation_persists_and_returns_typed_coupon_benefit() {
+        let pool = SqlitePool::connect("sqlite::memory:")
+            .await
+            .expect("sqlite pool");
+        sqlx::query(
+            "CREATE TABLE promotion_offer (
+                id INTEGER PRIMARY KEY, uuid TEXT NOT NULL, tenant_id INTEGER NOT NULL,
+                organization_id INTEGER NOT NULL, campaign_id INTEGER, offer_no TEXT NOT NULL,
+                offer_code TEXT, offer_type TEXT NOT NULL, audience_scope TEXT NOT NULL,
+                combinability TEXT NOT NULL, priority INTEGER NOT NULL, goods_scope TEXT NOT NULL,
+                current_offer_version_id INTEGER NOT NULL, display_name TEXT NOT NULL,
+                description TEXT, starts_at TEXT NOT NULL, ends_at TEXT, status INTEGER NOT NULL,
+                version INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+            )",
+        )
+        .execute(&pool)
+        .await
+        .expect("offer schema");
+        sqlx::query(
+            "CREATE TABLE promotion_offer_version (
+                id INTEGER PRIMARY KEY, uuid TEXT NOT NULL, tenant_id INTEGER NOT NULL,
+                offer_id INTEGER NOT NULL, version_no INTEGER NOT NULL,
+                discount_type TEXT NOT NULL, discount_value TEXT NOT NULL,
+                minimum_amount TEXT NOT NULL, maximum_discount_amount TEXT,
+                maximum_quantity_per_order INTEGER NOT NULL, currency_code TEXT NOT NULL,
+                rule_json TEXT, stack_rule_json TEXT, created_at TEXT NOT NULL
+            )",
+        )
+        .execute(&pool)
+        .await
+        .expect("offer version schema");
+
+        let coupon_benefit = PromotionCouponBenefit::subscription(
+            "seed-product-membership",
+            "sku-standard-monthly",
+            1002,
+            PromotionSubscriptionPeriod::Month,
+            30,
+            1000,
+            30000,
+        )
+        .expect("coupon benefit");
+        let input = PromotionOfferInput {
+            campaign_id: None,
+            offer_code: Some("SUB-MONTH".to_owned()),
+            offer_type: "COUPON".to_owned(),
+            display_name: "Monthly subscription coupon".to_owned(),
+            description: None,
+            audience_scope: "USER".to_owned(),
+            combinability: "EXCLUSIVE".to_owned(),
+            goods_scope: "MEMBERSHIP".to_owned(),
+            priority: 100,
+            starts_at: "2026-01-01T00:00:00Z".to_owned(),
+            ends_at: None,
+            status: 1,
+            discount_type: "FIXED".to_owned(),
+            discount_value: "0".to_owned(),
+            minimum_amount: "0".to_owned(),
+            maximum_discount_amount: None,
+            currency_code: "CNY".to_owned(),
+            coupon_benefit: Some(coupon_benefit.clone()),
+            version: None,
+        };
+        let scope = PromotionAdminScope::new(100001, 300001, "900001").expect("scope");
+        let item = create_offer(&AdminPool::Sqlite(pool.clone()), &scope, &input)
+            .await
+            .expect("create offer");
+        assert_eq!(item.coupon_benefit, Some(coupon_benefit));
+
+        let stored: String = sqlx::query_scalar("SELECT rule_json FROM promotion_offer_version")
+            .fetch_one(&pool)
+            .await
+            .expect("stored rule");
+        let stored: serde_json::Value = serde_json::from_str(&stored).expect("stored rule json");
+        assert_eq!(stored["couponBenefit"]["kind"], "subscription");
+        assert_eq!(stored["couponBenefit"]["skuId"], "sku-standard-monthly");
+        assert_eq!(stored["couponBenefit"]["dailyQuota"], "1000");
+        assert_eq!(stored["couponBenefit"]["totalQuota"], "30000");
+    }
 }

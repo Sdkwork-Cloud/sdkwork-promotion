@@ -2,6 +2,6 @@ import type { PromotionDistributionTask } from './promotion-distribution-task';
 
 export interface PromotionDistributionTaskEnvelope {
   code: 0;
-  data: Record<string, unknown>;
+  data: { item: PromotionDistributionTask; };
   traceId: string;
 }

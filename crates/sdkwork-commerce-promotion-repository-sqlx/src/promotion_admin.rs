@@ -40,9 +40,9 @@ WHERE tenant_id = ?1 AND organization_id = ?2
 "#;
 
 const POSTGRES_OFFER_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_offer WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(display_name) LIKE $3 OR LOWER(COALESCE(offer_code, '')) LIKE $3) AND ($4 IS NULL OR status = $4)";
-const POSTGRES_OFFER_LIST_SQL: &str = "SELECT o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.display_name, o.description, o.priority, CAST(o.starts_at AS TEXT) AS starts_at, CAST(o.ends_at AS TEXT) AS ends_at, o.status, v.discount_type, CAST(v.discount_value AS TEXT) AS discount_value, CAST(v.minimum_amount AS TEXT) AS minimum_amount, CAST(v.maximum_discount_amount AS TEXT) AS maximum_discount_amount, v.currency_code, o.version, CAST(o.updated_at AS TEXT) AS updated_at FROM promotion_offer o LEFT JOIN promotion_offer_version v ON v.id = o.current_offer_version_id AND v.tenant_id = o.tenant_id WHERE o.tenant_id = $1 AND o.organization_id = $2 AND ($3 = '%%' OR LOWER(o.display_name) LIKE $3 OR LOWER(COALESCE(o.offer_code, '')) LIKE $3) AND ($4 IS NULL OR o.status = $4) ORDER BY o.priority DESC, o.starts_at DESC LIMIT $5 OFFSET $6";
+const POSTGRES_OFFER_LIST_SQL: &str = "SELECT o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.display_name, o.description, o.priority, CAST(o.starts_at AS TEXT) AS starts_at, CAST(o.ends_at AS TEXT) AS ends_at, o.status, v.discount_type, CAST(v.discount_value AS TEXT) AS discount_value, CAST(v.minimum_amount AS TEXT) AS minimum_amount, CAST(v.maximum_discount_amount AS TEXT) AS maximum_discount_amount, v.currency_code, CAST(v.rule_json AS TEXT) AS rule_json, o.version, CAST(o.updated_at AS TEXT) AS updated_at FROM promotion_offer o LEFT JOIN promotion_offer_version v ON v.id = o.current_offer_version_id AND v.tenant_id = o.tenant_id WHERE o.tenant_id = $1 AND o.organization_id = $2 AND ($3 = '%%' OR LOWER(o.display_name) LIKE $3 OR LOWER(COALESCE(o.offer_code, '')) LIKE $3) AND ($4 IS NULL OR o.status = $4) ORDER BY o.priority DESC, o.starts_at DESC LIMIT $5 OFFSET $6";
 const SQLITE_OFFER_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_offer WHERE tenant_id = ?1 AND organization_id = ?2 AND (?3 = '%%' OR LOWER(display_name) LIKE ?3 OR LOWER(COALESCE(offer_code, '')) LIKE ?3) AND (?4 IS NULL OR status = ?4)";
-const SQLITE_OFFER_LIST_SQL: &str = "SELECT o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.display_name, o.description, o.priority, CAST(o.starts_at AS TEXT) AS starts_at, CAST(o.ends_at AS TEXT) AS ends_at, o.status, v.discount_type, CAST(v.discount_value AS TEXT) AS discount_value, CAST(v.minimum_amount AS TEXT) AS minimum_amount, CAST(v.maximum_discount_amount AS TEXT) AS maximum_discount_amount, v.currency_code, o.version, CAST(o.updated_at AS TEXT) AS updated_at FROM promotion_offer o LEFT JOIN promotion_offer_version v ON v.id = o.current_offer_version_id AND v.tenant_id = o.tenant_id WHERE o.tenant_id = ?1 AND o.organization_id = ?2 AND (?3 = '%%' OR LOWER(o.display_name) LIKE ?3 OR LOWER(COALESCE(o.offer_code, '')) LIKE ?3) AND (?4 IS NULL OR o.status = ?4) ORDER BY o.priority DESC, o.starts_at DESC LIMIT ?5 OFFSET ?6";
+const SQLITE_OFFER_LIST_SQL: &str = "SELECT o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.display_name, o.description, o.priority, CAST(o.starts_at AS TEXT) AS starts_at, CAST(o.ends_at AS TEXT) AS ends_at, o.status, v.discount_type, CAST(v.discount_value AS TEXT) AS discount_value, CAST(v.minimum_amount AS TEXT) AS minimum_amount, CAST(v.maximum_discount_amount AS TEXT) AS maximum_discount_amount, v.currency_code, CAST(v.rule_json AS TEXT) AS rule_json, o.version, CAST(o.updated_at AS TEXT) AS updated_at FROM promotion_offer o LEFT JOIN promotion_offer_version v ON v.id = o.current_offer_version_id AND v.tenant_id = o.tenant_id WHERE o.tenant_id = ?1 AND o.organization_id = ?2 AND (?3 = '%%' OR LOWER(o.display_name) LIKE ?3 OR LOWER(COALESCE(o.offer_code, '')) LIKE ?3) AND (?4 IS NULL OR o.status = ?4) ORDER BY o.priority DESC, o.starts_at DESC LIMIT ?5 OFFSET ?6";
 
 const POSTGRES_STOCK_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_coupon_stock WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(stock_no) LIKE $3) AND ($4 IS NULL OR status = $4)";
 const POSTGRES_STOCK_LIST_SQL: &str = "SELECT id, offer_id, stock_no, stock_type, total_quantity, available_quantity, claimed_quantity, redeemed_quantity, locked_quantity, per_user_limit, CAST(claim_starts_at AS TEXT) AS claim_starts_at, CAST(claim_ends_at AS TEXT) AS claim_ends_at, status FROM promotion_coupon_stock WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(stock_no) LIKE $3) AND ($4 IS NULL OR status = $4) ORDER BY created_at DESC LIMIT $5 OFFSET $6";
@@ -526,6 +526,9 @@ async fn list_offers(
                 minimum_amount: row.optional_string("minimum_amount")?,
                 maximum_discount_amount: row.optional_string("maximum_discount_amount")?,
                 currency_code: row.optional_string("currency_code")?,
+                coupon_benefit: crate::coupon_benefit::parse_admin_coupon_benefit(
+                    row.optional_string("rule_json")?.as_deref(),
+                )?,
                 version: row.i64("version")?,
                 updated_at: row.string("updated_at")?,
             })
@@ -779,14 +782,14 @@ mod tests {
             .expect("sqlite pool");
         for statement in [
             "CREATE TABLE promotion_offer (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, organization_id INTEGER NOT NULL, campaign_id INTEGER, offer_no TEXT NOT NULL, offer_code TEXT, offer_type TEXT NOT NULL, current_offer_version_id INTEGER, display_name TEXT NOT NULL, description TEXT, priority INTEGER NOT NULL, starts_at TEXT NOT NULL, ends_at TEXT, status INTEGER NOT NULL, version INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)",
-            "CREATE TABLE promotion_offer_version (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, offer_id INTEGER NOT NULL, discount_type TEXT NOT NULL, discount_value TEXT NOT NULL, minimum_amount TEXT NOT NULL, maximum_discount_amount TEXT, currency_code TEXT NOT NULL)",
+            "CREATE TABLE promotion_offer_version (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, offer_id INTEGER NOT NULL, discount_type TEXT NOT NULL, discount_value TEXT NOT NULL, minimum_amount TEXT NOT NULL, maximum_discount_amount TEXT, currency_code TEXT NOT NULL, rule_json TEXT)",
             "CREATE TABLE promotion_coupon_stock (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, organization_id INTEGER NOT NULL, offer_id INTEGER NOT NULL, stock_no TEXT NOT NULL, stock_type TEXT NOT NULL, total_quantity INTEGER NOT NULL, available_quantity INTEGER NOT NULL, claimed_quantity INTEGER NOT NULL, redeemed_quantity INTEGER NOT NULL, locked_quantity INTEGER NOT NULL, per_user_limit INTEGER NOT NULL, claim_starts_at TEXT, claim_ends_at TEXT, status INTEGER NOT NULL, created_at TEXT NOT NULL)",
             "CREATE TABLE promotion_code (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, organization_id INTEGER NOT NULL, stock_id INTEGER NOT NULL, offer_id INTEGER NOT NULL, code_no TEXT NOT NULL, promotion_code TEXT NOT NULL, code_type TEXT NOT NULL, max_claims INTEGER NOT NULL, claimed_quantity INTEGER NOT NULL, starts_at TEXT, expires_at TEXT, status INTEGER NOT NULL, created_at TEXT NOT NULL)",
             "CREATE TABLE promotion_discount_application (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, organization_id INTEGER NOT NULL, application_no TEXT NOT NULL, order_id INTEGER NOT NULL, order_no TEXT, offer_id INTEGER NOT NULL, discount_type TEXT NOT NULL, discount_amount TEXT NOT NULL, currency_code TEXT NOT NULL, status INTEGER NOT NULL, applied_at TEXT NOT NULL, settled_at TEXT, released_at TEXT, rolled_back_at TEXT)",
             "INSERT INTO promotion_offer VALUES (1, 100001, 300001, NULL, 'offer-1', 'launch', 'COUPON', 11, 'Launch', NULL, 10, '2026-01-01', NULL, 1, 0, '2026-01-01', '2026-01-01')",
             "INSERT INTO promotion_offer VALUES (2, 200002, 300001, NULL, 'offer-2', 'other', 'COUPON', 12, 'Other tenant', NULL, 5, '2026-01-01', NULL, 1, 0, '2026-01-01', '2026-01-01')",
-            "INSERT INTO promotion_offer_version VALUES (11, 100001, 1, 'FIXED', '10', '100', NULL, 'CNY')",
-            "INSERT INTO promotion_offer_version VALUES (12, 200002, 2, 'FIXED', '10', '100', NULL, 'CNY')",
+            "INSERT INTO promotion_offer_version VALUES (11, 100001, 1, 'FIXED', '10', '100', NULL, 'CNY', '{\"couponBenefit\":{\"kind\":\"token_bank_credit\",\"targetAsset\":\"token_bank\",\"grantAmount\":\"500\"}}')",
+            "INSERT INTO promotion_offer_version VALUES (12, 200002, 2, 'FIXED', '10', '100', NULL, 'CNY', NULL)",
             "INSERT INTO promotion_coupon_stock VALUES (1, 100001, 300001, 1, 'stock-1', 'LIMITED', 100, 80, 15, 5, 0, 1, NULL, NULL, 1, '2026-01-01')",
             "INSERT INTO promotion_code VALUES (1, 100001, 300001, 1, 1, 'code-1', 'WELCOME', 'PUBLIC', 10, 1, NULL, NULL, 1, '2026-01-01')",
             "INSERT INTO promotion_discount_application VALUES (1, 100001, 300001, 'application-1', 10, 'order-10', 1, 'FIXED', '500', 'CNY', 1, '2026-01-01', NULL, NULL, NULL)",
@@ -824,6 +827,14 @@ mod tests {
         assert_eq!(offers.total_items, 1);
         assert_eq!(offers.items.len(), 1);
         assert_eq!(offers.items[0].display_name, "Launch");
+        assert!(matches!(
+            offers.items[0].coupon_benefit,
+            Some(
+                sdkwork_commerce_promotion_service::PromotionCouponBenefit::TokenBankCredit {
+                    grant_amount: 500
+                }
+            )
+        ));
     }
 
     #[tokio::test]

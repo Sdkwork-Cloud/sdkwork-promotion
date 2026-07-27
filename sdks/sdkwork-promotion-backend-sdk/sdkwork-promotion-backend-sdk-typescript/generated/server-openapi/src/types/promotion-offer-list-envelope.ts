@@ -3,6 +3,6 @@ import type { PromotionOffer } from './promotion-offer';
 
 export interface PromotionOfferListEnvelope {
   code: 0;
-  data: Record<string, unknown>;
+  data: { items: PromotionOffer[]; pageInfo: PageInfo; };
   traceId: string;
 }
