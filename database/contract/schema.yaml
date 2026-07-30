@@ -1,13 +1,13 @@
 schema_version: 1
 kind: sdkwork.database.schema
+database_role: authoritative-server
 module_id: promotion
 contract_version: 1.0.0
 owner_team: sdkwork-promotion
 compliance_level: L2
 engines:
   - postgres
-  - sqlite
-table_prefix: commerce_
+table_prefix: promotion_
 tables:
   - name: promotion_campaign
     lifecycle_status: active
