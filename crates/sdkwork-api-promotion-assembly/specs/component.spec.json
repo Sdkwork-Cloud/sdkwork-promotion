@@ -51,8 +51,7 @@
     "dependencyApiSurfaces": [],
     "events": [],
     "configKeys": [
-      "SDKWORK_DATABASE_URL",
-      "SDKWORK_PROMOTION_DATABASE_URL"
+      "SDKWORK_DATABASE_URL"
     ],
     "layerRole": "runtime-composition"
   },

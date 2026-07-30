@@ -41,7 +41,7 @@
     "dependencyApiExports": [],
     "dependencyApiSurfaces": [],
     "events": [],
-    "configKeys": ["SDKWORK_PROMOTION_DATABASE_URL", "SDKWORK_DATABASE_URL"]
+    "configKeys": ["SDKWORK_DATABASE_URL"]
   },
   "verification": {
     "commands": ["cargo test -p sdkwork-promotion-service-host"]
