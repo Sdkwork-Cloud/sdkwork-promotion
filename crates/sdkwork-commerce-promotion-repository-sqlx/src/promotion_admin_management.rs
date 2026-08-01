@@ -28,7 +28,7 @@ pub(crate) async fn list_campaigns(
                 .bind(scope.tenant_id).bind(scope.organization_id).bind(&search)
                 .fetch_one(pool).await.map_err(|error| storage("list campaigns", error))?;
             let sql = format!("SELECT {CAMPAIGN_COLUMNS} FROM promotion_campaign WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(display_name) LIKE $3 OR LOWER(COALESCE(campaign_code, '')) LIKE $3 OR LOWER(campaign_no) LIKE $3) ORDER BY created_at DESC LIMIT $4 OFFSET $5");
-            let rows = sqlx::query(&sql)
+            let rows = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
@@ -49,7 +49,7 @@ pub(crate) async fn list_campaigns(
                 .bind(scope.tenant_id).bind(scope.organization_id).bind(&search)
                 .fetch_one(pool).await.map_err(|error| storage("list campaigns", error))?;
             let sql = format!("SELECT {CAMPAIGN_COLUMNS} FROM promotion_campaign WHERE tenant_id = ?1 AND organization_id = ?2 AND (?3 = '%%' OR LOWER(display_name) LIKE ?3 OR LOWER(COALESCE(campaign_code, '')) LIKE ?3 OR LOWER(campaign_no) LIKE ?3) ORDER BY created_at DESC LIMIT ?4 OFFSET ?5");
-            let rows = sqlx::query(&sql)
+            let rows = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
@@ -83,7 +83,7 @@ pub(crate) async fn retrieve_campaign(
     let row = match pool {
         AdminPool::Postgres(pool) => {
             let sql = format!("SELECT {CAMPAIGN_COLUMNS} FROM promotion_campaign WHERE id = $1 AND tenant_id = $2 AND organization_id = $3");
-            sqlx::query(&sql)
+            sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(campaign_id)
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
@@ -94,7 +94,7 @@ pub(crate) async fn retrieve_campaign(
         }
         AdminPool::Sqlite(pool) => {
             let sql = format!("SELECT {CAMPAIGN_COLUMNS} FROM promotion_campaign WHERE id = ?1 AND tenant_id = ?2 AND organization_id = ?3");
-            sqlx::query(&sql)
+            sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(campaign_id)
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
@@ -288,7 +288,7 @@ async fn retrieve_offer_postgres(
     offer_id: i64,
 ) -> Result<Option<sqlx::postgres::PgRow>, CommerceServiceError> {
     let sql = format!("SELECT {OFFER_COLUMNS} FROM promotion_offer o LEFT JOIN promotion_offer_version v ON v.id=o.current_offer_version_id AND v.tenant_id=o.tenant_id WHERE o.id=$1 AND o.tenant_id=$2 AND o.organization_id=$3");
-    sqlx::query(&sql)
+    sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
         .bind(offer_id)
         .bind(scope.tenant_id)
         .bind(scope.organization_id)
@@ -303,7 +303,7 @@ async fn retrieve_offer_sqlite(
     offer_id: i64,
 ) -> Result<Option<sqlx::sqlite::SqliteRow>, CommerceServiceError> {
     let sql = format!("SELECT {OFFER_COLUMNS} FROM promotion_offer o LEFT JOIN promotion_offer_version v ON v.id=o.current_offer_version_id AND v.tenant_id=o.tenant_id WHERE o.id=?1 AND o.tenant_id=?2 AND o.organization_id=?3");
-    sqlx::query(&sql)
+    sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
         .bind(offer_id)
         .bind(scope.tenant_id)
         .bind(scope.organization_id)
@@ -529,7 +529,7 @@ async fn retrieve_stock(
     let row = match pool {
         AdminPool::Postgres(pool) => {
             let sql=format!("SELECT {columns} FROM promotion_coupon_stock WHERE id=$1 AND tenant_id=$2 AND organization_id=$3");
-            sqlx::query(&sql)
+            sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(stock_id)
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
@@ -540,7 +540,7 @@ async fn retrieve_stock(
         }
         AdminPool::Sqlite(pool) => {
             let sql=format!("SELECT {columns} FROM promotion_coupon_stock WHERE id=?1 AND tenant_id=?2 AND organization_id=?3");
-            sqlx::query(&sql)
+            sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(stock_id)
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
@@ -564,7 +564,7 @@ pub(crate) async fn list_code_batches(
         AdminPool::Postgres(pool) => {
             let total=sqlx::query_scalar::<_,i64>("SELECT COUNT(*) FROM promotion_code_batch WHERE tenant_id=$1 AND organization_id=$2 AND ($3='%%' OR LOWER(batch_no) LIKE $3)").bind(scope.tenant_id).bind(scope.organization_id).bind(&search).fetch_one(pool).await.map_err(|error|storage("list code batches",error))?;
             let sql=format!("SELECT {columns} FROM promotion_code_batch WHERE tenant_id=$1 AND organization_id=$2 AND ($3='%%' OR LOWER(batch_no) LIKE $3) ORDER BY created_at DESC LIMIT $4 OFFSET $5");
-            let rows = sqlx::query(&sql)
+            let rows = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
@@ -583,7 +583,7 @@ pub(crate) async fn list_code_batches(
         AdminPool::Sqlite(pool) => {
             let total=sqlx::query_scalar::<_,i64>("SELECT COUNT(*) FROM promotion_code_batch WHERE tenant_id=?1 AND organization_id=?2 AND (?3='%%' OR LOWER(batch_no) LIKE ?3)").bind(scope.tenant_id).bind(scope.organization_id).bind(&search).fetch_one(pool).await.map_err(|error|storage("list code batches",error))?;
             let sql=format!("SELECT {columns} FROM promotion_code_batch WHERE tenant_id=?1 AND organization_id=?2 AND (?3='%%' OR LOWER(batch_no) LIKE ?3) ORDER BY created_at DESC LIMIT ?4 OFFSET ?5");
-            let rows = sqlx::query(&sql)
+            let rows = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
@@ -744,7 +744,7 @@ async fn retrieve_code_batch(
     let row = match pool {
         AdminPool::Postgres(pool) => {
             let sql=format!("SELECT {columns} FROM promotion_code_batch WHERE id=$1 AND tenant_id=$2 AND organization_id=$3");
-            sqlx::query(&sql)
+            sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(id)
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
@@ -755,7 +755,7 @@ async fn retrieve_code_batch(
         }
         AdminPool::Sqlite(pool) => {
             let sql=format!("SELECT {columns} FROM promotion_code_batch WHERE id=?1 AND tenant_id=?2 AND organization_id=?3");
-            sqlx::query(&sql)
+            sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(id)
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
@@ -779,7 +779,7 @@ pub(crate) async fn list_distribution_tasks(
         AdminPool::Postgres(pool) => {
             let total=sqlx::query_scalar::<_,i64>("SELECT COUNT(*) FROM promotion_distribution_task WHERE tenant_id=$1 AND organization_id=$2 AND ($3='%%' OR LOWER(task_no) LIKE $3)").bind(scope.tenant_id).bind(scope.organization_id).bind(&search).fetch_one(pool).await.map_err(|error|storage("list distribution tasks",error))?;
             let sql=format!("SELECT {columns} FROM promotion_distribution_task WHERE tenant_id=$1 AND organization_id=$2 AND ($3='%%' OR LOWER(task_no) LIKE $3) ORDER BY created_at DESC LIMIT $4 OFFSET $5");
-            let rows = sqlx::query(&sql)
+            let rows = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
@@ -798,7 +798,7 @@ pub(crate) async fn list_distribution_tasks(
         AdminPool::Sqlite(pool) => {
             let total=sqlx::query_scalar::<_,i64>("SELECT COUNT(*) FROM promotion_distribution_task WHERE tenant_id=?1 AND organization_id=?2 AND (?3='%%' OR LOWER(task_no) LIKE ?3)").bind(scope.tenant_id).bind(scope.organization_id).bind(&search).fetch_one(pool).await.map_err(|error|storage("list distribution tasks",error))?;
             let sql=format!("SELECT {columns} FROM promotion_distribution_task WHERE tenant_id=?1 AND organization_id=?2 AND (?3='%%' OR LOWER(task_no) LIKE ?3) ORDER BY created_at DESC LIMIT ?4 OFFSET ?5");
-            let rows = sqlx::query(&sql)
+            let rows = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
@@ -912,7 +912,7 @@ async fn create_distribution_postgres(
     } else {
         "UPDATE promotion_coupon_stock SET available_quantity=available_quantity-$1,claimed_quantity=claimed_quantity+$1,version=version+1,updated_at=CURRENT_TIMESTAMP WHERE id=$2 AND tenant_id=$3 AND organization_id=$4 AND available_quantity >= $1"
     };
-    let affected = sqlx::query(stock_update)
+    let affected = sqlx::query(sqlx::AssertSqlSafe(stock_update))
         .bind(requested)
         .bind(input.stock_id)
         .bind(scope.tenant_id)
@@ -1014,7 +1014,7 @@ async fn create_distribution_sqlite(
     } else {
         "UPDATE promotion_coupon_stock SET available_quantity=available_quantity-?1,claimed_quantity=claimed_quantity+?1,version=version+1,updated_at=CURRENT_TIMESTAMP WHERE id=?2 AND tenant_id=?3 AND organization_id=?4 AND available_quantity >= ?1"
     };
-    let affected = sqlx::query(stock_update)
+    let affected = sqlx::query(sqlx::AssertSqlSafe(stock_update))
         .bind(requested)
         .bind(input.stock_id)
         .bind(scope.tenant_id)
@@ -1078,7 +1078,7 @@ async fn retrieve_distribution_task(
     let row = match pool {
         AdminPool::Postgres(pool) => {
             let sql=format!("SELECT {columns} FROM promotion_distribution_task WHERE id=$1 AND tenant_id=$2 AND organization_id=$3");
-            sqlx::query(&sql)
+            sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(id)
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
@@ -1089,7 +1089,7 @@ async fn retrieve_distribution_task(
         }
         AdminPool::Sqlite(pool) => {
             let sql=format!("SELECT {columns} FROM promotion_distribution_task WHERE id=?1 AND tenant_id=?2 AND organization_id=?3");
-            sqlx::query(&sql)
+            sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(id)
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
@@ -1113,7 +1113,7 @@ pub(crate) async fn list_user_coupons(
         AdminPool::Postgres(pool) => {
             let total=sqlx::query_scalar::<_,i64>("SELECT COUNT(*) FROM promotion_user_coupon WHERE tenant_id=$1 AND organization_id=$2 AND ($3='%%' OR LOWER(coupon_no) LIKE $3 OR CAST(owner_user_id AS TEXT) LIKE $3) AND ($4 IS NULL OR status=$4)").bind(scope.tenant_id).bind(scope.organization_id).bind(&search).bind(query.status).fetch_one(pool).await.map_err(|error|storage("list user coupons",error))?;
             let sql=format!("SELECT {columns} FROM promotion_user_coupon WHERE tenant_id=$1 AND organization_id=$2 AND ($3='%%' OR LOWER(coupon_no) LIKE $3 OR CAST(owner_user_id AS TEXT) LIKE $3) AND ($4 IS NULL OR status=$4) ORDER BY claimed_at DESC LIMIT $5 OFFSET $6");
-            let rows = sqlx::query(&sql)
+            let rows = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
@@ -1133,7 +1133,7 @@ pub(crate) async fn list_user_coupons(
         AdminPool::Sqlite(pool) => {
             let total=sqlx::query_scalar::<_,i64>("SELECT COUNT(*) FROM promotion_user_coupon WHERE tenant_id=?1 AND organization_id=?2 AND (?3='%%' OR LOWER(coupon_no) LIKE ?3 OR CAST(owner_user_id AS TEXT) LIKE ?3) AND (?4 IS NULL OR status=?4)").bind(scope.tenant_id).bind(scope.organization_id).bind(&search).bind(query.status).fetch_one(pool).await.map_err(|error|storage("list user coupons",error))?;
             let sql=format!("SELECT {columns} FROM promotion_user_coupon WHERE tenant_id=?1 AND organization_id=?2 AND (?3='%%' OR LOWER(coupon_no) LIKE ?3 OR CAST(owner_user_id AS TEXT) LIKE ?3) AND (?4 IS NULL OR status=?4) ORDER BY claimed_at DESC LIMIT ?5 OFFSET ?6");
-            let rows = sqlx::query(&sql)
+            let rows = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
@@ -1171,7 +1171,7 @@ pub(crate) async fn list_coupon_ledger(
         AdminPool::Postgres(pool) => {
             let total=sqlx::query_scalar::<_,i64>("SELECT COUNT(*) FROM promotion_coupon_ledger_entry l JOIN promotion_coupon_stock s ON s.tenant_id=l.tenant_id AND s.id=l.stock_id WHERE l.tenant_id=$1 AND s.organization_id=$2 AND ($3='%%' OR LOWER(l.business_no) LIKE $3 OR LOWER(l.business_type) LIKE $3 OR CAST(l.subject_id AS TEXT) LIKE $3)").bind(scope.tenant_id).bind(scope.organization_id).bind(&search).fetch_one(pool).await.map_err(|error|storage("list coupon ledger",error))?;
             let sql=format!("SELECT {columns} FROM promotion_coupon_ledger_entry l JOIN promotion_coupon_stock s ON s.tenant_id=l.tenant_id AND s.id=l.stock_id WHERE l.tenant_id=$1 AND s.organization_id=$2 AND ($3='%%' OR LOWER(l.business_no) LIKE $3 OR LOWER(l.business_type) LIKE $3 OR CAST(l.subject_id AS TEXT) LIKE $3) ORDER BY l.created_at DESC LIMIT $4 OFFSET $5");
-            let rows = sqlx::query(&sql)
+            let rows = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
@@ -1190,7 +1190,7 @@ pub(crate) async fn list_coupon_ledger(
         AdminPool::Sqlite(pool) => {
             let total=sqlx::query_scalar::<_,i64>("SELECT COUNT(*) FROM promotion_coupon_ledger_entry l JOIN promotion_coupon_stock s ON s.tenant_id=l.tenant_id AND s.id=l.stock_id WHERE l.tenant_id=?1 AND s.organization_id=?2 AND (?3='%%' OR LOWER(l.business_no) LIKE ?3 OR LOWER(l.business_type) LIKE ?3 OR CAST(l.subject_id AS TEXT) LIKE ?3)").bind(scope.tenant_id).bind(scope.organization_id).bind(&search).fetch_one(pool).await.map_err(|error|storage("list coupon ledger",error))?;
             let sql=format!("SELECT {columns} FROM promotion_coupon_ledger_entry l JOIN promotion_coupon_stock s ON s.tenant_id=l.tenant_id AND s.id=l.stock_id WHERE l.tenant_id=?1 AND s.organization_id=?2 AND (?3='%%' OR LOWER(l.business_no) LIKE ?3 OR LOWER(l.business_type) LIKE ?3 OR CAST(l.subject_id AS TEXT) LIKE ?3) ORDER BY l.created_at DESC LIMIT ?4 OFFSET ?5");
-            let rows = sqlx::query(&sql)
+            let rows = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)

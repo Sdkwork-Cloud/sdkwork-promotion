@@ -665,7 +665,7 @@ async fn query_page(
     let search = query.search_pattern();
     match pool {
         AdminPool::Postgres(pool) => {
-            let total_items = sqlx::query_scalar::<_, i64>(postgres_count_sql)
+            let total_items = sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(postgres_count_sql))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
@@ -673,7 +673,7 @@ async fn query_page(
                 .fetch_one(pool)
                 .await
                 .map_err(|error| storage_error(operation, error))?;
-            let rows = sqlx::query(postgres_list_sql)
+            let rows = sqlx::query(sqlx::AssertSqlSafe(postgres_list_sql))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
@@ -689,7 +689,7 @@ async fn query_page(
             Ok((total_items, rows))
         }
         AdminPool::Sqlite(pool) => {
-            let total_items = sqlx::query_scalar::<_, i64>(sqlite_count_sql)
+            let total_items = sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(sqlite_count_sql))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
@@ -697,7 +697,7 @@ async fn query_page(
                 .fetch_one(pool)
                 .await
                 .map_err(|error| storage_error(operation, error))?;
-            let rows = sqlx::query(sqlite_list_sql)
+            let rows = sqlx::query(sqlx::AssertSqlSafe(sqlite_list_sql))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
@@ -794,7 +794,7 @@ mod tests {
             "INSERT INTO promotion_code VALUES (1, 100001, 300001, 1, 1, 'code-1', 'WELCOME', 'PUBLIC', 10, 1, NULL, NULL, 1, '2026-01-01')",
             "INSERT INTO promotion_discount_application VALUES (1, 100001, 300001, 'application-1', 10, 'order-10', 1, 'FIXED', '500', 'CNY', 1, '2026-01-01', NULL, NULL, NULL)",
         ] {
-            sqlx::query(statement)
+            sqlx::query(sqlx::AssertSqlSafe(statement))
                 .execute(&pool)
                 .await
                 .expect("schema or seed");
