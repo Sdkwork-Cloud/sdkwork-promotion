@@ -43,8 +43,8 @@ describe("createSdkworkPromotionBackendService", () => {
     };
 
     const service = createSdkworkPromotionBackendService(client as never);
-    await service.updateOfferStatus("42", 1);
+    await service.updateOfferStatus("42", "active");
 
-    expect(update).toHaveBeenCalledWith("42", { status: 1 });
+    expect(update).toHaveBeenCalledWith("42", { status: "active" });
   });
 });

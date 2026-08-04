@@ -1,6 +1,8 @@
 use sdkwork_database_config::DatabaseConfig;
 use sdkwork_database_lifecycle::{lifecycle_options_from_env, LifecycleOrchestrator};
-use sdkwork_database_spi::{DatabaseAssetProvider, DatabaseManifest, DefaultDatabaseModule};
+use sdkwork_database_spi::{
+    DatabaseAssetProvider, DatabaseManifest, DefaultDatabaseModule, SpiError,
+};
 use sdkwork_database_sqlx::{create_pool_from_config, DatabasePool};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -18,6 +20,22 @@ impl PromotionDatabaseHost {
     pub fn module(&self) -> Arc<DefaultDatabaseModule> {
         self.module.clone()
     }
+}
+
+/// Load the promotion-owned database assets for a federated application host.
+///
+/// Hosts register this module in `DatabaseModuleRegistry` and call
+/// `RegistryLifecycleOrchestrator::bootstrap_all_from_env()` on their shared
+/// connection pool so promotion schema, migrations, and seeds stay aligned
+/// with the rest of the commerce capability databases.
+pub fn database_module() -> Result<DefaultDatabaseModule, SpiError> {
+    let app_root = std::env::var("SDKWORK_PROMOTION_APP_ROOT")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            let raw = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+            std::fs::canonicalize(&raw).unwrap_or(raw)
+        });
+    DefaultDatabaseModule::from_app_root(&app_root)
 }
 
 pub async fn bootstrap_promotion_database_from_env() -> Result<PromotionDatabaseHost, String> {

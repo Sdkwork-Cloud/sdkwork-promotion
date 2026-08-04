@@ -269,6 +269,9 @@
           },
           {
             "$ref": "#/components/parameters/Status"
+          },
+          {
+            "$ref": "#/components/parameters/CodeBatchId"
           }
         ],
         "responses": {
@@ -661,6 +664,9 @@
           },
           {
             "$ref": "#/components/parameters/Status"
+          },
+          {
+            "$ref": "#/components/parameters/StockId"
           }
         ],
         "responses": {
@@ -919,8 +925,31 @@
         "name": "status",
         "in": "query",
         "schema": {
+          "type": "string",
+          "enum": [
+            "active",
+            "disabled"
+          ]
+        }
+      },
+      "CodeBatchId": {
+        "name": "code_batch_id",
+        "in": "query",
+        "description": "Filter promotion codes by code batch id",
+        "schema": {
           "type": "integer",
-          "format": "int32"
+          "format": "int64",
+          "minimum": 1
+        }
+      },
+      "StockId": {
+        "name": "stock_id",
+        "in": "query",
+        "description": "Filter code batches by coupon stock id",
+        "schema": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1
         }
       }
     },
@@ -1175,11 +1204,10 @@
         ],
         "properties": {
           "status": {
-            "type": "integer",
-            "format": "int32",
+            "type": "string",
             "enum": [
-              0,
-              1
+              "active",
+              "disabled"
             ]
           }
         }
@@ -1283,8 +1311,11 @@
             ]
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "type": "string",
+            "enum": [
+              "active",
+              "disabled"
+            ]
           },
           "updatedAt": {
             "type": "string"
@@ -1484,7 +1515,8 @@
           "redeemedQuantity",
           "lockedQuantity",
           "perUserLimit",
-          "status"
+          "status",
+          "codeIssueMode"
         ],
         "properties": {
           "id": {
@@ -1536,8 +1568,18 @@
             ]
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "type": "string",
+            "enum": [
+              "active",
+              "disabled"
+            ]
+          },
+          "codeIssueMode": {
+            "type": "string",
+            "enum": [
+              "REALTIME",
+              "BATCH"
+            ]
           }
         }
       },
@@ -1594,8 +1636,11 @@
             ]
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "type": "string",
+            "enum": [
+              "active",
+              "disabled"
+            ]
           }
         }
       },
@@ -1641,8 +1686,13 @@
             "type": "string"
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "type": "string",
+            "enum": [
+              "applied",
+              "settled",
+              "released",
+              "rolled_back"
+            ]
           },
           "appliedAt": {
             "type": "string"
@@ -2079,11 +2129,10 @@
             ]
           },
           "status": {
-            "type": "integer",
-            "format": "int32",
+            "type": "string",
             "enum": [
-              0,
-              1
+              "active",
+              "disabled"
             ]
           },
           "discountType": {
@@ -2140,7 +2189,8 @@
           "totalQuantity": {
             "type": "integer",
             "format": "int64",
-            "minimum": 1
+            "minimum": 0,
+            "description": "Total quantity. Must be positive for LIMITED stock; 0 allowed for UNLIMITED stock (statistics only)"
           },
           "perUserLimit": {
             "type": "integer",
@@ -2160,12 +2210,20 @@
             ]
           },
           "status": {
-            "type": "integer",
-            "format": "int32",
+            "type": "string",
             "enum": [
-              0,
-              1
+              "active",
+              "disabled"
             ]
+          },
+          "codeIssueMode": {
+            "type": "string",
+            "enum": [
+              "REALTIME",
+              "BATCH"
+            ],
+            "default": "REALTIME",
+            "description": "Coupon code issuance mode: REALTIME generates a code at claim time; BATCH dispenses a pre-generated pool code"
           }
         }
       },
@@ -2401,8 +2459,15 @@
             "type": "string"
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "type": "string",
+            "enum": [
+              "claimed",
+              "redeemed",
+              "expired",
+              "disabled",
+              "voided",
+              "cancelled"
+            ]
           },
           "claimedAt": {
             "type": "string"

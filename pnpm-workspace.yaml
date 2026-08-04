@@ -11,9 +11,7 @@ packages:
   - "../sdkwork-iam/apps/sdkwork-iam-common/packages/sdkwork-iam-sdk-adapter"
   - "../sdkwork-iam/apps/sdkwork-iam-common/packages/sdkwork-iam-service"
   - "../sdkwork-iam/apps/sdkwork-iam-common/packages/sdkwork-iam-application-bootstrap"
-  - "../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-auth-pc-react"
-  - "../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-auth-runtime-pc-react"
-  - "../sdkwork-iam/apps/sdkwork-iam-pc/packages/sdkwork-iam-react"
+  - "../sdkwork-iam/apps/sdkwork-iam-pc/packages/*"
   - "../sdkwork-iam/sdks/sdkwork-iam-app-sdk/sdkwork-iam-app-sdk-typescript"
   - "../sdkwork-iam/sdks/sdkwork-iam-backend-sdk/sdkwork-iam-backend-sdk-typescript"
   - "../sdkwork-iam/sdks/sdkwork-iam-open-sdk/sdkwork-iam-open-sdk-typescript"
@@ -23,10 +21,13 @@ packages:
   - "../sdkwork-appbase/packages/pc-react/foundation/sdkwork-i18n-pc-react"
   - "../sdkwork-core/sdkwork-core-pc-react"
   - "../sdkwork-ui/sdkwork-ui-pc-react"
+  - "../sdkwork-ui/sdkwork-ui-mobile-react"
   - "../sdkwork-sdk-commons/sdkwork-sdk-common-typescript"
   - "../sdkwork-utils/packages/sdkwork-utils-typescript"
+  - "../sdkwork-search/apps/sdkwork-search-common/packages/sdkwork-search-contracts"
+  - "../sdkwork-search/apps/sdkwork-search-pc/packages/sdkwork-search-pc-react"
   - "../sdkwork-account/apps/sdkwork-account-common/packages/*"
-  - "../sdkwork-account/apps/sdkwork-account-pc/packages/sdkwork-account-pc-wallet"
+  - "../sdkwork-account/apps/sdkwork-account-pc/packages/*"
   - "../sdkwork-account/sdks/sdkwork-account-app-sdk/sdkwork-account-app-sdk-typescript"
   - "../sdkwork-account/sdks/sdkwork-account-backend-sdk/sdkwork-account-backend-sdk-typescript"
   - "../sdkwork-membership/apps/sdkwork-membership-common/packages/*"
@@ -140,8 +141,8 @@ catalog:
   marked: ^18.0.5
   postcss: ^8.5.8
   react-markdown: ^10.1.0
-  react-router: "\">=6.0.0 <8.0.0\""
-  react-router-dom: "\">=6.0.0 <8.0.0\""
+  react-router: ">=6.0.0 <8.0.0"
+  react-router-dom: ">=6.0.0 <8.0.0"
   sonner: ^2.0.7
   tailwindcss-animate: ^1.0.7
   tsup: ^8.5.0

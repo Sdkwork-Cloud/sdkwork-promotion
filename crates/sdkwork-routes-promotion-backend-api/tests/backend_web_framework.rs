@@ -52,7 +52,7 @@ impl PromotionAdminRepositoryPort for RecordingPromotionAdminRepository {
     fn retrieve_campaign<'a>(
         &'a self,
         _: &'a PromotionAdminScope,
-        _: i64,
+        _: String,
     ) -> PromotionAdminFuture<'a, Option<PromotionCampaignItem>> {
         unreachable_future()
     }
@@ -66,7 +66,7 @@ impl PromotionAdminRepositoryPort for RecordingPromotionAdminRepository {
     fn update_campaign<'a>(
         &'a self,
         _: &'a PromotionAdminScope,
-        _: i64,
+        _: String,
         _: &'a PromotionCampaignInput,
     ) -> PromotionAdminFuture<'a, Option<PromotionCampaignItem>> {
         unreachable_future()
@@ -74,7 +74,7 @@ impl PromotionAdminRepositoryPort for RecordingPromotionAdminRepository {
     fn delete_campaign<'a>(
         &'a self,
         _: &'a PromotionAdminScope,
-        _: i64,
+        _: String,
     ) -> PromotionAdminFuture<'a, bool> {
         unreachable_future()
     }
@@ -90,7 +90,7 @@ impl PromotionAdminRepositoryPort for RecordingPromotionAdminRepository {
     fn retrieve_offer<'a>(
         &'a self,
         _: &'a PromotionAdminScope,
-        _: i64,
+        _: String,
     ) -> PromotionAdminFuture<'a, Option<PromotionOfferItem>> {
         unreachable_future()
     }
@@ -104,7 +104,7 @@ impl PromotionAdminRepositoryPort for RecordingPromotionAdminRepository {
     fn update_offer<'a>(
         &'a self,
         _: &'a PromotionAdminScope,
-        _: i64,
+        _: String,
         _: &'a PromotionOfferInput,
     ) -> PromotionAdminFuture<'a, Option<PromotionOfferItem>> {
         unreachable_future()
@@ -112,7 +112,7 @@ impl PromotionAdminRepositoryPort for RecordingPromotionAdminRepository {
     fn delete_offer<'a>(
         &'a self,
         _: &'a PromotionAdminScope,
-        _: i64,
+        _: String,
     ) -> PromotionAdminFuture<'a, bool> {
         unreachable_future()
     }
@@ -120,8 +120,8 @@ impl PromotionAdminRepositoryPort for RecordingPromotionAdminRepository {
     fn update_offer_status<'a>(
         &'a self,
         _scope: &'a PromotionAdminScope,
-        _offer_id: i64,
-        _status: i32,
+        _offer_id: String,
+        _status: &'a str,
     ) -> PromotionAdminFuture<'a, bool> {
         Box::pin(async { Ok(false) })
     }

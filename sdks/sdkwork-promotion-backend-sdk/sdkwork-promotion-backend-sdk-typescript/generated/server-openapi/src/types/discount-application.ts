@@ -7,7 +7,7 @@ export interface DiscountApplication {
   discountType: string;
   discountAmount: string;
   currencyCode: string;
-  status: number;
+  status: 'applied' | 'settled' | 'released' | 'rolled_back';
   appliedAt: string;
   settledAt?: string | null;
   releasedAt?: string | null;

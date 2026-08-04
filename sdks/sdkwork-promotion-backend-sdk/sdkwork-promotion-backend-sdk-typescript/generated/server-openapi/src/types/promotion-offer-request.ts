@@ -12,7 +12,7 @@ export interface PromotionOfferRequest {
   priority: number;
   startsAt: string;
   endsAt?: string | null;
-  status: 0 | 1;
+  status: 'active' | 'disabled';
   discountType: string;
   discountValue: string;
   minimumAmount: string;

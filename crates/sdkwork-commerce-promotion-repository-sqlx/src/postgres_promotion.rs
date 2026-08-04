@@ -37,6 +37,7 @@ struct ClaimPromotion {
     total_quantity: Option<i64>,
     available_quantity: i64,
     stock_claimed_quantity: i64,
+    per_user_limit: i64,
     expires_at: Option<String>,
 }
 
@@ -436,8 +437,17 @@ impl PostgresCommercePromotionStore {
 
         let promotion = load_promotion_for_claim(&mut tx, &command, &now).await?;
         ensure_promotion_offer_can_be_claimed(&mut tx, &command, &promotion).await?;
+        let pool_code = claim_pool_code_if_available(&mut tx, &command, &promotion, &now).await?;
         let coupon_id = claim_coupon_id(&command);
-        insert_claimed_user_coupon(&mut tx, &command, &promotion, &coupon_id, &now).await?;
+        insert_claimed_user_coupon(
+            &mut tx,
+            &command,
+            &promotion,
+            pool_code.as_ref(),
+            &coupon_id,
+            &now,
+        )
+        .await?;
         insert_claim_coupon_ledger_entry(
             &mut tx,
             &command,
@@ -450,9 +460,13 @@ impl PostgresCommercePromotionStore {
         update_claim_promotion_counters(&mut tx, &promotion, &now).await?;
 
         let amount = stored_money_minor_units(&promotion.discount_value)?;
+        let coupon_code = pool_code
+            .as_ref()
+            .map(|code| code.coupon_code.clone())
+            .unwrap_or_else(|| issued_claim_coupon_code(&command));
         let coupon = PromotionUserCouponItem::new(
             &coupon_id,
-            &issued_claim_coupon_code(&command),
+            &coupon_code,
             &amount,
             &now,
             "pending",
@@ -1441,7 +1455,7 @@ async fn load_promotion_for_redeem(
                COALESCE(s.claimed_quantity, 0) AS stock_claimed_quantity,
                COALESCE(pc.max_claims, 1) AS code_max_claims,
                COALESCE(pc.claimed_quantity, 0) AS code_claimed_quantity,
-               CAST(COALESCE(pc.expires_at, s.expires_at, o.ends_at) AS TEXT) AS expires_at
+               CAST(COALESCE(pc.expires_at, s.claim_ends_at, o.ends_at) AS TEXT) AS expires_at
         FROM promotion_code pc
         JOIN promotion_coupon_stock s
           ON s.tenant_id = pc.tenant_id
@@ -1461,8 +1475,8 @@ async fn load_promotion_for_redeem(
           AND v.lifecycle_status = 'published'
           AND (pc.starts_at IS NULL OR pc.starts_at <= $4)
           AND (pc.expires_at IS NULL OR pc.expires_at >= $4)
-          AND (s.starts_at IS NULL OR s.starts_at <= $4)
-          AND (s.expires_at IS NULL OR s.expires_at >= $4)
+          AND (s.claim_starts_at IS NULL OR s.claim_starts_at <= $4)
+          AND (s.claim_ends_at IS NULL OR s.claim_ends_at >= $4)
           AND (o.starts_at IS NULL OR o.starts_at <= $4)
           AND (o.ends_at IS NULL OR o.ends_at >= $4)
         ORDER BY pc.organization_id DESC NULLS LAST, pc.id ASC
@@ -1678,7 +1692,7 @@ async fn insert_coupon_ledger_entry(
         INSERT INTO promotion_coupon_ledger_entry
             (id, tenant_id, organization_id, ledger_no, user_coupon_id, stock_id, offer_id,
              subject_type, subject_id, direction, quantity_delta, balance_after, business_type,
-             source_type, source_id, request_no, idempotency_key, occurred_at, created_at)
+             source_type, source_id, request_no, idempotency_key, created_at, updated_at)
         VALUES
             ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'debit', -1, $10, 'redeem',
              $11, $12, $13, $14, $15, $16)
@@ -2069,7 +2083,8 @@ async fn load_promotion_for_claim(
                s.total_quantity AS total_quantity,
                COALESCE(s.available_quantity, 0) AS available_quantity,
                COALESCE(s.claimed_quantity, 0) AS stock_claimed_quantity,
-               COALESCE(s.expires_at, o.ends_at) AS expires_at
+               COALESCE(s.per_user_limit, 1) AS per_user_limit,
+               COALESCE(s.claim_ends_at, o.ends_at) AS expires_at
         FROM promotion_offer o
         JOIN promotion_coupon_stock s
           ON s.tenant_id = o.tenant_id
@@ -2083,8 +2098,8 @@ async fn load_promotion_for_claim(
           AND o.status = 'active'
           AND s.status = 'active'
           AND v.lifecycle_status = 'published'
-          AND (s.starts_at IS NULL OR s.starts_at <= $5)
-          AND (s.expires_at IS NULL OR s.expires_at >= $6)
+          AND (s.claim_starts_at IS NULL OR s.claim_starts_at <= $5)
+          AND (s.claim_ends_at IS NULL OR s.claim_ends_at >= $6)
           AND (o.starts_at IS NULL OR o.starts_at <= $7)
           AND (o.ends_at IS NULL OR o.ends_at >= $8)
         ORDER BY s.created_at ASC, s.id ASC
@@ -2114,6 +2129,7 @@ async fn load_promotion_for_claim(
         total_quantity: optional_integer_cell(&row, "total_quantity"),
         available_quantity: integer_cell(&row, "available_quantity"),
         stock_claimed_quantity: integer_cell(&row, "stock_claimed_quantity"),
+        per_user_limit: integer_cell(&row, "per_user_limit"),
         expires_at: optional_string_cell(&row, "expires_at"),
     })
 }
@@ -2123,12 +2139,10 @@ async fn ensure_promotion_offer_can_be_claimed(
     command: &ClaimPromotionUserCouponCommand,
     promotion: &ClaimPromotion,
 ) -> Result<(), CommerceServiceError> {
-    if promotion.total_quantity.is_some() && promotion.available_quantity <= 0 {
-        return Err(CommerceServiceError::conflict(
-            "promotion offer has reached its issue limit",
-        ));
-    }
-    if promotion.stock_type.trim() != "unlimited" && promotion.available_quantity <= 0 {
+
+    if promotion.stock_type.trim().to_ascii_lowercase() != "unlimited"
+        && promotion.available_quantity <= 0
+    {
         return Err(CommerceServiceError::conflict(
             "promotion offer has reached its issue limit",
         ));
@@ -2156,7 +2170,7 @@ async fn ensure_promotion_offer_can_be_claimed(
     .fetch_one(&mut **tx)
     .await
     .map_err(|error| store_error("failed to check promotion offer subject limit", error))?;
-    if received_count > 0 {
+    if received_count >= promotion.per_user_limit {
         return Err(CommerceServiceError::conflict(
             "promotion offer subject receive limit has been reached",
         ));
@@ -2164,13 +2178,123 @@ async fn ensure_promotion_offer_can_be_claimed(
     Ok(())
 }
 
+struct ClaimedPoolCode {
+    code_id: String,
+    coupon_code: String,
+    expires_at: Option<String>,
+}
+
+/// 领取时从该 stock 的预生成券码池中发放一张券码。
+/// 池不存在（实时生成模式）时返回 None；池存在但已无可用券码时拒绝领取。
+async fn claim_pool_code_if_available(
+    tx: &mut Transaction<'_, Postgres>,
+    command: &ClaimPromotionUserCouponCommand,
+    promotion: &ClaimPromotion,
+    now: &str,
+) -> Result<Option<ClaimedPoolCode>, CommerceServiceError> {
+    let row = sqlx::query(
+        r#"
+
+        SELECT id AS code_id, promotion_code AS coupon_code, expires_at AS expires_at
+        FROM promotion_code
+        WHERE tenant_id = CAST($1 AS TEXT)
+          AND ((organization_id = CAST($2 AS TEXT)) OR (organization_id IS NULL AND $3 IS NULL))
+          AND stock_id = $4
+          AND status = 'active'
+          AND claimed_quantity = 0
+          AND (starts_at IS NULL OR starts_at <= $5)
+          AND (expires_at IS NULL OR expires_at >= $6)
+        ORDER BY created_at ASC, id ASC
+        LIMIT 1
+        FOR UPDATE
+
+"#,
+    )
+    .bind(&command.tenant_id)
+    .bind(command.organization_id.as_deref())
+    .bind(command.organization_id.as_deref())
+    .bind(&promotion.stock_id)
+    .bind(now)
+    .bind(now)
+    .fetch_optional(&mut **tx)
+    .await
+    .map_err(|error| store_error("failed to claim promotion pool code", error))?;
+    let Some(row) = row else {
+        // 未命中：区分「无池（实时生成模式）」与「池存在但已耗尽」
+        let pool_exists = sqlx::query_scalar::<_, bool>(
+            r#"
+
+            SELECT EXISTS(
+                SELECT 1
+                FROM promotion_code
+                WHERE tenant_id = CAST($1 AS TEXT)
+                  AND ((organization_id = CAST($2 AS TEXT)) OR (organization_id IS NULL AND $3 IS NULL))
+                  AND stock_id = $4
+                  AND status = 'active'
+            )
+
+"#,
+        )
+        .bind(&command.tenant_id)
+        .bind(command.organization_id.as_deref())
+        .bind(command.organization_id.as_deref())
+        .bind(&promotion.stock_id)
+        .fetch_one(&mut **tx)
+        .await
+        .map_err(|error| store_error("failed to check promotion code pool existence", error))?;
+        if !pool_exists {
+            return Ok(None);
+        }
+        return Err(CommerceServiceError::conflict(
+            "promotion code pool is exhausted",
+        ));
+    };
+    let code_id = string_cell(&row, "code_id");
+    let coupon_code = string_cell(&row, "coupon_code");
+    let consumed = sqlx::query(
+        r#"
+
+        UPDATE promotion_code
+        SET claimed_quantity = COALESCE(claimed_quantity, 0) + 1,
+            updated_at = $1
+        WHERE id = $2
+          AND status = 'active'
+          AND claimed_quantity < max_claims
+
+"#,
+    )
+    .bind(now)
+    .bind(&code_id)
+    .execute(&mut **tx)
+    .await
+    .map_err(|error| store_error("failed to consume promotion pool code", error))?;
+    if consumed.rows_affected() != 1 {
+        return Err(CommerceServiceError::conflict(
+            "promotion code pool was not consumed atomically",
+        ));
+    }
+    Ok(Some(ClaimedPoolCode {
+        code_id,
+        coupon_code,
+        expires_at: optional_string_cell(&row, "expires_at"),
+    }))
+}
+
 async fn insert_claimed_user_coupon(
     tx: &mut Transaction<'_, Postgres>,
     command: &ClaimPromotionUserCouponCommand,
     promotion: &ClaimPromotion,
+    pool_code: Option<&ClaimedPoolCode>,
     coupon_id: &str,
     now: &str,
 ) -> Result<(), CommerceServiceError> {
+    let code_id = pool_code.map(|code| code.code_id.as_str());
+    let coupon_code = pool_code
+        .map(|code| code.coupon_code.clone())
+        .unwrap_or_else(|| issued_claim_coupon_code(command));
+    let expires_at = pool_code
+        .and_then(|code| code.expires_at.as_deref())
+        .or_else(|| promotion.expires_at.as_deref());
     sqlx::query(
         r#"
 
@@ -2180,7 +2304,7 @@ async fn insert_claimed_user_coupon(
              status, claimed_at, valid_from, expires_at, redeemed_at, disabled_at,
              request_no, idempotency_key, created_at, updated_at)
         VALUES
-            ($1, $2, $3, $4, $5, NULL, $6, $7, $8, $9, $10, $11, 'claimed', $12, $13, $14, NULL, NULL, $15, $16, $17, $18)
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'claimed', $13, $14, $15, NULL, NULL, $16, $17, $18, $19)
 
 "#,
     )
@@ -2189,15 +2313,16 @@ async fn insert_claimed_user_coupon(
     .bind(command.organization_id.as_deref())
     .bind(claim_coupon_no(command))
     .bind(&promotion.stock_id)
+    .bind(code_id)
     .bind(&promotion.offer_id)
     .bind(&promotion.offer_version_id)
     .bind(USER_SUBJECT_TYPE)
     .bind(&command.owner_user_id)
     .bind(&command.owner_user_id)
-    .bind(issued_claim_coupon_code(command))
+    .bind(&coupon_code)
     .bind(now)
     .bind(now)
-    .bind(promotion.expires_at.as_deref())
+    .bind(expires_at)
     .bind(&command.request_no)
     .bind(&command.idempotency_key)
     .bind(now)
@@ -2223,7 +2348,7 @@ async fn insert_claim_coupon_ledger_entry(
         INSERT INTO promotion_coupon_ledger_entry
             (id, tenant_id, organization_id, ledger_no, user_coupon_id, stock_id, offer_id,
              subject_type, subject_id, direction, quantity_delta, balance_after, business_type,
-             source_type, source_id, request_no, idempotency_key, occurred_at, created_at)
+             source_type, source_id, request_no, idempotency_key, created_at, updated_at)
         VALUES
             ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'debit', -1, $10, 'claim',
              $11, $12, $13, $14, $15, $16)
@@ -2258,7 +2383,7 @@ async fn update_claim_promotion_counters(
     now: &str,
 ) -> Result<(), CommerceServiceError> {
     let requires_stock_quantity =
-        promotion.total_quantity.is_some() || promotion.stock_type.trim() != "unlimited";
+        promotion.stock_type.trim().to_ascii_lowercase() != "unlimited";
     let requires_stock_quantity_flag = if requires_stock_quantity {
         1_i64
     } else {
@@ -2434,7 +2559,7 @@ fn checked_points_add(left: i64, right: i64) -> Result<i64, CommerceServiceError
 }
 
 fn promotion_requires_stock_quantity(promotion: &RedeemPromotion) -> bool {
-    promotion.total_quantity.is_some() || promotion.stock_type.trim() != "unlimited"
+    promotion.stock_type.trim().to_ascii_lowercase() != "unlimited"
 }
 
 fn coupon_status_label(value: &str) -> Result<&'static str, CommerceServiceError> {

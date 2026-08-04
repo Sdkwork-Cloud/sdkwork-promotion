@@ -52,12 +52,17 @@ impl PromotionAdminScope {
     }
 }
 
+pub const CODE_ISSUE_MODE_REALTIME: &str = "REALTIME";
+pub const CODE_ISSUE_MODE_BATCH: &str = "BATCH";
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PromotionAdminListQuery {
     pub page: i64,
     pub page_size: i64,
     pub query: Option<String>,
-    pub status: Option<i32>,
+    pub status: Option<String>,
+    pub code_batch_id: Option<i64>,
+    pub stock_id: Option<i64>,
 }
 
 impl PromotionAdminListQuery {
@@ -65,7 +70,9 @@ impl PromotionAdminListQuery {
         page: i64,
         page_size: i64,
         query: Option<&str>,
-        status: Option<i32>,
+        status: Option<&str>,
+        code_batch_id: Option<i64>,
+        stock_id: Option<i64>,
     ) -> Result<Self, CommerceServiceError> {
         if page < 1 {
             return Err(CommerceServiceError::validation("page must be at least 1"));
@@ -75,11 +82,27 @@ impl PromotionAdminListQuery {
                 "page_size must be between 1 and 200",
             ));
         }
+        if let Some(id) = code_batch_id {
+            if id <= 0 {
+                return Err(CommerceServiceError::validation(
+                    "code_batch_id must be positive",
+                ));
+            }
+        }
+        if let Some(id) = stock_id {
+            if id <= 0 {
+                return Err(CommerceServiceError::validation(
+                    "stock_id must be positive",
+                ));
+            }
+        }
         Ok(Self {
             page,
             page_size,
             query: optional_text(query),
-            status,
+            status: status.map(str::to_owned),
+            code_batch_id,
+            stock_id,
         })
     }
 
@@ -157,7 +180,7 @@ pub struct PromotionOfferItem {
     pub priority: i32,
     pub starts_at: String,
     pub ends_at: Option<String>,
-    pub status: i32,
+    pub status: String,
     pub discount_type: Option<String>,
     pub discount_value: Option<String>,
     pub minimum_amount: Option<String>,
@@ -170,7 +193,7 @@ pub struct PromotionOfferItem {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct PromotionOfferInput {
-    pub campaign_id: Option<i64>,
+    pub campaign_id: Option<String>,
     pub offer_code: Option<String>,
     pub offer_type: String,
     pub display_name: String,
@@ -181,7 +204,7 @@ pub struct PromotionOfferInput {
     pub priority: i32,
     pub starts_at: String,
     pub ends_at: Option<String>,
-    pub status: i32,
+    pub status: String,
     pub discount_type: String,
     pub discount_value: String,
     pub minimum_amount: String,
@@ -197,6 +220,7 @@ pub struct PromotionCouponStockItem {
     pub offer_id: String,
     pub stock_no: String,
     pub stock_type: String,
+    pub code_issue_mode: String,
     pub total_quantity: i64,
     pub available_quantity: i64,
     pub claimed_quantity: i64,
@@ -205,18 +229,19 @@ pub struct PromotionCouponStockItem {
     pub per_user_limit: i32,
     pub claim_starts_at: Option<String>,
     pub claim_ends_at: Option<String>,
-    pub status: i32,
+    pub status: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PromotionCouponStockInput {
-    pub offer_id: i64,
+    pub offer_id: String,
     pub stock_type: String,
+    pub code_issue_mode: String,
     pub total_quantity: i64,
     pub per_user_limit: i32,
     pub claim_starts_at: Option<String>,
     pub claim_ends_at: Option<String>,
-    pub status: i32,
+    pub status: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -231,7 +256,7 @@ pub struct PromotionCodeItem {
     pub claimed_quantity: i32,
     pub starts_at: Option<String>,
     pub expires_at: Option<String>,
-    pub status: i32,
+    pub status: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -253,7 +278,7 @@ pub struct PromotionCodeBatchItem {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PromotionCodeBatchInput {
-    pub stock_id: i64,
+    pub stock_id: String,
     pub code_type: String,
     pub quantity: i64,
     pub code_length: i32,
@@ -280,8 +305,8 @@ pub struct PromotionDistributionTaskItem {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PromotionDistributionInput {
-    pub stock_id: i64,
-    pub owner_user_ids: Vec<i64>,
+    pub stock_id: String,
+    pub owner_user_ids: Vec<String>,
     pub idempotency_key: String,
 }
 
@@ -293,7 +318,7 @@ pub struct PromotionAdminUserCouponItem {
     pub offer_id: String,
     pub owner_user_id: String,
     pub coupon_code: String,
-    pub status: i32,
+    pub status: String,
     pub claimed_at: String,
     pub valid_from: String,
     pub expires_at: Option<String>,
@@ -327,7 +352,7 @@ pub struct PromotionDiscountApplicationItem {
     pub discount_type: String,
     pub discount_amount: String,
     pub currency_code: String,
-    pub status: i32,
+    pub status: String,
     pub applied_at: String,
     pub settled_at: Option<String>,
     pub released_at: Option<String>,
@@ -347,7 +372,7 @@ pub trait PromotionAdminRepositoryPort: Send + Sync {
     fn retrieve_campaign<'a>(
         &'a self,
         scope: &'a PromotionAdminScope,
-        campaign_id: i64,
+        campaign_id: String,
     ) -> PromotionAdminFuture<'a, Option<PromotionCampaignItem>>;
     fn create_campaign<'a>(
         &'a self,
@@ -357,13 +382,13 @@ pub trait PromotionAdminRepositoryPort: Send + Sync {
     fn update_campaign<'a>(
         &'a self,
         scope: &'a PromotionAdminScope,
-        campaign_id: i64,
+        campaign_id: String,
         input: &'a PromotionCampaignInput,
     ) -> PromotionAdminFuture<'a, Option<PromotionCampaignItem>>;
     fn delete_campaign<'a>(
         &'a self,
         scope: &'a PromotionAdminScope,
-        campaign_id: i64,
+        campaign_id: String,
     ) -> PromotionAdminFuture<'a, bool>;
     fn list_offers<'a>(
         &'a self,
@@ -373,7 +398,7 @@ pub trait PromotionAdminRepositoryPort: Send + Sync {
     fn retrieve_offer<'a>(
         &'a self,
         scope: &'a PromotionAdminScope,
-        offer_id: i64,
+        offer_id: String,
     ) -> PromotionAdminFuture<'a, Option<PromotionOfferItem>>;
     fn create_offer<'a>(
         &'a self,
@@ -383,19 +408,19 @@ pub trait PromotionAdminRepositoryPort: Send + Sync {
     fn update_offer<'a>(
         &'a self,
         scope: &'a PromotionAdminScope,
-        offer_id: i64,
+        offer_id: String,
         input: &'a PromotionOfferInput,
     ) -> PromotionAdminFuture<'a, Option<PromotionOfferItem>>;
     fn update_offer_status<'a>(
         &'a self,
         scope: &'a PromotionAdminScope,
-        offer_id: i64,
-        status: i32,
+        offer_id: String,
+        status: &'a str,
     ) -> PromotionAdminFuture<'a, bool>;
     fn delete_offer<'a>(
         &'a self,
         scope: &'a PromotionAdminScope,
-        offer_id: i64,
+        offer_id: String,
     ) -> PromotionAdminFuture<'a, bool>;
     fn list_coupon_stocks<'a>(
         &'a self,
@@ -475,9 +500,9 @@ impl PromotionAdminService {
     pub async fn retrieve_campaign(
         &self,
         scope: &PromotionAdminScope,
-        id: i64,
+        id: String,
     ) -> Result<Option<PromotionCampaignItem>, CommerceServiceError> {
-        positive_id("campaign_id", id)?;
+        positive_id("campaign_id", &id)?;
         self.repository.retrieve_campaign(scope, id).await
     }
     pub async fn create_campaign(
@@ -492,10 +517,10 @@ impl PromotionAdminService {
     pub async fn update_campaign(
         &self,
         scope: &PromotionAdminScope,
-        id: i64,
+        id: String,
         input: &PromotionCampaignInput,
     ) -> Result<Option<PromotionCampaignItem>, CommerceServiceError> {
-        positive_id("campaign_id", id)?;
+        positive_id("campaign_id", &id)?;
         validate_campaign(input)?;
         if input.version.is_none() {
             return Err(CommerceServiceError::validation("version is required"));
@@ -505,9 +530,9 @@ impl PromotionAdminService {
     pub async fn delete_campaign(
         &self,
         scope: &PromotionAdminScope,
-        id: i64,
+        id: String,
     ) -> Result<bool, CommerceServiceError> {
-        positive_id("campaign_id", id)?;
+        positive_id("campaign_id", &id)?;
         self.repository.delete_campaign(scope, id).await
     }
     pub async fn list_offers(
@@ -520,9 +545,9 @@ impl PromotionAdminService {
     pub async fn retrieve_offer(
         &self,
         scope: &PromotionAdminScope,
-        id: i64,
+        id: String,
     ) -> Result<Option<PromotionOfferItem>, CommerceServiceError> {
-        positive_id("offer_id", id)?;
+        positive_id("offer_id", &id)?;
         self.repository.retrieve_offer(scope, id).await
     }
     pub async fn create_offer(
@@ -536,10 +561,10 @@ impl PromotionAdminService {
     pub async fn update_offer(
         &self,
         scope: &PromotionAdminScope,
-        id: i64,
+        id: String,
         input: &PromotionOfferInput,
     ) -> Result<Option<PromotionOfferItem>, CommerceServiceError> {
-        positive_id("offer_id", id)?;
+        positive_id("offer_id", &id)?;
         validate_offer(input)?;
         if input.version.is_none() {
             return Err(CommerceServiceError::validation("version is required"));
@@ -549,19 +574,19 @@ impl PromotionAdminService {
     pub async fn update_offer_status(
         &self,
         scope: &PromotionAdminScope,
-        id: i64,
-        status: i32,
+        id: String,
+        status: &str,
     ) -> Result<bool, CommerceServiceError> {
-        positive_id("offer_id", id)?;
-        binary_status(status)?;
+        positive_id("offer_id", &id)?;
+        validate_status(status)?;
         self.repository.update_offer_status(scope, id, status).await
     }
     pub async fn delete_offer(
         &self,
         scope: &PromotionAdminScope,
-        id: i64,
+        id: String,
     ) -> Result<bool, CommerceServiceError> {
-        positive_id("offer_id", id)?;
+        positive_id("offer_id", &id)?;
         self.repository.delete_offer(scope, id).await
     }
     pub async fn list_coupon_stocks(
@@ -576,13 +601,22 @@ impl PromotionAdminService {
         scope: &PromotionAdminScope,
         input: &PromotionCouponStockInput,
     ) -> Result<PromotionCouponStockItem, CommerceServiceError> {
-        positive_id("offer_id", input.offer_id)?;
-        if input.total_quantity <= 0 || input.per_user_limit <= 0 {
+        positive_id("offer_id", &input.offer_id)?;
+        let is_unlimited = input.stock_type.trim().eq_ignore_ascii_case("UNLIMITED");
+        if (!is_unlimited && input.total_quantity <= 0) || input.per_user_limit <= 0 {
             return Err(CommerceServiceError::validation(
-                "total_quantity and per_user_limit must be positive",
+                "total_quantity must be positive for limited stock; per_user_limit must be positive",
             ));
         }
-        binary_status(input.status)?;
+        validate_status(&input.status)?;
+        if !matches!(
+            input.code_issue_mode.as_str(),
+            CODE_ISSUE_MODE_REALTIME | CODE_ISSUE_MODE_BATCH
+        ) {
+            return Err(CommerceServiceError::validation(
+                "code_issue_mode must be REALTIME or BATCH",
+            ));
+        }
         self.repository.create_coupon_stock(scope, input).await
     }
     pub async fn list_code_batches(
@@ -597,7 +631,7 @@ impl PromotionAdminService {
         scope: &PromotionAdminScope,
         input: &PromotionCodeBatchInput,
     ) -> Result<PromotionCodeBatchItem, CommerceServiceError> {
-        positive_id("stock_id", input.stock_id)?;
+        positive_id("stock_id", &input.stock_id)?;
         if !(1..=5000).contains(&input.quantity) {
             return Err(CommerceServiceError::validation(
                 "quantity must be between 1 and 5000",
@@ -608,6 +642,7 @@ impl PromotionAdminService {
                 "code_length must be between 12 and 32",
             ));
         }
+        validate_code_batch_prefix(&input.code_prefix, input.code_length)?;
         required("idempotency_key", &input.idempotency_key)?;
         self.repository.create_code_batch(scope, input).await
     }
@@ -630,14 +665,14 @@ impl PromotionAdminService {
         scope: &PromotionAdminScope,
         input: &PromotionDistributionInput,
     ) -> Result<PromotionDistributionTaskItem, CommerceServiceError> {
-        positive_id("stock_id", input.stock_id)?;
+        positive_id("stock_id", &input.stock_id)?;
         required("idempotency_key", &input.idempotency_key)?;
         if input.owner_user_ids.is_empty()
             || input.owner_user_ids.len() > 200
-            || input.owner_user_ids.iter().any(|id| *id <= 0)
+            || input.owner_user_ids.iter().any(|id| id.trim().is_empty())
         {
             return Err(CommerceServiceError::validation(
-                "owner_user_ids must contain 1 to 200 positive ids",
+                "owner_user_ids must contain 1 to 200 non-empty ids",
             ));
         }
         let mut ids = input.owner_user_ids.clone();
@@ -687,34 +722,49 @@ fn validate_campaign(input: &PromotionCampaignInput) -> Result<(), CommerceServi
     Ok(())
 }
 
+/// 券码前缀必须为字母数字且为随机部分至少保留 8 个字符（防枚举猜测）。
+fn validate_code_batch_prefix(
+    code_prefix: &str,
+    code_length: i32,
+) -> Result<(), CommerceServiceError> {
+    if code_prefix.chars().count() > code_length as usize - 8 {
+        return Err(CommerceServiceError::validation(
+            "code_prefix must leave at least 8 random characters for code guessing resistance",
+        ));
+    }
+    Ok(())
+}
+
 fn validate_offer(input: &PromotionOfferInput) -> Result<(), CommerceServiceError> {
     required("display_name", &input.display_name)?;
     required("offer_type", &input.offer_type)?;
     required("discount_type", &input.discount_type)?;
     required("discount_value", &input.discount_value)?;
     required("starts_at", &input.starts_at)?;
-    binary_status(input.status)?;
+    validate_status(&input.status)?;
     if let Some(coupon_benefit) = &input.coupon_benefit {
         coupon_benefit.validate()?;
     }
     Ok(())
 }
 
-fn positive_id(name: &str, value: i64) -> Result<(), CommerceServiceError> {
-    if value <= 0 {
+fn positive_id(name: &str, value: &str) -> Result<(), CommerceServiceError> {
+    if value.trim().is_empty() {
         Err(CommerceServiceError::validation(format!(
-            "{name} must be positive"
+            "{name} must not be empty"
         )))
     } else {
         Ok(())
     }
 }
 
-fn binary_status(status: i32) -> Result<(), CommerceServiceError> {
-    if matches!(status, 0 | 1) {
+fn validate_status(status: &str) -> Result<(), CommerceServiceError> {
+    if matches!(status, "active" | "disabled") {
         Ok(())
     } else {
-        Err(CommerceServiceError::validation("status must be 0 or 1"))
+        Err(CommerceServiceError::validation(
+            "status must be 'active' or 'disabled'",
+        ))
     }
 }
 
@@ -733,4 +783,27 @@ fn optional_text(value: Option<&str>) -> Option<String> {
         .map(str::trim)
         .filter(|value| !value.is_empty())
         .map(str::to_owned)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::validate_code_batch_prefix;
+
+    #[test]
+    fn code_prefix_validation_requires_at_least_eight_random_characters() {
+        assert!(validate_code_batch_prefix("", 12).is_ok());
+        assert!(validate_code_batch_prefix("WELCOME", 16).is_ok());
+        assert!(validate_code_batch_prefix("WELCOME2026", 20).is_ok());
+        // 前缀占满长度时随机部分不足 8 位，必须拒绝（防枚举）
+        let error = validate_code_batch_prefix("ABCDEFGHIJK", 12).expect_err("short random tail");
+        assert_eq!("validation", error.code());
+        let error = validate_code_batch_prefix("WELCOMENEW", 16).expect_err("nine char prefix");
+        assert_eq!("validation", error.code());
+    }
+
+    #[test]
+    fn code_prefix_validation_is_unaffected_by_unicode_width() {
+        // 按字符数（chars）计算，而不是字节数
+        assert!(validate_code_batch_prefix("优惠", 12).is_ok());
+    }
 }

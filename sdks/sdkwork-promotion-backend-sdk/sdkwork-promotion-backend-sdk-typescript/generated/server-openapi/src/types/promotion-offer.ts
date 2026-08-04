@@ -10,7 +10,7 @@ export interface PromotionOffer {
   priority: number;
   startsAt: string;
   endsAt?: string | null;
-  status: number;
+  status: 'active' | 'disabled';
   updatedAt: string;
   campaignId?: string | null;
   discountType?: string | null;

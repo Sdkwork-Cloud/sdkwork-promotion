@@ -5,7 +5,7 @@ export interface PromotionUserCoupon {
   offerId: string;
   ownerUserId: string;
   couponCode: string;
-  status: number;
+  status: 'claimed' | 'redeemed' | 'expired' | 'disabled' | 'voided' | 'cancelled';
   claimedAt: string;
   validFrom: string;
   expiresAt?: string | null;

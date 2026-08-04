@@ -5,7 +5,7 @@
   type PromotionSdkMethod,
 } from "@sdkwork/promotion-sdk-ports";
 import type { SdkworkPromotionMutationStatus } from "@sdkwork/promotion-contracts";
-import { formatCurrency as formatSdkworkCurrency } from "@sdkwork/utils";
+import { formatMoney } from "@sdkwork/utils/money";
 import type {
   CouponStock,
   CouponStockRequest,
@@ -49,7 +49,7 @@ export interface PromotionAdminListQuery {
   page?: number;
   pageSize?: number;
   q?: string;
-  status?: number;
+  status?: 'active' | 'disabled';
 }
 
 export interface PromotionAdminPage<T> {
@@ -71,7 +71,7 @@ export interface SdkworkPromotionBackendService {
   getOffer(offerId: string): Promise<PromotionOffer>;
   createOffer(input: PromotionOfferRequest): Promise<PromotionOffer>;
   updateOffer(offerId: string, input: PromotionOfferRequest): Promise<PromotionOffer>;
-  updateOfferStatus(offerId: string, status: 0 | 1): Promise<void>;
+  updateOfferStatus(offerId: string, status: 'active' | 'disabled'): Promise<void>;
   deleteOffer(offerId: string): Promise<void>;
   listCouponStocks(query?: PromotionAdminListQuery): Promise<PromotionAdminPage<CouponStock>>;
   createCouponStock(input: CouponStockRequest): Promise<CouponStock>;
@@ -283,10 +283,7 @@ export function toSdkworkPromotionMutationStatus(status: unknown): SdkworkPromot
 }
 
 export function formatSdkworkPromotionCurrencyCny(value: number | null | undefined, language = "en-US"): string {
-  if (value === null || value === undefined || !Number.isFinite(value)) {
-    return "--";
-  }
-  return formatSdkworkCurrency(value, "CNY", language) ?? "--";
+  return formatMoney(value, { currency: "CNY", locale: language, mode: "symbol" }) ?? "--";
 }
 
 export function formatSdkworkPromotionPoints(value: number, language = "en-US"): string {

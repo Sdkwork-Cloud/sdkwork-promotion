@@ -202,8 +202,6 @@ fn validation_response(message: impl Into<String>) -> Response {
 
 #[cfg(test)]
 mod tests {
-    use axum::http::HeaderValue;
-
     use super::*;
 
     #[test]

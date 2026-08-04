@@ -100,7 +100,11 @@ function loadTsconfigAliases() {
         return null;
       }
       return {
-        find,
+        // tsconfig paths 是精确包名语义（无前缀通配）。@rollup/plugin-alias 的
+        // 前缀匹配会把 `@sdkwork/utils` 吞掉 `@sdkwork/utils/money` 子路径导入，
+        // 因此追加 `$` 后缀让 alias 只精确匹配包名本身；子路径导入回退到
+        // workspace 包自身的 package.json#exports 解析。
+        find: find.endsWith("$") ? find : `${find}$`,
         replacement: path.resolve(root, replacement),
       };
     })

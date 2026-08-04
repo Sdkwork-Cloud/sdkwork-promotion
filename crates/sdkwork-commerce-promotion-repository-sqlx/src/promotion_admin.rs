@@ -14,12 +14,12 @@ use sqlx::{PgPool, Row, SqlitePool};
 const POSTGRES_OVERVIEW_SQL: &str = r#"
 SELECT
     COUNT(*)::BIGINT AS total_offers,
-    COALESCE(SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END), 0)::BIGINT AS active_offers,
+    COALESCE(SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END), 0)::BIGINT AS active_offers,
     COALESCE((SELECT SUM(total_quantity) FROM promotion_coupon_stock WHERE tenant_id = $1 AND organization_id = $2), 0)::BIGINT AS total_coupon_stock,
     COALESCE((SELECT SUM(available_quantity) FROM promotion_coupon_stock WHERE tenant_id = $1 AND organization_id = $2), 0)::BIGINT AS available_coupons,
     COALESCE((SELECT SUM(claimed_quantity) FROM promotion_coupon_stock WHERE tenant_id = $1 AND organization_id = $2), 0)::BIGINT AS claimed_coupons,
     COALESCE((SELECT SUM(redeemed_quantity) FROM promotion_coupon_stock WHERE tenant_id = $1 AND organization_id = $2), 0)::BIGINT AS redeemed_coupons,
-    COALESCE((SELECT COUNT(*) FROM promotion_code WHERE tenant_id = $1 AND organization_id = $2 AND status = 1), 0)::BIGINT AS active_codes,
+    COALESCE((SELECT COUNT(*) FROM promotion_code WHERE tenant_id = $1 AND organization_id = $2 AND status = 'active'), 0)::BIGINT AS active_codes,
     COALESCE((SELECT COUNT(*) FROM promotion_discount_application WHERE tenant_id = $1 AND organization_id = $2), 0)::BIGINT AS discount_applications
 FROM promotion_offer
 WHERE tenant_id = $1 AND organization_id = $2
@@ -28,36 +28,36 @@ WHERE tenant_id = $1 AND organization_id = $2
 const SQLITE_OVERVIEW_SQL: &str = r#"
 SELECT
     CAST(COUNT(*) AS INTEGER) AS total_offers,
-    CAST(COALESCE(SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END), 0) AS INTEGER) AS active_offers,
+    CAST(COALESCE(SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END), 0) AS INTEGER) AS active_offers,
     CAST(COALESCE((SELECT SUM(total_quantity) FROM promotion_coupon_stock WHERE tenant_id = ?1 AND organization_id = ?2), 0) AS INTEGER) AS total_coupon_stock,
     CAST(COALESCE((SELECT SUM(available_quantity) FROM promotion_coupon_stock WHERE tenant_id = ?1 AND organization_id = ?2), 0) AS INTEGER) AS available_coupons,
     CAST(COALESCE((SELECT SUM(claimed_quantity) FROM promotion_coupon_stock WHERE tenant_id = ?1 AND organization_id = ?2), 0) AS INTEGER) AS claimed_coupons,
     CAST(COALESCE((SELECT SUM(redeemed_quantity) FROM promotion_coupon_stock WHERE tenant_id = ?1 AND organization_id = ?2), 0) AS INTEGER) AS redeemed_coupons,
-    CAST(COALESCE((SELECT COUNT(*) FROM promotion_code WHERE tenant_id = ?1 AND organization_id = ?2 AND status = 1), 0) AS INTEGER) AS active_codes,
+    CAST(COALESCE((SELECT COUNT(*) FROM promotion_code WHERE tenant_id = ?1 AND organization_id = ?2 AND status = 'active'), 0) AS INTEGER) AS active_codes,
     CAST(COALESCE((SELECT COUNT(*) FROM promotion_discount_application WHERE tenant_id = ?1 AND organization_id = ?2), 0) AS INTEGER) AS discount_applications
 FROM promotion_offer
 WHERE tenant_id = ?1 AND organization_id = ?2
 "#;
 
 const POSTGRES_OFFER_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_offer WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(display_name) LIKE $3 OR LOWER(COALESCE(offer_code, '')) LIKE $3) AND ($4 IS NULL OR status = $4)";
-const POSTGRES_OFFER_LIST_SQL: &str = "SELECT o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.display_name, o.description, o.priority, CAST(o.starts_at AS TEXT) AS starts_at, CAST(o.ends_at AS TEXT) AS ends_at, o.status, v.discount_type, CAST(v.discount_value AS TEXT) AS discount_value, CAST(v.minimum_amount AS TEXT) AS minimum_amount, CAST(v.maximum_discount_amount AS TEXT) AS maximum_discount_amount, v.currency_code, CAST(v.rule_json AS TEXT) AS rule_json, o.version, CAST(o.updated_at AS TEXT) AS updated_at FROM promotion_offer o LEFT JOIN promotion_offer_version v ON v.id = o.current_offer_version_id AND v.tenant_id = o.tenant_id WHERE o.tenant_id = $1 AND o.organization_id = $2 AND ($3 = '%%' OR LOWER(o.display_name) LIKE $3 OR LOWER(COALESCE(o.offer_code, '')) LIKE $3) AND ($4 IS NULL OR o.status = $4) ORDER BY o.priority DESC, o.starts_at DESC LIMIT $5 OFFSET $6";
+const POSTGRES_OFFER_LIST_SQL: &str = "SELECT o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.display_name, o.description, o.priority, o.starts_at AS starts_at, o.ends_at AS ends_at, o.status, v.discount_type, v.discount_value AS discount_value, v.minimum_amount AS minimum_amount, v.maximum_discount_amount AS maximum_discount_amount, v.currency_code, v.rule_json AS rule_json, o.version, o.updated_at AS updated_at FROM promotion_offer o LEFT JOIN promotion_offer_version v ON v.id = o.current_offer_version_id AND v.tenant_id = o.tenant_id WHERE o.tenant_id = $1 AND o.organization_id = $2 AND ($3 = '%%' OR LOWER(o.display_name) LIKE $3 OR LOWER(COALESCE(o.offer_code, '')) LIKE $3) AND ($4 IS NULL OR o.status = $4) ORDER BY o.priority DESC, o.starts_at DESC LIMIT $5 OFFSET $6";
 const SQLITE_OFFER_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_offer WHERE tenant_id = ?1 AND organization_id = ?2 AND (?3 = '%%' OR LOWER(display_name) LIKE ?3 OR LOWER(COALESCE(offer_code, '')) LIKE ?3) AND (?4 IS NULL OR status = ?4)";
-const SQLITE_OFFER_LIST_SQL: &str = "SELECT o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.display_name, o.description, o.priority, CAST(o.starts_at AS TEXT) AS starts_at, CAST(o.ends_at AS TEXT) AS ends_at, o.status, v.discount_type, CAST(v.discount_value AS TEXT) AS discount_value, CAST(v.minimum_amount AS TEXT) AS minimum_amount, CAST(v.maximum_discount_amount AS TEXT) AS maximum_discount_amount, v.currency_code, CAST(v.rule_json AS TEXT) AS rule_json, o.version, CAST(o.updated_at AS TEXT) AS updated_at FROM promotion_offer o LEFT JOIN promotion_offer_version v ON v.id = o.current_offer_version_id AND v.tenant_id = o.tenant_id WHERE o.tenant_id = ?1 AND o.organization_id = ?2 AND (?3 = '%%' OR LOWER(o.display_name) LIKE ?3 OR LOWER(COALESCE(o.offer_code, '')) LIKE ?3) AND (?4 IS NULL OR o.status = ?4) ORDER BY o.priority DESC, o.starts_at DESC LIMIT ?5 OFFSET ?6";
+const SQLITE_OFFER_LIST_SQL: &str = "SELECT o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.display_name, o.description, o.priority, o.starts_at AS starts_at, o.ends_at AS ends_at, o.status, v.discount_type, v.discount_value AS discount_value, v.minimum_amount AS minimum_amount, v.maximum_discount_amount AS maximum_discount_amount, v.currency_code, v.rule_json AS rule_json, o.version, o.updated_at AS updated_at FROM promotion_offer o LEFT JOIN promotion_offer_version v ON v.id = o.current_offer_version_id AND v.tenant_id = o.tenant_id WHERE o.tenant_id = ?1 AND o.organization_id = ?2 AND (?3 = '%%' OR LOWER(o.display_name) LIKE ?3 OR LOWER(COALESCE(o.offer_code, '')) LIKE ?3) AND (?4 IS NULL OR o.status = ?4) ORDER BY o.priority DESC, o.starts_at DESC LIMIT ?5 OFFSET ?6";
 
 const POSTGRES_STOCK_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_coupon_stock WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(stock_no) LIKE $3) AND ($4 IS NULL OR status = $4)";
-const POSTGRES_STOCK_LIST_SQL: &str = "SELECT id, offer_id, stock_no, stock_type, total_quantity, available_quantity, claimed_quantity, redeemed_quantity, locked_quantity, per_user_limit, CAST(claim_starts_at AS TEXT) AS claim_starts_at, CAST(claim_ends_at AS TEXT) AS claim_ends_at, status FROM promotion_coupon_stock WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(stock_no) LIKE $3) AND ($4 IS NULL OR status = $4) ORDER BY created_at DESC LIMIT $5 OFFSET $6";
+const POSTGRES_STOCK_LIST_SQL: &str = "SELECT id, offer_id, stock_no, stock_type, code_issue_mode, total_quantity, available_quantity, claimed_quantity, redeemed_quantity, locked_quantity, per_user_limit, claim_starts_at AS claim_starts_at, claim_ends_at AS claim_ends_at, status FROM promotion_coupon_stock WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(stock_no) LIKE $3) AND ($4 IS NULL OR status = $4) ORDER BY created_at DESC LIMIT $5 OFFSET $6";
 const SQLITE_STOCK_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_coupon_stock WHERE tenant_id = ?1 AND organization_id = ?2 AND (?3 = '%%' OR LOWER(stock_no) LIKE ?3) AND (?4 IS NULL OR status = ?4)";
-const SQLITE_STOCK_LIST_SQL: &str = "SELECT id, offer_id, stock_no, stock_type, total_quantity, available_quantity, claimed_quantity, redeemed_quantity, locked_quantity, per_user_limit, CAST(claim_starts_at AS TEXT) AS claim_starts_at, CAST(claim_ends_at AS TEXT) AS claim_ends_at, status FROM promotion_coupon_stock WHERE tenant_id = ?1 AND organization_id = ?2 AND (?3 = '%%' OR LOWER(stock_no) LIKE ?3) AND (?4 IS NULL OR status = ?4) ORDER BY created_at DESC LIMIT ?5 OFFSET ?6";
+const SQLITE_STOCK_LIST_SQL: &str = "SELECT id, offer_id, stock_no, stock_type, code_issue_mode, total_quantity, available_quantity, claimed_quantity, redeemed_quantity, locked_quantity, per_user_limit, claim_starts_at AS claim_starts_at, claim_ends_at AS claim_ends_at, status FROM promotion_coupon_stock WHERE tenant_id = ?1 AND organization_id = ?2 AND (?3 = '%%' OR LOWER(stock_no) LIKE ?3) AND (?4 IS NULL OR status = ?4) ORDER BY created_at DESC LIMIT ?5 OFFSET ?6";
 
-const POSTGRES_CODE_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_code WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(promotion_code) LIKE $3 OR LOWER(code_no) LIKE $3) AND ($4 IS NULL OR status = $4)";
-const POSTGRES_CODE_LIST_SQL: &str = "SELECT id, stock_id, offer_id, code_no, promotion_code, code_type, max_claims, claimed_quantity, CAST(starts_at AS TEXT) AS starts_at, CAST(expires_at AS TEXT) AS expires_at, status FROM promotion_code WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(promotion_code) LIKE $3 OR LOWER(code_no) LIKE $3) AND ($4 IS NULL OR status = $4) ORDER BY created_at DESC LIMIT $5 OFFSET $6";
-const SQLITE_CODE_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_code WHERE tenant_id = ?1 AND organization_id = ?2 AND (?3 = '%%' OR LOWER(promotion_code) LIKE ?3 OR LOWER(code_no) LIKE ?3) AND (?4 IS NULL OR status = ?4)";
-const SQLITE_CODE_LIST_SQL: &str = "SELECT id, stock_id, offer_id, code_no, promotion_code, code_type, max_claims, claimed_quantity, CAST(starts_at AS TEXT) AS starts_at, CAST(expires_at AS TEXT) AS expires_at, status FROM promotion_code WHERE tenant_id = ?1 AND organization_id = ?2 AND (?3 = '%%' OR LOWER(promotion_code) LIKE ?3 OR LOWER(code_no) LIKE ?3) AND (?4 IS NULL OR status = ?4) ORDER BY created_at DESC LIMIT ?5 OFFSET ?6";
+const POSTGRES_CODE_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_code WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(promotion_code) LIKE $3 OR LOWER(code_no) LIKE $3) AND ($4 IS NULL OR status = $4) AND ($5 IS NULL OR code_batch_id = $5)";
+const POSTGRES_CODE_LIST_SQL: &str = "SELECT id, stock_id, offer_id, code_no, promotion_code, code_type, max_claims, claimed_quantity, starts_at AS starts_at, expires_at AS expires_at, status FROM promotion_code WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(promotion_code) LIKE $3 OR LOWER(code_no) LIKE $3) AND ($4 IS NULL OR status = $4) AND ($5 IS NULL OR code_batch_id = $5) ORDER BY created_at DESC LIMIT $6 OFFSET $7";
+const SQLITE_CODE_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_code WHERE tenant_id = ?1 AND organization_id = ?2 AND (?3 = '%%' OR LOWER(promotion_code) LIKE ?3 OR LOWER(code_no) LIKE ?3) AND (?4 IS NULL OR status = ?4) AND (?5 IS NULL OR code_batch_id = ?5)";
+const SQLITE_CODE_LIST_SQL: &str = "SELECT id, stock_id, offer_id, code_no, promotion_code, code_type, max_claims, claimed_quantity, starts_at AS starts_at, expires_at AS expires_at, status FROM promotion_code WHERE tenant_id = ?1 AND organization_id = ?2 AND (?3 = '%%' OR LOWER(promotion_code) LIKE ?3 OR LOWER(code_no) LIKE ?3) AND (?4 IS NULL OR status = ?4) AND (?5 IS NULL OR code_batch_id = ?5) ORDER BY created_at DESC LIMIT ?6 OFFSET ?7";
 
 const POSTGRES_APPLICATION_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_discount_application WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(application_no) LIKE $3 OR LOWER(COALESCE(order_no, '')) LIKE $3) AND ($4 IS NULL OR status = $4)";
-const POSTGRES_APPLICATION_LIST_SQL: &str = "SELECT id, application_no, order_id, order_no, offer_id, discount_type, CAST(discount_amount AS TEXT) AS discount_amount, currency_code, status, CAST(applied_at AS TEXT) AS applied_at, CAST(settled_at AS TEXT) AS settled_at, CAST(released_at AS TEXT) AS released_at, CAST(rolled_back_at AS TEXT) AS rolled_back_at FROM promotion_discount_application WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(application_no) LIKE $3 OR LOWER(COALESCE(order_no, '')) LIKE $3) AND ($4 IS NULL OR status = $4) ORDER BY applied_at DESC LIMIT $5 OFFSET $6";
+const POSTGRES_APPLICATION_LIST_SQL: &str = "SELECT id, application_no, order_id, order_no, offer_id, discount_type, CAST(discount_amount AS TEXT) AS discount_amount, currency_code, status, applied_at AS applied_at, settled_at AS settled_at, released_at AS released_at, rolled_back_at AS rolled_back_at FROM promotion_discount_application WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(application_no) LIKE $3 OR LOWER(COALESCE(order_no, '')) LIKE $3) AND ($4 IS NULL OR status = $4) ORDER BY applied_at DESC LIMIT $5 OFFSET $6";
 const SQLITE_APPLICATION_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_discount_application WHERE tenant_id = ?1 AND organization_id = ?2 AND (?3 = '%%' OR LOWER(application_no) LIKE ?3 OR LOWER(COALESCE(order_no, '')) LIKE ?3) AND (?4 IS NULL OR status = ?4)";
-const SQLITE_APPLICATION_LIST_SQL: &str = "SELECT id, application_no, order_id, order_no, offer_id, discount_type, CAST(discount_amount AS TEXT) AS discount_amount, currency_code, status, CAST(applied_at AS TEXT) AS applied_at, CAST(settled_at AS TEXT) AS settled_at, CAST(released_at AS TEXT) AS released_at, CAST(rolled_back_at AS TEXT) AS rolled_back_at FROM promotion_discount_application WHERE tenant_id = ?1 AND organization_id = ?2 AND (?3 = '%%' OR LOWER(application_no) LIKE ?3 OR LOWER(COALESCE(order_no, '')) LIKE ?3) AND (?4 IS NULL OR status = ?4) ORDER BY applied_at DESC LIMIT ?5 OFFSET ?6";
+const SQLITE_APPLICATION_LIST_SQL: &str = "SELECT id, application_no, order_id, order_no, offer_id, discount_type, CAST(discount_amount AS TEXT) AS discount_amount, currency_code, status, applied_at AS applied_at, settled_at AS settled_at, released_at AS released_at, rolled_back_at AS rolled_back_at FROM promotion_discount_application WHERE tenant_id = ?1 AND organization_id = ?2 AND (?3 = '%%' OR LOWER(application_no) LIKE ?3 OR LOWER(COALESCE(order_no, '')) LIKE ?3) AND (?4 IS NULL OR status = ?4) ORDER BY applied_at DESC LIMIT ?5 OFFSET ?6";
 
 #[derive(Clone)]
 pub struct PostgresPromotionAdminRepository {
@@ -165,7 +165,7 @@ macro_rules! impl_admin_repository {
             fn retrieve_campaign<'a>(
                 &'a self,
                 scope: &'a PromotionAdminScope,
-                campaign_id: i64,
+                campaign_id: String,
             ) -> PromotionAdminFuture<'a, Option<PromotionCampaignItem>> {
                 Box::pin(async move {
                     crate::promotion_admin_management::retrieve_campaign(
@@ -195,7 +195,7 @@ macro_rules! impl_admin_repository {
             fn update_campaign<'a>(
                 &'a self,
                 scope: &'a PromotionAdminScope,
-                campaign_id: i64,
+                campaign_id: String,
                 input: &'a PromotionCampaignInput,
             ) -> PromotionAdminFuture<'a, Option<PromotionCampaignItem>> {
                 Box::pin(async move {
@@ -212,7 +212,7 @@ macro_rules! impl_admin_repository {
             fn delete_campaign<'a>(
                 &'a self,
                 scope: &'a PromotionAdminScope,
-                campaign_id: i64,
+                campaign_id: String,
             ) -> PromotionAdminFuture<'a, bool> {
                 Box::pin(async move {
                     crate::promotion_admin_management::delete_campaign(
@@ -238,7 +238,7 @@ macro_rules! impl_admin_repository {
             fn retrieve_offer<'a>(
                 &'a self,
                 scope: &'a PromotionAdminScope,
-                offer_id: i64,
+                offer_id: String,
             ) -> PromotionAdminFuture<'a, Option<PromotionOfferItem>> {
                 Box::pin(async move {
                     crate::promotion_admin_management::retrieve_offer(
@@ -268,7 +268,7 @@ macro_rules! impl_admin_repository {
             fn update_offer<'a>(
                 &'a self,
                 scope: &'a PromotionAdminScope,
-                offer_id: i64,
+                offer_id: String,
                 input: &'a PromotionOfferInput,
             ) -> PromotionAdminFuture<'a, Option<PromotionOfferItem>> {
                 Box::pin(async move {
@@ -285,8 +285,8 @@ macro_rules! impl_admin_repository {
             fn update_offer_status<'a>(
                 &'a self,
                 scope: &'a PromotionAdminScope,
-                offer_id: i64,
-                status: i32,
+                offer_id: String,
+                status: &'a str,
             ) -> PromotionAdminFuture<'a, bool> {
                 Box::pin(async move {
                     let pool = AdminPool::$variant(self.pool.clone());
@@ -297,7 +297,7 @@ macro_rules! impl_admin_repository {
             fn delete_offer<'a>(
                 &'a self,
                 scope: &'a PromotionAdminScope,
-                offer_id: i64,
+                offer_id: String,
             ) -> PromotionAdminFuture<'a, bool> {
                 Box::pin(async move {
                     crate::promotion_admin_management::delete_offer(
@@ -520,7 +520,7 @@ async fn list_offers(
                 priority: row.i32("priority")?,
                 starts_at: row.string("starts_at")?,
                 ends_at: row.optional_string("ends_at")?,
-                status: row.i32("status")?,
+                status: row.string("status")?,
                 discount_type: row.optional_string("discount_type")?,
                 discount_value: row.optional_string("discount_value")?,
                 minimum_amount: row.optional_string("minimum_amount")?,
@@ -561,6 +561,7 @@ async fn list_coupon_stocks(
                 offer_id: row.i64("offer_id")?.to_string(),
                 stock_no: row.string("stock_no")?,
                 stock_type: row.string("stock_type")?,
+                code_issue_mode: row.string("code_issue_mode")?,
                 total_quantity: row.i64("total_quantity")?,
                 available_quantity: row.i64("available_quantity")?,
                 claimed_quantity: row.i64("claimed_quantity")?,
@@ -569,7 +570,7 @@ async fn list_coupon_stocks(
                 per_user_limit: row.i32("per_user_limit")?,
                 claim_starts_at: row.optional_string("claim_starts_at")?,
                 claim_ends_at: row.optional_string("claim_ends_at")?,
-                status: row.i32("status")?,
+                status: row.string("status")?,
             })
         })
         .collect::<Result<Vec<_>, CommerceServiceError>>()?;
@@ -581,17 +582,65 @@ async fn list_codes(
     scope: &PromotionAdminScope,
     query: &PromotionAdminListQuery,
 ) -> Result<PromotionAdminPage<PromotionCodeItem>, CommerceServiceError> {
-    let (total_items, rows) = query_page(
-        pool,
-        scope,
-        query,
-        POSTGRES_CODE_COUNT_SQL,
-        POSTGRES_CODE_LIST_SQL,
-        SQLITE_CODE_COUNT_SQL,
-        SQLITE_CODE_LIST_SQL,
-        "list promotion codes",
-    )
-    .await?;
+    let search = query.search_pattern();
+    let (total_items, rows) = match pool {
+        AdminPool::Postgres(pool) => {
+            let total_items = sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(
+                POSTGRES_CODE_COUNT_SQL,
+            ))
+            .bind(scope.tenant_id)
+            .bind(scope.organization_id)
+            .bind(&search)
+            .bind(query.status.as_deref())
+            .bind(query.code_batch_id)
+            .fetch_one(pool)
+            .await
+            .map_err(|error| storage_error("list promotion codes", error))?;
+            let rows: Vec<AdminRow> = sqlx::query(sqlx::AssertSqlSafe(POSTGRES_CODE_LIST_SQL))
+                .bind(scope.tenant_id)
+                .bind(scope.organization_id)
+                .bind(&search)
+                .bind(query.status.as_deref())
+                .bind(query.code_batch_id)
+                .bind(query.page_size)
+                .bind(query.offset())
+                .fetch_all(pool)
+                .await
+                .map_err(|error| storage_error("list promotion codes", error))?
+                .into_iter()
+                .map(AdminRow::Postgres)
+                .collect();
+            (total_items, rows)
+        }
+        AdminPool::Sqlite(pool) => {
+            let total_items = sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(
+                SQLITE_CODE_COUNT_SQL,
+            ))
+            .bind(scope.tenant_id)
+            .bind(scope.organization_id)
+            .bind(&search)
+            .bind(query.status.as_deref())
+            .bind(query.code_batch_id)
+            .fetch_one(pool)
+            .await
+            .map_err(|error| storage_error("list promotion codes", error))?;
+            let rows: Vec<AdminRow> = sqlx::query(sqlx::AssertSqlSafe(SQLITE_CODE_LIST_SQL))
+                .bind(scope.tenant_id)
+                .bind(scope.organization_id)
+                .bind(&search)
+                .bind(query.status.as_deref())
+                .bind(query.code_batch_id)
+                .bind(query.page_size)
+                .bind(query.offset())
+                .fetch_all(pool)
+                .await
+                .map_err(|error| storage_error("list promotion codes", error))?
+                .into_iter()
+                .map(AdminRow::Sqlite)
+                .collect();
+            (total_items, rows)
+        }
+    };
     let items = rows
         .into_iter()
         .map(|row| {
@@ -606,7 +655,7 @@ async fn list_codes(
                 claimed_quantity: row.i32("claimed_quantity")?,
                 starts_at: row.optional_string("starts_at")?,
                 expires_at: row.optional_string("expires_at")?,
-                status: row.i32("status")?,
+                status: row.string("status")?,
             })
         })
         .collect::<Result<Vec<_>, CommerceServiceError>>()?;
@@ -641,7 +690,7 @@ async fn list_discount_applications(
                 discount_type: row.string("discount_type")?,
                 discount_amount: row.string("discount_amount")?,
                 currency_code: row.string("currency_code")?,
-                status: row.i32("status")?,
+                status: row.string("status")?,
                 applied_at: row.string("applied_at")?,
                 settled_at: row.optional_string("settled_at")?,
                 released_at: row.optional_string("released_at")?,
@@ -669,7 +718,7 @@ async fn query_page(
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
-                .bind(query.status)
+                .bind(query.status.as_deref())
                 .fetch_one(pool)
                 .await
                 .map_err(|error| storage_error(operation, error))?;
@@ -677,7 +726,7 @@ async fn query_page(
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
-                .bind(query.status)
+                .bind(query.status.as_deref())
                 .bind(query.page_size)
                 .bind(query.offset())
                 .fetch_all(pool)
@@ -693,7 +742,7 @@ async fn query_page(
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
-                .bind(query.status)
+                .bind(query.status.as_deref())
                 .fetch_one(pool)
                 .await
                 .map_err(|error| storage_error(operation, error))?;
@@ -701,7 +750,7 @@ async fn query_page(
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
                 .bind(&search)
-                .bind(query.status)
+                .bind(query.status.as_deref())
                 .bind(query.page_size)
                 .bind(query.offset())
                 .fetch_all(pool)
@@ -718,11 +767,11 @@ async fn query_page(
 async fn update_offer_status(
     pool: &AdminPool,
     scope: &PromotionAdminScope,
-    offer_id: i64,
-    status: i32,
+    offer_id: String,
+    status: &str,
 ) -> Result<bool, CommerceServiceError> {
     let affected = match pool {
-        AdminPool::Postgres(pool) => sqlx::query("UPDATE promotion_offer SET status = $1, version = version + 1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND tenant_id = $3 AND organization_id = $4")
+        AdminPool::Postgres(pool) => sqlx::query("UPDATE promotion_offer SET status = $1, version = version + 1, updated_at = TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') WHERE id = $2 AND tenant_id = $3 AND organization_id = $4")
             .bind(status)
             .bind(offer_id)
             .bind(scope.tenant_id)
@@ -781,18 +830,19 @@ mod tests {
             .await
             .expect("sqlite pool");
         for statement in [
-            "CREATE TABLE promotion_offer (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, organization_id INTEGER NOT NULL, campaign_id INTEGER, offer_no TEXT NOT NULL, offer_code TEXT, offer_type TEXT NOT NULL, current_offer_version_id INTEGER, display_name TEXT NOT NULL, description TEXT, priority INTEGER NOT NULL, starts_at TEXT NOT NULL, ends_at TEXT, status INTEGER NOT NULL, version INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)",
+            "CREATE TABLE promotion_offer (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, organization_id INTEGER NOT NULL, campaign_id INTEGER, offer_no TEXT NOT NULL, offer_code TEXT, offer_type TEXT NOT NULL, current_offer_version_id INTEGER, display_name TEXT NOT NULL, description TEXT, priority INTEGER NOT NULL, starts_at TEXT NOT NULL, ends_at TEXT, status TEXT NOT NULL DEFAULT 'active', version INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)",
             "CREATE TABLE promotion_offer_version (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, offer_id INTEGER NOT NULL, discount_type TEXT NOT NULL, discount_value TEXT NOT NULL, minimum_amount TEXT NOT NULL, maximum_discount_amount TEXT, currency_code TEXT NOT NULL, rule_json TEXT)",
-            "CREATE TABLE promotion_coupon_stock (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, organization_id INTEGER NOT NULL, offer_id INTEGER NOT NULL, stock_no TEXT NOT NULL, stock_type TEXT NOT NULL, total_quantity INTEGER NOT NULL, available_quantity INTEGER NOT NULL, claimed_quantity INTEGER NOT NULL, redeemed_quantity INTEGER NOT NULL, locked_quantity INTEGER NOT NULL, per_user_limit INTEGER NOT NULL, claim_starts_at TEXT, claim_ends_at TEXT, status INTEGER NOT NULL, created_at TEXT NOT NULL)",
-            "CREATE TABLE promotion_code (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, organization_id INTEGER NOT NULL, stock_id INTEGER NOT NULL, offer_id INTEGER NOT NULL, code_no TEXT NOT NULL, promotion_code TEXT NOT NULL, code_type TEXT NOT NULL, max_claims INTEGER NOT NULL, claimed_quantity INTEGER NOT NULL, starts_at TEXT, expires_at TEXT, status INTEGER NOT NULL, created_at TEXT NOT NULL)",
-            "CREATE TABLE promotion_discount_application (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, organization_id INTEGER NOT NULL, application_no TEXT NOT NULL, order_id INTEGER NOT NULL, order_no TEXT, offer_id INTEGER NOT NULL, discount_type TEXT NOT NULL, discount_amount TEXT NOT NULL, currency_code TEXT NOT NULL, status INTEGER NOT NULL, applied_at TEXT NOT NULL, settled_at TEXT, released_at TEXT, rolled_back_at TEXT)",
-            "INSERT INTO promotion_offer VALUES (1, 100001, 300001, NULL, 'offer-1', 'launch', 'COUPON', 11, 'Launch', NULL, 10, '2026-01-01', NULL, 1, 0, '2026-01-01', '2026-01-01')",
-            "INSERT INTO promotion_offer VALUES (2, 200002, 300001, NULL, 'offer-2', 'other', 'COUPON', 12, 'Other tenant', NULL, 5, '2026-01-01', NULL, 1, 0, '2026-01-01', '2026-01-01')",
+            "CREATE TABLE promotion_coupon_stock (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, organization_id INTEGER NOT NULL, offer_id INTEGER NOT NULL, stock_no TEXT NOT NULL, stock_type TEXT NOT NULL, code_issue_mode TEXT NOT NULL DEFAULT 'REALTIME', total_quantity INTEGER NOT NULL, available_quantity INTEGER NOT NULL, claimed_quantity INTEGER NOT NULL, redeemed_quantity INTEGER NOT NULL, locked_quantity INTEGER NOT NULL, per_user_limit INTEGER NOT NULL, claim_starts_at TEXT, claim_ends_at TEXT, status TEXT NOT NULL DEFAULT 'active', created_at TEXT NOT NULL)",
+            "CREATE TABLE promotion_code (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, organization_id INTEGER NOT NULL, stock_id INTEGER NOT NULL, offer_id INTEGER NOT NULL, code_batch_id INTEGER, code_no TEXT NOT NULL, promotion_code TEXT NOT NULL, code_type TEXT NOT NULL, max_claims INTEGER NOT NULL, claimed_quantity INTEGER NOT NULL, starts_at TEXT, expires_at TEXT, status TEXT NOT NULL DEFAULT 'active', created_at TEXT NOT NULL)",
+            "CREATE TABLE promotion_discount_application (id INTEGER PRIMARY KEY, tenant_id INTEGER NOT NULL, organization_id INTEGER NOT NULL, application_no TEXT NOT NULL, order_id INTEGER NOT NULL, order_no TEXT, offer_id INTEGER NOT NULL, discount_type TEXT NOT NULL, discount_amount TEXT NOT NULL, currency_code TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'applied', applied_at TEXT NOT NULL, settled_at TEXT, released_at TEXT, rolled_back_at TEXT)",
+            "INSERT INTO promotion_offer VALUES (1, 100001, 300001, NULL, 'offer-1', 'launch', 'COUPON', 11, 'Launch', NULL, 10, '2026-01-01', NULL, 'active', 0, '2026-01-01', '2026-01-01')",
+            "INSERT INTO promotion_offer VALUES (2, 200002, 300001, NULL, 'offer-2', 'other', 'COUPON', 12, 'Other tenant', NULL, 5, '2026-01-01', NULL, 'active', 0, '2026-01-01', '2026-01-01')",
             "INSERT INTO promotion_offer_version VALUES (11, 100001, 1, 'FIXED', '10', '100', NULL, 'CNY', '{\"couponBenefit\":{\"kind\":\"token_bank_credit\",\"targetAsset\":\"token_bank\",\"grantAmount\":\"500\"}}')",
             "INSERT INTO promotion_offer_version VALUES (12, 200002, 2, 'FIXED', '10', '100', NULL, 'CNY', NULL)",
-            "INSERT INTO promotion_coupon_stock VALUES (1, 100001, 300001, 1, 'stock-1', 'LIMITED', 100, 80, 15, 5, 0, 1, NULL, NULL, 1, '2026-01-01')",
-            "INSERT INTO promotion_code VALUES (1, 100001, 300001, 1, 1, 'code-1', 'WELCOME', 'PUBLIC', 10, 1, NULL, NULL, 1, '2026-01-01')",
-            "INSERT INTO promotion_discount_application VALUES (1, 100001, 300001, 'application-1', 10, 'order-10', 1, 'FIXED', '500', 'CNY', 1, '2026-01-01', NULL, NULL, NULL)",
+            "INSERT INTO promotion_coupon_stock VALUES (1, 100001, 300001, 1, 'stock-1', 'LIMITED', 'BATCH', 100, 80, 15, 5, 0, 1, NULL, NULL, 'active', '2026-01-01')",
+            "INSERT INTO promotion_code VALUES (1, 100001, 300001, 1, 1, NULL, 'code-1', 'WELCOME', 'PUBLIC', 10, 1, NULL, NULL, 'active', '2026-01-01')",
+            "INSERT INTO promotion_code VALUES (2, 100001, 300001, 1, 1, 9, 'code-2', 'BATCHED', 'PUBLIC', 10, 0, NULL, NULL, 'active', '2026-01-01')",
+            "INSERT INTO promotion_discount_application VALUES (1, 100001, 300001, 'application-1', 10, 'order-10', 1, 'FIXED', '500', 'CNY', 'applied', '2026-01-01', NULL, NULL, NULL)",
         ] {
             sqlx::query(sqlx::AssertSqlSafe(statement))
                 .execute(&pool)
@@ -815,11 +865,12 @@ mod tests {
             .expect("overview");
         assert_eq!(overview.total_offers, 1);
         assert_eq!(overview.total_coupon_stock, 100);
-        assert_eq!(overview.active_codes, 1);
+        assert_eq!(overview.active_codes, 2);
         assert_eq!(overview.discount_applications, 1);
 
         let query =
-            PromotionAdminListQuery::new(1, 1, Some("launch"), Some(1)).expect("list query");
+            PromotionAdminListQuery::new(1, 1, Some("launch"), Some("active"), None, None)
+                .expect("list query");
         let offers = repository
             .list_offers(&scope(), &query)
             .await
@@ -842,18 +893,52 @@ mod tests {
         let pool = test_pool().await;
         let repository = SqlitePromotionAdminRepository::new(pool.clone());
         assert!(repository
-            .update_offer_status(&scope(), 1, 0)
+            .update_offer_status(&scope(), "1".to_string(), "disabled")
             .await
             .expect("status update"));
         assert!(!repository
-            .update_offer_status(&scope(), 2, 0)
+            .update_offer_status(&scope(), "2".to_string(), "disabled")
             .await
             .expect("tenant guard"));
-        let status: i32 = sqlx::query_scalar("SELECT status FROM promotion_offer WHERE id = 1")
+        let status: String = sqlx::query_scalar("SELECT status FROM promotion_offer WHERE id = 1")
             .fetch_one(&pool)
             .await
             .expect("status");
-        assert_eq!(status, 0);
+        assert_eq!(status, "disabled");
+    }
+
+    #[tokio::test]
+    async fn sqlite_codes_list_filters_by_code_batch() {
+        let repository = SqlitePromotionAdminRepository::new(test_pool().await);
+        let scoped =
+            PromotionAdminListQuery::new(1, 20, None, None, Some(9), None).expect("list query");
+        let page = repository
+            .list_codes(&scope(), &scoped)
+            .await
+            .expect("codes by batch");
+        assert_eq!(page.total_items, 1);
+        assert_eq!(page.items[0].code_no, "code-2");
+        assert_eq!(page.items[0].promotion_code, "****");
+
+        let unfiltered =
+            PromotionAdminListQuery::new(1, 20, None, None, None, None).expect("list query");
+        let all = repository
+            .list_codes(&scope(), &unfiltered)
+            .await
+            .expect("all codes");
+        assert_eq!(all.total_items, 2);
+    }
+
+    #[tokio::test]
+    async fn sqlite_stock_list_exposes_code_issue_mode() {
+        let repository = SqlitePromotionAdminRepository::new(test_pool().await);
+        let query =
+            PromotionAdminListQuery::new(1, 20, None, None, None, None).expect("list query");
+        let page = repository
+            .list_coupon_stocks(&scope(), &query)
+            .await
+            .expect("stocks");
+        assert_eq!(page.items[0].code_issue_mode, "BATCH");
     }
 
     #[test]

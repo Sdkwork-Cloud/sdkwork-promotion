@@ -12,6 +12,15 @@
       "lock": "access-exclusive",
       "lock_timeout": "2s",
       "statement_timeout": "30s"
+    },
+    "0003_coupon_code_issue_mode.up.sql": {
+      "engine": "postgres",
+      "reversible": "false",
+      "rollback": "forward-fix",
+      "transactional": "true",
+      "lock": "access-exclusive",
+      "lock_timeout": "2s",
+      "statement_timeout": "30s"
     }
   }
 }

@@ -9,5 +9,5 @@ export interface PromotionCode {
   claimedQuantity: number;
   startsAt?: string | null;
   expiresAt?: string | null;
-  status: number;
+  status: 'active' | 'disabled';
 }

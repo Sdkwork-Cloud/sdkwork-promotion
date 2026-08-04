@@ -37,7 +37,9 @@ struct ListParams {
     page: Option<i64>,
     page_size: Option<i64>,
     q: Option<String>,
-    status: Option<i32>,
+    status: Option<String>,
+    code_batch_id: Option<i64>,
+    stock_id: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -68,7 +70,7 @@ struct OfferRequest {
     priority: i32,
     starts_at: String,
     ends_at: Option<String>,
-    status: i32,
+    status: String,
     discount_type: String,
     discount_value: String,
     minimum_amount: String,
@@ -104,11 +106,12 @@ enum CouponBenefitRequest {
 struct CouponStockRequest {
     offer_id: String,
     stock_type: String,
+    code_issue_mode: Option<String>,
     total_quantity: String,
     per_user_limit: i32,
     claim_starts_at: Option<String>,
     claim_ends_at: Option<String>,
-    status: i32,
+    status: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -134,7 +137,7 @@ struct DistributionRequest {
 
 #[derive(Debug, Deserialize)]
 struct UpdateStatusRequest {
-    status: i32,
+    status: String,
 }
 
 macro_rules! response_try {
@@ -221,7 +224,7 @@ struct OfferResponse {
     priority: i32,
     starts_at: String,
     ends_at: Option<String>,
-    status: i32,
+    status: String,
     discount_type: Option<String>,
     discount_value: Option<String>,
     minimum_amount: Option<String>,
@@ -314,6 +317,7 @@ struct StockResponse {
     offer_id: String,
     stock_no: String,
     stock_type: String,
+    code_issue_mode: String,
     total_quantity: i64,
     available_quantity: i64,
     claimed_quantity: i64,
@@ -322,7 +326,7 @@ struct StockResponse {
     per_user_limit: i32,
     claim_starts_at: Option<String>,
     claim_ends_at: Option<String>,
-    status: i32,
+    status: String,
 }
 impl From<PromotionCouponStockItem> for StockResponse {
     fn from(v: PromotionCouponStockItem) -> Self {
@@ -331,6 +335,7 @@ impl From<PromotionCouponStockItem> for StockResponse {
             offer_id: v.offer_id,
             stock_no: v.stock_no,
             stock_type: v.stock_type,
+            code_issue_mode: v.code_issue_mode,
             total_quantity: v.total_quantity,
             available_quantity: v.available_quantity,
             claimed_quantity: v.claimed_quantity,
@@ -394,7 +399,7 @@ struct CodeResponse {
     claimed_quantity: i32,
     starts_at: Option<String>,
     expires_at: Option<String>,
-    status: i32,
+    status: String,
 }
 impl From<PromotionCodeItem> for CodeResponse {
     fn from(v: PromotionCodeItem) -> Self {
@@ -456,7 +461,7 @@ struct UserCouponResponse {
     offer_id: String,
     owner_user_id: String,
     coupon_code: String,
-    status: i32,
+    status: String,
     claimed_at: String,
     valid_from: String,
     expires_at: Option<String>,
@@ -528,7 +533,7 @@ struct ApplicationResponse {
     discount_type: String,
     discount_amount: String,
     currency_code: String,
-    status: i32,
+    status: String,
     applied_at: String,
     settled_at: Option<String>,
     released_at: Option<String>,
@@ -755,12 +760,13 @@ async fn update_offer_status(
 ) -> Response {
     let scope = response_try!(manage_scope(&c, i));
     let parsed = response_try!(parse_id(Some(&c), &id, "offerId"));
+    let status = b.status;
     match s
         .service
-        .update_offer_status(&scope, parsed, b.status)
+        .update_offer_status(&scope, parsed, &status)
         .await
     {
-        Ok(true) => success_command(Some(&c), id, b.status.to_string()),
+        Ok(true) => success_command(Some(&c), id, status),
         Ok(false) => not_found(Some(&c), "offer not found"),
         Err(e) => service_error(Some(&c), "update offer status", e),
     }
@@ -800,13 +806,21 @@ async fn create_stock(
     Json(b): Json<CouponStockRequest>,
 ) -> Response {
     let scope = response_try!(manage_scope(&c, i));
+    let is_unlimited = b.stock_type.trim().eq_ignore_ascii_case("UNLIMITED");
+    let total_quantity = if is_unlimited {
+        // 无限库存：总量仅作统计，允许 0
+        b.total_quantity.trim().parse::<i64>().unwrap_or(0).max(0)
+    } else {
+        response_try!(parse_i64_field(&b.total_quantity, "totalQuantity")
+            .map_err(|e| validation(Some(&c), e.message())))
+    };
     let input = PromotionCouponStockInput {
-        offer_id: response_try!(
-            parse_i64_field(&b.offer_id, "offerId").map_err(|e| validation(Some(&c), e.message()))
-        ),
+        offer_id: b.offer_id,
         stock_type: b.stock_type,
-        total_quantity: response_try!(parse_i64_field(&b.total_quantity, "totalQuantity")
-            .map_err(|e| validation(Some(&c), e.message()))),
+        code_issue_mode: b
+            .code_issue_mode
+            .unwrap_or_else(|| sdkwork_commerce_promotion_service::CODE_ISSUE_MODE_REALTIME.to_owned()),
+        total_quantity,
         per_user_limit: b.per_user_limit,
         claim_starts_at: b.claim_starts_at,
         claim_ends_at: b.claim_ends_at,
@@ -839,8 +853,7 @@ async fn create_code_batch(
     let scope = response_try!(manage_scope(&c, i));
     let input =
         PromotionCodeBatchInput {
-            stock_id: response_try!(parse_i64_field(&b.stock_id, "stockId")
-                .map_err(|e| validation(Some(&c), e.message()))),
+            stock_id: b.stock_id,
             code_type: b.code_type,
             quantity: response_try!(parse_i64_field(&b.quantity, "quantity")
                 .map_err(|e| validation(Some(&c), e.message()))),
@@ -888,16 +901,10 @@ async fn create_distribution(
     Json(b): Json<DistributionRequest>,
 ) -> Response {
     let scope = response_try!(manage_scope(&c, i));
-    let owner_user_ids = response_try!(b
-        .owner_user_ids
-        .iter()
-        .map(|value| parse_i64_field(value, "ownerUserIds"))
-        .collect::<Result<Vec<_>, _>>()
+    let owner_user_ids = response_try!(validate_owner_user_ids(&b.owner_user_ids)
         .map_err(|e| validation(Some(&c), e.message())));
     let input = PromotionDistributionInput {
-        stock_id: response_try!(
-            parse_i64_field(&b.stock_id, "stockId").map_err(|e| validation(Some(&c), e.message()))
-        ),
+        stock_id: b.stock_id,
         owner_user_ids,
         idempotency_key: b.idempotency_key,
     };
@@ -961,7 +968,7 @@ fn campaign_input(b: CampaignRequest) -> Result<PromotionCampaignInput, Commerce
 }
 fn offer_input(b: OfferRequest) -> Result<PromotionOfferInput, CommerceServiceError> {
     Ok(PromotionOfferInput {
-        campaign_id: parse_optional_i64(b.campaign_id.as_deref(), "campaignId")?,
+        campaign_id: b.campaign_id,
         offer_code: b.offer_code,
         offer_type: b.offer_type,
         display_name: b.display_name,
@@ -1023,6 +1030,24 @@ fn parse_i64_field(value: &str, name: &str) -> Result<i64, CommerceServiceError>
         })
 }
 
+fn validate_owner_user_ids(
+    values: &[String],
+) -> Result<Vec<String>, CommerceServiceError> {
+    if values.is_empty() {
+        return Err(CommerceServiceError::validation(
+            "ownerUserIds must not be empty",
+        ));
+    }
+    for value in values {
+        if value.trim().is_empty() {
+            return Err(CommerceServiceError::validation(
+                "ownerUserIds must not contain blank entries",
+            ));
+        }
+    }
+    Ok(values.to_vec())
+}
+
 fn parse_optional_i64(
     value: Option<&str>,
     name: &str,
@@ -1042,20 +1067,27 @@ fn manage_scope(
 ) -> Result<sdkwork_commerce_promotion_service::PromotionAdminScope, Response> {
     require_backend_operator(Some(c), i, MANAGE_PERMISSION).map_err(|r| *r)
 }
-fn parse_id(c: Option<&WebRequestContext>, value: &str, name: &str) -> Result<i64, Response> {
-    value
-        .parse::<i64>()
-        .ok()
-        .filter(|v| *v > 0)
-        .ok_or_else(|| validation(c, format!("{name} must be a positive integer")))
+fn parse_id(c: Option<&WebRequestContext>, value: &str, name: &str) -> Result<String, Response> {
+    let value = value.trim();
+    if value.is_empty() {
+        return Err(validation(c, format!("{name} must not be blank")));
+    }
+    Ok(value.to_owned())
 }
 fn list_query(
     c: Option<&WebRequestContext>,
     q: &ListParams,
 ) -> Result<(OffsetListPageParams, PromotionAdminListQuery), Response> {
     let page = parse_page(c, q.page, q.page_size).map_err(|r| *r)?;
-    let query = PromotionAdminListQuery::new(page.page, page.page_size, q.q.as_deref(), q.status)
-        .map_err(|e| validation(c, e.message()))?;
+    let query = PromotionAdminListQuery::new(
+        page.page,
+        page.page_size,
+        q.q.as_deref(),
+        q.status.as_deref(),
+        q.code_batch_id,
+        q.stock_id,
+    )
+    .map_err(|e| validation(c, e.message()))?;
     Ok((page, query))
 }
 fn page_response<T, R, F>(

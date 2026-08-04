@@ -11,5 +11,6 @@ export interface CouponStock {
   perUserLimit: number;
   claimStartsAt?: string | null;
   claimEndsAt?: string | null;
-  status: number;
+  status: 'active' | 'disabled';
+  codeIssueMode: 'REALTIME' | 'BATCH';
 }
