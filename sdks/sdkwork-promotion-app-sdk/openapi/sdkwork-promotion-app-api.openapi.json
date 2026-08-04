@@ -1318,7 +1318,7 @@
       },
       "PromotionsCodesRedemptionsCreateRequest": {
         "additionalProperties": false,
-        "description": "Promotions codes redemptions create request schema exposed by Claw Router.",
+        "description": "Promotions codes redemptions create request schema exposed by Cloud Router.",
         "properties": {
           "channel": {
             "description": "Channel field on promotions codes redemptions create request.",
@@ -1360,7 +1360,7 @@
             "type": "object"
           }
         ],
-        "description": "Promotions codes redemptions create result schema exposed by Claw Router.",
+        "description": "Promotions codes redemptions create result schema exposed by Cloud Router.",
         "x-operation-id": "promotions.codes.redemptions.create"
       },
       "PromotionsDiscountApplicationsCreateResult": {
@@ -1387,7 +1387,7 @@
             "type": "object"
           }
         ],
-        "description": "Promotions discount applications create result schema exposed by Claw Router.",
+        "description": "Promotions discount applications create result schema exposed by Cloud Router.",
         "x-operation-id": "promotions.discountApplications.create"
       },
       "PromotionsDiscountApplicationsReleasesCreateResult": {
@@ -1414,7 +1414,7 @@
             "type": "object"
           }
         ],
-        "description": "Promotions discount applications releases create result schema exposed by Claw Router.",
+        "description": "Promotions discount applications releases create result schema exposed by Cloud Router.",
         "x-operation-id": "promotions.discountApplications.releases.create"
       },
       "PromotionsDiscountApplicationsReversalsCreateResult": {
@@ -1441,7 +1441,7 @@
             "type": "object"
           }
         ],
-        "description": "Promotions discount applications reversals create result schema exposed by Claw Router.",
+        "description": "Promotions discount applications reversals create result schema exposed by Cloud Router.",
         "x-operation-id": "promotions.discountApplications.reversals.create"
       },
       "PromotionsDiscountApplicationsRollbackResult": {
@@ -1468,7 +1468,7 @@
             "type": "object"
           }
         ],
-        "description": "Promotions discount applications rollback result schema exposed by Claw Router.",
+        "description": "Promotions discount applications rollback result schema exposed by Cloud Router.",
         "x-operation-id": "promotions.discountApplications.rollback"
       },
       "PromotionsDiscountApplicationsSettlementsCreateResult": {
@@ -1495,7 +1495,7 @@
             "type": "object"
           }
         ],
-        "description": "Promotions discount applications settlements create result schema exposed by Claw Router.",
+        "description": "Promotions discount applications settlements create result schema exposed by Cloud Router.",
         "x-operation-id": "promotions.discountApplications.settlements.create"
       },
       "PromotionsOffersListResult": {
@@ -1522,7 +1522,7 @@
             "type": "object"
           }
         ],
-        "description": "Promotions offers list result schema exposed by Claw Router.",
+        "description": "Promotions offers list result schema exposed by Cloud Router.",
         "x-operation-id": "promotions.offers.list"
       },
       "PromotionsOffersRetrieveResult": {
@@ -1549,7 +1549,7 @@
             "type": "object"
           }
         ],
-        "description": "Promotions offers retrieve result schema exposed by Claw Router.",
+        "description": "Promotions offers retrieve result schema exposed by Cloud Router.",
         "x-operation-id": "promotions.offers.retrieve"
       },
       "PromotionsUserCouponsClaimsCreateResult": {
@@ -1576,7 +1576,7 @@
             "type": "object"
           }
         ],
-        "description": "Promotions user coupons claims create result schema exposed by Claw Router.",
+        "description": "Promotions user coupons claims create result schema exposed by Cloud Router.",
         "x-operation-id": "promotions.userCoupons.claims.create"
       },
       "PromotionsUserCouponsListResult": {
@@ -1603,7 +1603,7 @@
             "type": "object"
           }
         ],
-        "description": "Promotions user coupons list result schema exposed by Claw Router.",
+        "description": "Promotions user coupons list result schema exposed by Cloud Router.",
         "x-operation-id": "promotions.userCoupons.list"
       },
       "PromotionsUserCouponsRetrieveResult": {
@@ -1630,7 +1630,7 @@
             "type": "object"
           }
         ],
-        "description": "Promotions user coupons retrieve result schema exposed by Claw Router.",
+        "description": "Promotions user coupons retrieve result schema exposed by Cloud Router.",
         "x-operation-id": "promotions.userCoupons.retrieve"
       },
       "PromotionsUserCouponsWalletListResult": {
@@ -1657,7 +1657,7 @@
             "type": "object"
           }
         ],
-        "description": "Promotions user coupons wallet list result schema exposed by Claw Router.",
+        "description": "Promotions user coupons wallet list result schema exposed by Cloud Router.",
         "x-operation-id": "promotions.userCoupons.wallet.list"
       },
       "PromotionsUserCouponsWalletRetrieveResult": {
@@ -1684,7 +1684,7 @@
             "type": "object"
           }
         ],
-        "description": "Promotions user coupons wallet retrieve result schema exposed by Claw Router.",
+        "description": "Promotions user coupons wallet retrieve result schema exposed by Cloud Router.",
         "x-operation-id": "promotions.userCoupons.wallet.retrieve"
       },
       "SdkWorkApiResponse": {

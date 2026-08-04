@@ -1,6 +1,6 @@
 import type { NoData } from './no-data';
 
-/** Promotions user coupons claims create result schema exposed by Claw Router. */
+/** Promotions user coupons claims create result schema exposed by Cloud Router. */
 export interface PromotionsUserCouponsClaimsCreateResult {
   code: 0;
   data: unknown & NoData;

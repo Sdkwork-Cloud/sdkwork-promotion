@@ -82,7 +82,7 @@
   },
   "screenshots": [
    {
-    "id": "sdkwork-clawrouter-pc-web-screenshot",
+    "id": "sdkwork-cloudrouter-pc-web-screenshot",
     "type": "SCREENSHOT",
     "purpose": "CATALOG_SCREENSHOT",
     "url": "https://cdn.sdkwork.com/apps/sdkwork-promotion-pc/media/web-screenshot.png",
@@ -95,18 +95,18 @@
     "format": "PNG",
     "fileSizeBytes": 1048576,
     "alphaChannel": false,
-    "caption": "SDKWork ClawRouter PC product screenshot.",
+    "caption": "SDKWork CloudRouter PC product screenshot.",
     "sortOrder": 0,
     "enabled": true,
     "metadata": {
      "generatedPlaceholder": true,
-     "altText": "SDKWork ClawRouter PC app screenshot."
+     "altText": "SDKWork CloudRouter PC app screenshot."
     }
    }
   ],
   "previews": [
    {
-    "id": "sdkwork-clawrouter-pc-catalog-preview",
+    "id": "sdkwork-cloudrouter-pc-catalog-preview",
     "type": "PREVIEW_IMAGE",
     "purpose": "CATALOG_PREVIEW",
     "url": "https://cdn.sdkwork.com/apps/sdkwork-promotion-pc/media/preview-cover.png",
@@ -117,12 +117,12 @@
     "format": "PNG",
     "fileSizeBytes": 786432,
     "alphaChannel": false,
-    "caption": "SDKWork ClawRouter PC preview.",
+    "caption": "SDKWork CloudRouter PC preview.",
     "sortOrder": 0,
     "enabled": true,
     "metadata": {
      "generatedPlaceholder": true,
-     "altText": "SDKWork ClawRouter PC preview cover."
+     "altText": "SDKWork CloudRouter PC preview cover."
     }
    }
   ],
@@ -143,7 +143,7 @@
    "WEB"
   ],
   "defaultPackageId": "web-universal-cloud-browser-zip",
-  "storeUrl": "https://sdkwork.com/apps/sdkwork-clawrouter-pc",
+  "storeUrl": "https://sdkwork.com/apps/sdkwork-cloudrouter-pc",
   "stores": [],
   "config": {
    "workspaceRoot": ".",
@@ -154,17 +154,17 @@
  "artifacts": {
   "installConfig": {
    "defaultPackageId": "web-universal-cloud-browser-zip",
-   "installCommand": "sdkwork install sdkwork-clawrouter-pc",
-   "launchCommand": "sdkwork open sdkwork-clawrouter-pc",
-   "uninstallCommand": "sdkwork uninstall sdkwork-clawrouter-pc",
+   "installCommand": "sdkwork install sdkwork-cloudrouter-pc",
+   "launchCommand": "sdkwork open sdkwork-cloudrouter-pc",
+   "uninstallCommand": "sdkwork uninstall sdkwork-cloudrouter-pc",
    "packages": [
     {
      "id": "web-universal-cloud-browser-zip",
-     "name": "SDKWork ClawRouter PC Web Bundle",
+     "name": "SDKWork CloudRouter PC Web Bundle",
      "sourceType": "WEB_URL",
      "packageFormat": "ZIP",
      "platform": "WEB",
-     "url": "https://cdn.sdkwork.com/apps/sdkwork-clawrouter-pc/STABLE/0.0.0/web.zip",
+     "url": "https://cdn.sdkwork.com/apps/sdkwork-cloudrouter-pc/STABLE/0.0.0/web.zip",
      "enabled": true,
      "metadata": {},
      "checksumAlgorithm": "SHA-256",
@@ -175,11 +175,11 @@
     },
     {
      "id": "windows-x64-standalone-desktop-zip",
-     "name": "SDKWork ClawRouter PC Windows Bundle",
+     "name": "SDKWork CloudRouter PC Windows Bundle",
      "sourceType": "BINARY_URL",
      "packageFormat": "ZIP",
      "platform": "DESKTOP_WINDOWS",
-     "url": "https://cdn.sdkwork.com/apps/sdkwork-clawrouter-pc/STABLE/0.0.0/windows/x64/app.zip",
+     "url": "https://cdn.sdkwork.com/apps/sdkwork-cloudrouter-pc/STABLE/0.0.0/windows/x64/app.zip",
      "enabled": true,
      "metadata": {},
      "architecture": "x64",
@@ -190,11 +190,11 @@
     },
     {
      "id": "macos-universal-standalone-desktop-dmg",
-     "name": "SDKWork ClawRouter PC macOS Bundle",
+     "name": "SDKWork CloudRouter PC macOS Bundle",
      "sourceType": "BINARY_URL",
      "packageFormat": "DMG",
      "platform": "DESKTOP_MACOS",
-     "url": "https://cdn.sdkwork.com/apps/sdkwork-clawrouter-pc/STABLE/0.0.0/macos/universal/app.dmg",
+     "url": "https://cdn.sdkwork.com/apps/sdkwork-cloudrouter-pc/STABLE/0.0.0/macos/universal/app.dmg",
      "enabled": true,
      "metadata": {},
      "architecture": "universal",
@@ -205,11 +205,11 @@
     },
     {
      "id": "linux-x64-standalone-desktop-appimage",
-     "name": "SDKWork ClawRouter PC Linux Bundle",
+     "name": "SDKWork CloudRouter PC Linux Bundle",
      "sourceType": "BINARY_URL",
      "packageFormat": "APPIMAGE",
      "platform": "DESKTOP_LINUX",
-     "url": "https://cdn.sdkwork.com/apps/sdkwork-clawrouter-pc/STABLE/0.0.0/linux/generic/x64/app.AppImage",
+     "url": "https://cdn.sdkwork.com/apps/sdkwork-cloudrouter-pc/STABLE/0.0.0/linux/generic/x64/app.AppImage",
      "enabled": true,
      "metadata": {
       "linux": {
@@ -241,9 +241,9 @@
    {
     "version": "0.0.0",
     "releaseChannel": "STABLE",
-    "title": "SDKWork ClawRouter PC 0.0.0",
-    "summary": "SDKWork ClawRouter PC initialized standard release.",
-    "content": "Initial SDKWork App Standard v3 manifest for SDKWork ClawRouter PC.",
+    "title": "SDKWork CloudRouter PC 0.0.0",
+    "summary": "SDKWork CloudRouter PC initialized standard release.",
+    "content": "Initial SDKWork App Standard v3 manifest for SDKWork CloudRouter PC.",
     "highlights": [
      "SDKWork App Standard v3 configuration initialized",
      "platform_app projection metadata standardized",

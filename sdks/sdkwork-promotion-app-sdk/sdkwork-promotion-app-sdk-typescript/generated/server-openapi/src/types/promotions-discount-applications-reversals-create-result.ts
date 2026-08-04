@@ -1,6 +1,6 @@
 import type { NoData } from './no-data';
 
-/** Promotions discount applications reversals create result schema exposed by Claw Router. */
+/** Promotions discount applications reversals create result schema exposed by Cloud Router. */
 export interface PromotionsDiscountApplicationsReversalsCreateResult {
   code: 0;
   data: unknown & NoData;

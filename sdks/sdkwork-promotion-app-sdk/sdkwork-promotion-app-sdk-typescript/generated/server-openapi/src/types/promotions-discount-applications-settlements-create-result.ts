@@ -1,6 +1,6 @@
 import type { NoData } from './no-data';
 
-/** Promotions discount applications settlements create result schema exposed by Claw Router. */
+/** Promotions discount applications settlements create result schema exposed by Cloud Router. */
 export interface PromotionsDiscountApplicationsSettlementsCreateResult {
   code: 0;
   data: unknown & NoData;

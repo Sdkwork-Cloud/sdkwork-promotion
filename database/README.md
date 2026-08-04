@@ -29,7 +29,7 @@ This module is in **initialization state** for greenfield deployments:
 3. **Drift** — run `pnpm db:drift:check` before release.
 
 The promotion module is registered as a federated commerce capability database:
-`crates/sdkwork-promotion-database-host` exposes `database_module()`, and the Claw
+`crates/sdkwork-promotion-database-host` exposes `database_module()`, and the Cloud
 Router commerce runtime bootstraps it on the shared commerce pool together with
 payment, order, and membership modules.
 

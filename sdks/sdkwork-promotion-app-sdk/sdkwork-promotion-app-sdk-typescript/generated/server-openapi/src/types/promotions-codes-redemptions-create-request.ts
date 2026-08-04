@@ -1,4 +1,4 @@
-/** Promotions codes redemptions create request schema exposed by Claw Router. */
+/** Promotions codes redemptions create request schema exposed by Cloud Router. */
 export interface PromotionsCodesRedemptionsCreateRequest {
   /** Channel field on promotions codes redemptions create request. */
   channel?: string;
