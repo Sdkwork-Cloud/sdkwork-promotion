@@ -585,17 +585,16 @@ async fn list_codes(
     let search = query.search_pattern();
     let (total_items, rows) = match pool {
         AdminPool::Postgres(pool) => {
-            let total_items = sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(
-                POSTGRES_CODE_COUNT_SQL,
-            ))
-            .bind(scope.tenant_id)
-            .bind(scope.organization_id)
-            .bind(&search)
-            .bind(query.status.as_deref())
-            .bind(query.code_batch_id)
-            .fetch_one(pool)
-            .await
-            .map_err(|error| storage_error("list promotion codes", error))?;
+            let total_items =
+                sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(POSTGRES_CODE_COUNT_SQL))
+                    .bind(scope.tenant_id)
+                    .bind(scope.organization_id)
+                    .bind(&search)
+                    .bind(query.status.as_deref())
+                    .bind(query.code_batch_id)
+                    .fetch_one(pool)
+                    .await
+                    .map_err(|error| storage_error("list promotion codes", error))?;
             let rows: Vec<AdminRow> = sqlx::query(sqlx::AssertSqlSafe(POSTGRES_CODE_LIST_SQL))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
@@ -613,17 +612,16 @@ async fn list_codes(
             (total_items, rows)
         }
         AdminPool::Sqlite(pool) => {
-            let total_items = sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(
-                SQLITE_CODE_COUNT_SQL,
-            ))
-            .bind(scope.tenant_id)
-            .bind(scope.organization_id)
-            .bind(&search)
-            .bind(query.status.as_deref())
-            .bind(query.code_batch_id)
-            .fetch_one(pool)
-            .await
-            .map_err(|error| storage_error("list promotion codes", error))?;
+            let total_items =
+                sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(SQLITE_CODE_COUNT_SQL))
+                    .bind(scope.tenant_id)
+                    .bind(scope.organization_id)
+                    .bind(&search)
+                    .bind(query.status.as_deref())
+                    .bind(query.code_batch_id)
+                    .fetch_one(pool)
+                    .await
+                    .map_err(|error| storage_error("list promotion codes", error))?;
             let rows: Vec<AdminRow> = sqlx::query(sqlx::AssertSqlSafe(SQLITE_CODE_LIST_SQL))
                 .bind(scope.tenant_id)
                 .bind(scope.organization_id)
@@ -868,9 +866,8 @@ mod tests {
         assert_eq!(overview.active_codes, 2);
         assert_eq!(overview.discount_applications, 1);
 
-        let query =
-            PromotionAdminListQuery::new(1, 1, Some("launch"), Some("active"), None, None)
-                .expect("list query");
+        let query = PromotionAdminListQuery::new(1, 1, Some("launch"), Some("active"), None, None)
+            .expect("list query");
         let offers = repository
             .list_offers(&scope(), &query)
             .await

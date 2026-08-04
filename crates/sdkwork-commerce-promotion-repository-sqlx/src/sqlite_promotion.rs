@@ -476,13 +476,8 @@ impl SqliteCommercePromotionStore {
             .as_ref()
             .map(|code| code.coupon_code.clone())
             .unwrap_or_else(|| issued_claim_coupon_code(&command));
-        let coupon = PromotionUserCouponItem::new(
-            &coupon_id,
-            &coupon_code,
-            &amount,
-            &now,
-            "pending",
-        )?;
+        let coupon =
+            PromotionUserCouponItem::new(&coupon_id, &coupon_code, &amount, &now, "pending")?;
         complete_claim_idempotency(&mut tx, &command, &coupon, &now).await?;
         tx.commit().await.map_err(|error| {
             store_error(
@@ -2141,7 +2136,6 @@ async fn ensure_promotion_offer_can_be_claimed(
     command: &ClaimPromotionUserCouponCommand,
     promotion: &ClaimPromotion,
 ) -> Result<(), CommerceServiceError> {
-
     if promotion.stock_type.trim().to_ascii_lowercase() != "unlimited"
         && promotion.available_quantity <= 0
     {
@@ -2371,8 +2365,7 @@ async fn update_claim_promotion_counters(
     promotion: &ClaimPromotion,
     now: &str,
 ) -> Result<(), CommerceServiceError> {
-    let requires_stock_quantity =
-        promotion.stock_type.trim().to_ascii_lowercase() != "unlimited";
+    let requires_stock_quantity = promotion.stock_type.trim().to_ascii_lowercase() != "unlimited";
     let requires_stock_quantity_flag = if requires_stock_quantity {
         1_i64
     } else {
@@ -3226,10 +3219,12 @@ mod tests {
         let pool = migrated_pool().await;
         seed_promotion_codes(&pool).await;
         // stock-other 无人领取：设置每人限领 2 张；禁用其码池走实时生成路径
-        sqlx::query("UPDATE promotion_coupon_stock SET per_user_limit = 2 WHERE id = 'stock-other'")
-            .execute(&pool)
-            .await
-            .expect("set per user limit");
+        sqlx::query(
+            "UPDATE promotion_coupon_stock SET per_user_limit = 2 WHERE id = 'stock-other'",
+        )
+        .execute(&pool)
+        .await
+        .expect("set per user limit");
         sqlx::query("UPDATE promotion_code SET status = 'disabled' WHERE id = 'code-other'")
             .execute(&pool)
             .await
@@ -3237,15 +3232,27 @@ mod tests {
         let store = super::SqliteCommercePromotionStore::new(pool.clone());
 
         store
-            .claim_promotion_user_coupon(claim_command("limit-user", "offer-other", "claim-limit-1"))
+            .claim_promotion_user_coupon(claim_command(
+                "limit-user",
+                "offer-other",
+                "claim-limit-1",
+            ))
             .await
             .expect("first claim");
         store
-            .claim_promotion_user_coupon(claim_command("limit-user", "offer-other", "claim-limit-2"))
+            .claim_promotion_user_coupon(claim_command(
+                "limit-user",
+                "offer-other",
+                "claim-limit-2",
+            ))
             .await
             .expect("second claim");
         let error = store
-            .claim_promotion_user_coupon(claim_command("limit-user", "offer-other", "claim-limit-3"))
+            .claim_promotion_user_coupon(claim_command(
+                "limit-user",
+                "offer-other",
+                "claim-limit-3",
+            ))
             .await
             .expect_err("third claim must exceed per user limit");
         assert_eq!("conflict", error.code());

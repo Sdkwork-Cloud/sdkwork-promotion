@@ -7,6 +7,7 @@ use sdkwork_commerce_promotion_service::{
     PromotionOfferItem,
 };
 use sdkwork_contract_service::CommerceServiceError;
+use sdkwork_utils_rust::uuid;
 use sqlx::{PgPool, Row, SqlitePool};
 use uuid::Uuid;
 
@@ -113,7 +114,7 @@ pub(crate) async fn create_campaign(
     input: &PromotionCampaignInput,
 ) -> Result<PromotionCampaignItem, CommerceServiceError> {
     let id = generated_id();
-    let uuid = Uuid::new_v4().to_string();
+    let uuid = uuid();
     let campaign_no = reference("CAM");
     let actor_id = scope.actor_id()?;
     match pool {
@@ -189,8 +190,8 @@ pub(crate) async fn create_offer(
 ) -> Result<PromotionOfferItem, CommerceServiceError> {
     let offer_id = generated_id();
     let version_id = generated_id();
-    let offer_uuid = Uuid::new_v4().to_string();
-    let version_uuid = Uuid::new_v4().to_string();
+    let offer_uuid = uuid();
+    let version_uuid = uuid();
     let offer_no = reference("OFR");
     match pool {
         AdminPool::Postgres(pool) => {
@@ -232,13 +233,29 @@ pub(crate) async fn update_offer(
     input: &PromotionOfferInput,
 ) -> Result<Option<PromotionOfferItem>, CommerceServiceError> {
     let version_id = generated_id();
-    let version_uuid = Uuid::new_v4().to_string();
+    let version_uuid = uuid();
     let affected = match pool {
         AdminPool::Postgres(pool) => {
-            update_offer_postgres(pool, scope, offer_id.clone(), input, version_id, &version_uuid).await?
+            update_offer_postgres(
+                pool,
+                scope,
+                offer_id.clone(),
+                input,
+                version_id,
+                &version_uuid,
+            )
+            .await?
         }
         AdminPool::Sqlite(pool) => {
-            update_offer_sqlite(pool, scope, offer_id.clone(), input, version_id, &version_uuid).await?
+            update_offer_sqlite(
+                pool,
+                scope,
+                offer_id.clone(),
+                input,
+                version_id,
+                &version_uuid,
+            )
+            .await?
         }
     };
     if !affected {
@@ -265,7 +282,7 @@ pub(crate) async fn create_coupon_stock(
     input: &PromotionCouponStockInput,
 ) -> Result<PromotionCouponStockItem, CommerceServiceError> {
     let id = generated_id();
-    let uuid = Uuid::new_v4().to_string();
+    let uuid = uuid();
     let stock_no = reference("STK");
     match pool {
         AdminPool::Postgres(pool) => {
@@ -620,7 +637,7 @@ pub(crate) async fn create_code_batch(
         return Ok(item);
     }
     let batch_id = generated_id();
-    let batch_uuid = Uuid::new_v4().to_string();
+    let batch_uuid = uuid();
     let batch_no = reference("CBT");
     let actor_id = scope.actor_id()?;
     match pool {
@@ -677,7 +694,7 @@ async fn create_code_batch_postgres(
     sqlx::query("INSERT INTO promotion_code_batch (id,uuid,tenant_id,organization_id,stock_id,offer_id,offer_version_id,batch_no,code_type,requested_quantity,generated_quantity,code_length,code_prefix,starts_at,expires_at,status,idempotency_key,created_by,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,0,$11,$12,$13,$14,'GENERATING',$15,$16,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind(batch_id.to_string()).bind(batch_uuid).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(input.stock_id.to_string()).bind(offer_id.to_string()).bind(version_id.to_string()).bind(batch_no).bind(input.code_type.trim()).bind(input.quantity).bind(input.code_length).bind(input.code_prefix.trim()).bind(trimmed(&input.starts_at)).bind(trimmed(&input.expires_at)).bind(input.idempotency_key.trim()).bind(actor_id.to_string()).execute(&mut *tx).await.map_err(|error|storage("create code batch",error))?;
     for _ in 0..input.quantity {
         let id = generated_id();
-        let uuid = Uuid::new_v4().to_string();
+        let uuid = uuid();
         let code_no = reference("COD");
         let value = generated_code(&input.code_prefix, input.code_length)?;
         sqlx::query("INSERT INTO promotion_code (id,uuid,tenant_id,organization_id,code_batch_id,stock_id,offer_id,offer_version_id,code_no,promotion_code,code_type,max_claims,claimed_quantity,starts_at,expires_at,status,version,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,1,0,$12,$13,'active',0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind(id.as_str()).bind(uuid).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(batch_id.to_string()).bind(input.stock_id.to_string()).bind(offer_id.to_string()).bind(version_id.to_string()).bind(code_no).bind(value).bind(input.code_type.trim()).bind(trimmed(&input.starts_at)).bind(trimmed(&input.expires_at)).execute(&mut *tx).await.map_err(|error|storage("generate promotion code",error))?;
@@ -711,7 +728,7 @@ async fn create_code_batch_sqlite(
     sqlx::query("INSERT INTO promotion_code_batch (id,uuid,tenant_id,organization_id,stock_id,offer_id,offer_version_id,batch_no,code_type,requested_quantity,generated_quantity,code_length,code_prefix,starts_at,expires_at,status,idempotency_key,created_by,created_at,updated_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,0,?11,?12,?13,?14,'GENERATING',?15,?16,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind(batch_id.to_string()).bind(batch_uuid).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(input.stock_id.to_string()).bind(offer_id.to_string()).bind(version_id.to_string()).bind(batch_no).bind(input.code_type.trim()).bind(input.quantity).bind(input.code_length).bind(input.code_prefix.trim()).bind(trimmed(&input.starts_at)).bind(trimmed(&input.expires_at)).bind(input.idempotency_key.trim()).bind(actor_id.to_string()).execute(&mut *tx).await.map_err(|error|storage("create code batch",error))?;
     for _ in 0..input.quantity {
         let id = generated_id();
-        let uuid = Uuid::new_v4().to_string();
+        let uuid = uuid();
         let code_no = reference("COD");
         let value = generated_code(&input.code_prefix, input.code_length)?;
         sqlx::query("INSERT INTO promotion_code (id,uuid,tenant_id,organization_id,code_batch_id,stock_id,offer_id,offer_version_id,code_no,promotion_code,code_type,max_claims,claimed_quantity,starts_at,expires_at,status,version,created_at,updated_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,1,0,?12,?13,'active',0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind(id.as_str()).bind(uuid).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(batch_id.to_string()).bind(input.stock_id.to_string()).bind(offer_id.to_string()).bind(version_id.to_string()).bind(code_no).bind(value).bind(input.code_type.trim()).bind(trimmed(&input.starts_at)).bind(trimmed(&input.expires_at)).execute(&mut *tx).await.map_err(|error|storage("generate promotion code",error))?;
@@ -835,19 +852,33 @@ pub(crate) async fn create_distribution_task(
         return Ok(item);
     }
     let task_id = generated_id();
-    let task_uuid = Uuid::new_v4().to_string();
+    let task_uuid = uuid();
     let task_no = reference("DST");
     let actor_id = scope.actor_id()?;
     match pool {
         AdminPool::Postgres(pool) => {
             create_distribution_postgres(
-                pool, scope, input, task_id.clone(), &task_uuid, &task_no, actor_id,
+                pool,
+                scope,
+                input,
+                task_id.clone(),
+                &task_uuid,
+                &task_no,
+                actor_id,
             )
             .await?
         }
         AdminPool::Sqlite(pool) => {
-            create_distribution_sqlite(pool, scope, input, task_id.clone(), &task_uuid, &task_no, actor_id)
-                .await?
+            create_distribution_sqlite(
+                pool,
+                scope,
+                input,
+                task_id.clone(),
+                &task_uuid,
+                &task_no,
+                actor_id,
+            )
+            .await?
         }
     }
     retrieve_distribution_task(pool, scope, task_id)
@@ -946,14 +977,14 @@ async fn insert_distributed_coupon_postgres(
     balance_after: i64,
 ) -> Result<(), CommerceServiceError> {
     let coupon_id = generated_id();
-    let coupon_uuid = Uuid::new_v4().to_string();
+    let coupon_uuid = uuid();
     let coupon_no = reference("CPN");
     let coupon_code = generated_code("AC", 16)?;
     let request_no = reference("REQ");
     let item_key = format!("{}:{user_id}", input.idempotency_key.trim());
     sqlx::query("INSERT INTO promotion_user_coupon (id,uuid,tenant_id,organization_id,coupon_no,stock_id,code_id,offer_id,offer_version_id,subject_type,subject_id,owner_user_id,coupon_code,status,claimed_at,valid_from,expires_at,redeemed_at,disabled_at,source_type,source_id,request_no,idempotency_key,trace_id,version,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,NULL,$7,$8,'USER',$9,$9,$10,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,$11,NULL,NULL,'ADMIN_DISTRIBUTION',$12,$13,$14,'',0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind(coupon_id.as_str()).bind(coupon_uuid).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(coupon_no).bind(input.stock_id.to_string()).bind(offer_id.to_string()).bind(version_id.to_string()).bind(user_id.to_string()).bind(coupon_code).bind(expires).bind(task_id.to_string()).bind(&request_no).bind(&item_key).execute(&mut **tx).await.map_err(|error|storage("issue user coupon",error))?;
-    sqlx::query("INSERT INTO promotion_distribution_record (id,uuid,tenant_id,organization_id,task_id,owner_user_id,user_coupon_id,status,failure_code,failure_detail,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,'SUCCEEDED',NULL,NULL,CURRENT_TIMESTAMP)").bind(generated_id()).bind(Uuid::new_v4().to_string()).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(task_id.to_string()).bind(user_id.to_string()).bind(coupon_id.as_str()).execute(&mut **tx).await.map_err(|error|storage("record coupon distribution",error))?;
-    sqlx::query("INSERT INTO promotion_coupon_ledger_entry (id,uuid,tenant_id,stock_id,user_coupon_id,offer_id,subject_type,subject_id,direction,quantity_delta,balance_after,business_type,business_no,request_no,idempotency_key,source_type,source_id,trace_id,created_at) VALUES ($1,$2,$3,$4,$5,$6,'USER',$7,'OUT',-1,$8,'ADMIN_DISTRIBUTION',$9,$10,$11,'ADMIN_DISTRIBUTION',$12,'',CURRENT_TIMESTAMP)").bind(generated_id()).bind(Uuid::new_v4().to_string()).bind(scope.tenant_id.to_string()).bind(input.stock_id.to_string()).bind(coupon_id.as_str()).bind(offer_id.to_string()).bind(user_id.to_string()).bind(balance_after).bind(task_id.to_string()).bind(&request_no).bind(format!("ledger:{item_key}")).bind(task_id.to_string()).execute(&mut **tx).await.map_err(|error|storage("record coupon ledger",error))?;
+    sqlx::query("INSERT INTO promotion_distribution_record (id,uuid,tenant_id,organization_id,task_id,owner_user_id,user_coupon_id,status,failure_code,failure_detail,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,'SUCCEEDED',NULL,NULL,CURRENT_TIMESTAMP)").bind(generated_id()).bind(uuid()).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(task_id.to_string()).bind(user_id.to_string()).bind(coupon_id.as_str()).execute(&mut **tx).await.map_err(|error|storage("record coupon distribution",error))?;
+    sqlx::query("INSERT INTO promotion_coupon_ledger_entry (id,uuid,tenant_id,stock_id,user_coupon_id,offer_id,subject_type,subject_id,direction,quantity_delta,balance_after,business_type,business_no,request_no,idempotency_key,source_type,source_id,trace_id,created_at) VALUES ($1,$2,$3,$4,$5,$6,'USER',$7,'OUT',-1,$8,'ADMIN_DISTRIBUTION',$9,$10,$11,'ADMIN_DISTRIBUTION',$12,'',CURRENT_TIMESTAMP)").bind(generated_id()).bind(uuid()).bind(scope.tenant_id.to_string()).bind(input.stock_id.to_string()).bind(coupon_id.as_str()).bind(offer_id.to_string()).bind(user_id.to_string()).bind(balance_after).bind(task_id.to_string()).bind(&request_no).bind(format!("ledger:{item_key}")).bind(task_id.to_string()).execute(&mut **tx).await.map_err(|error|storage("record coupon ledger",error))?;
     Ok(())
 }
 
@@ -1048,14 +1079,14 @@ async fn insert_distributed_coupon_sqlite(
     balance_after: i64,
 ) -> Result<(), CommerceServiceError> {
     let coupon_id = generated_id();
-    let coupon_uuid = Uuid::new_v4().to_string();
+    let coupon_uuid = uuid();
     let coupon_no = reference("CPN");
     let coupon_code = generated_code("AC", 16)?;
     let request_no = reference("REQ");
     let item_key = format!("{}:{user_id}", input.idempotency_key.trim());
     sqlx::query("INSERT INTO promotion_user_coupon (id,uuid,tenant_id,organization_id,coupon_no,stock_id,code_id,offer_id,offer_version_id,subject_type,subject_id,owner_user_id,coupon_code,status,claimed_at,valid_from,expires_at,redeemed_at,disabled_at,source_type,source_id,request_no,idempotency_key,trace_id,version,created_at,updated_at) VALUES (?1,?2,?3,?4,?5,?6,NULL,?7,?8,'USER',?9,?9,?10,'claimed',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,?11,NULL,NULL,'ADMIN_DISTRIBUTION',?12,?13,?14,'',0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind(coupon_id.as_str()).bind(coupon_uuid).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(coupon_no).bind(input.stock_id.to_string()).bind(offer_id.to_string()).bind(version_id.to_string()).bind(user_id.to_string()).bind(coupon_code).bind(expires).bind(task_id.to_string()).bind(&request_no).bind(&item_key).execute(&mut **tx).await.map_err(|error|storage("issue user coupon",error))?;
-    sqlx::query("INSERT INTO promotion_distribution_record (id,uuid,tenant_id,organization_id,task_id,owner_user_id,user_coupon_id,status,failure_code,failure_detail,created_at) VALUES (?1,?2,?3,?4,?5,?6,?7,'SUCCEEDED',NULL,NULL,CURRENT_TIMESTAMP)").bind(generated_id()).bind(Uuid::new_v4().to_string()).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(task_id.to_string()).bind(user_id.to_string()).bind(coupon_id.as_str()).execute(&mut **tx).await.map_err(|error|storage("record coupon distribution",error))?;
-    sqlx::query("INSERT INTO promotion_coupon_ledger_entry (id,uuid,tenant_id,stock_id,user_coupon_id,offer_id,subject_type,subject_id,direction,quantity_delta,balance_after,business_type,business_no,request_no,idempotency_key,source_type,source_id,trace_id,created_at) VALUES (?1,?2,?3,?4,?5,?6,'USER',?7,'OUT',-1,?8,'ADMIN_DISTRIBUTION',?9,?10,?11,'ADMIN_DISTRIBUTION',?12,'',CURRENT_TIMESTAMP)").bind(generated_id()).bind(Uuid::new_v4().to_string()).bind(scope.tenant_id.to_string()).bind(input.stock_id.to_string()).bind(coupon_id.as_str()).bind(offer_id.to_string()).bind(user_id.to_string()).bind(balance_after).bind(task_id.to_string()).bind(&request_no).bind(format!("ledger:{item_key}")).bind(task_id.to_string()).execute(&mut **tx).await.map_err(|error|storage("record coupon ledger",error))?;
+    sqlx::query("INSERT INTO promotion_distribution_record (id,uuid,tenant_id,organization_id,task_id,owner_user_id,user_coupon_id,status,failure_code,failure_detail,created_at) VALUES (?1,?2,?3,?4,?5,?6,?7,'SUCCEEDED',NULL,NULL,CURRENT_TIMESTAMP)").bind(generated_id()).bind(uuid()).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(task_id.to_string()).bind(user_id.to_string()).bind(coupon_id.as_str()).execute(&mut **tx).await.map_err(|error|storage("record coupon distribution",error))?;
+    sqlx::query("INSERT INTO promotion_coupon_ledger_entry (id,uuid,tenant_id,stock_id,user_coupon_id,offer_id,subject_type,subject_id,direction,quantity_delta,balance_after,business_type,business_no,request_no,idempotency_key,source_type,source_id,trace_id,created_at) VALUES (?1,?2,?3,?4,?5,?6,'USER',?7,'OUT',-1,?8,'ADMIN_DISTRIBUTION',?9,?10,?11,'ADMIN_DISTRIBUTION',?12,'',CURRENT_TIMESTAMP)").bind(generated_id()).bind(uuid()).bind(scope.tenant_id.to_string()).bind(input.stock_id.to_string()).bind(coupon_id.as_str()).bind(offer_id.to_string()).bind(user_id.to_string()).bind(balance_after).bind(task_id.to_string()).bind(&request_no).bind(format!("ledger:{item_key}")).bind(task_id.to_string()).execute(&mut **tx).await.map_err(|error|storage("record coupon ledger",error))?;
     Ok(())
 }
 
@@ -1401,12 +1432,7 @@ fn map_ledger(row: ManagementRow) -> Result<PromotionCouponLedgerItem, CommerceS
 
 fn generated_id() -> String {
     let value = (Uuid::new_v4().as_u128() & 0x7fff_ffff_ffff_ffff) as i64;
-    if value == 0 {
-        1
-    } else {
-        value
-    }
-    .to_string()
+    if value == 0 { 1 } else { value }.to_string()
 }
 fn reference(prefix: &str) -> String {
     let suffix = Uuid::new_v4().simple().to_string();
@@ -1478,7 +1504,7 @@ mod tests {
                 offer_code TEXT, offer_type TEXT NOT NULL, audience_scope TEXT NOT NULL,
                 combinability TEXT NOT NULL, priority INTEGER NOT NULL, goods_scope TEXT NOT NULL,
                 current_offer_version_id INTEGER NOT NULL, display_name TEXT NOT NULL,
-                description TEXT, starts_at TEXT NOT NULL, ends_at TEXT, status INTEGER NOT NULL,
+                description TEXT, starts_at TEXT NOT NULL, ends_at TEXT, status TEXT NOT NULL DEFAULT 'active',
                 version INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
             )",
         )

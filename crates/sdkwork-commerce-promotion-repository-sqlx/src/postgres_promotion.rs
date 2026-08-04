@@ -464,13 +464,8 @@ impl PostgresCommercePromotionStore {
             .as_ref()
             .map(|code| code.coupon_code.clone())
             .unwrap_or_else(|| issued_claim_coupon_code(&command));
-        let coupon = PromotionUserCouponItem::new(
-            &coupon_id,
-            &coupon_code,
-            &amount,
-            &now,
-            "pending",
-        )?;
+        let coupon =
+            PromotionUserCouponItem::new(&coupon_id, &coupon_code, &amount, &now, "pending")?;
         complete_claim_idempotency(&mut tx, &command, &coupon, &now).await?;
         tx.commit().await.map_err(|error| {
             store_error(
@@ -2139,7 +2134,6 @@ async fn ensure_promotion_offer_can_be_claimed(
     command: &ClaimPromotionUserCouponCommand,
     promotion: &ClaimPromotion,
 ) -> Result<(), CommerceServiceError> {
-
     if promotion.stock_type.trim().to_ascii_lowercase() != "unlimited"
         && promotion.available_quantity <= 0
     {
@@ -2382,8 +2376,7 @@ async fn update_claim_promotion_counters(
     promotion: &ClaimPromotion,
     now: &str,
 ) -> Result<(), CommerceServiceError> {
-    let requires_stock_quantity =
-        promotion.stock_type.trim().to_ascii_lowercase() != "unlimited";
+    let requires_stock_quantity = promotion.stock_type.trim().to_ascii_lowercase() != "unlimited";
     let requires_stock_quantity_flag = if requires_stock_quantity {
         1_i64
     } else {

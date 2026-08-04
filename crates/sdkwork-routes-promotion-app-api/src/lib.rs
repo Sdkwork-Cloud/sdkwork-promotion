@@ -1,6 +1,7 @@
 pub mod api_response;
 pub mod command_headers;
 pub mod exchange_router;
+pub mod http_route_manifest;
 pub mod promotion_router;
 pub mod routes;
 pub mod subject;
@@ -16,6 +17,10 @@ pub use promotion_router::{
 };
 pub use routes::build_promotion_app_router_with_framework;
 pub use web_bootstrap::wrap_router_with_web_framework_from_env;
+
+pub fn promotion_app_api_route_manifest() -> sdkwork_web_core::HttpRouteManifest {
+    http_route_manifest::app_route_manifest()
+}
 
 use axum::Router;
 use sdkwork_promotion_service_host::PromotionServiceHost;

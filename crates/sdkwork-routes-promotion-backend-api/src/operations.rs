@@ -761,11 +761,7 @@ async fn update_offer_status(
     let scope = response_try!(manage_scope(&c, i));
     let parsed = response_try!(parse_id(Some(&c), &id, "offerId"));
     let status = b.status;
-    match s
-        .service
-        .update_offer_status(&scope, parsed, &status)
-        .await
-    {
+    match s.service.update_offer_status(&scope, parsed, &status).await {
         Ok(true) => success_command(Some(&c), id, status),
         Ok(false) => not_found(Some(&c), "offer not found"),
         Err(e) => service_error(Some(&c), "update offer status", e),
@@ -817,9 +813,9 @@ async fn create_stock(
     let input = PromotionCouponStockInput {
         offer_id: b.offer_id,
         stock_type: b.stock_type,
-        code_issue_mode: b
-            .code_issue_mode
-            .unwrap_or_else(|| sdkwork_commerce_promotion_service::CODE_ISSUE_MODE_REALTIME.to_owned()),
+        code_issue_mode: b.code_issue_mode.unwrap_or_else(|| {
+            sdkwork_commerce_promotion_service::CODE_ISSUE_MODE_REALTIME.to_owned()
+        }),
         total_quantity,
         per_user_limit: b.per_user_limit,
         claim_starts_at: b.claim_starts_at,
@@ -851,18 +847,18 @@ async fn create_code_batch(
     Json(b): Json<CodeBatchRequest>,
 ) -> Response {
     let scope = response_try!(manage_scope(&c, i));
-    let input =
-        PromotionCodeBatchInput {
-            stock_id: b.stock_id,
-            code_type: b.code_type,
-            quantity: response_try!(parse_i64_field(&b.quantity, "quantity")
-                .map_err(|e| validation(Some(&c), e.message()))),
-            code_length: b.code_length,
-            code_prefix: b.code_prefix,
-            starts_at: b.starts_at,
-            expires_at: b.expires_at,
-            idempotency_key: b.idempotency_key,
-        };
+    let input = PromotionCodeBatchInput {
+        stock_id: b.stock_id,
+        code_type: b.code_type,
+        quantity: response_try!(
+            parse_i64_field(&b.quantity, "quantity").map_err(|e| validation(Some(&c), e.message()))
+        ),
+        code_length: b.code_length,
+        code_prefix: b.code_prefix,
+        starts_at: b.starts_at,
+        expires_at: b.expires_at,
+        idempotency_key: b.idempotency_key,
+    };
     match s.service.create_code_batch(&scope, &input).await {
         Ok(v) => success_created(Some(&c), CodeBatchResponse::from(v)),
         Err(e) => service_error(Some(&c), "create code batch", e),
@@ -901,8 +897,9 @@ async fn create_distribution(
     Json(b): Json<DistributionRequest>,
 ) -> Response {
     let scope = response_try!(manage_scope(&c, i));
-    let owner_user_ids = response_try!(validate_owner_user_ids(&b.owner_user_ids)
-        .map_err(|e| validation(Some(&c), e.message())));
+    let owner_user_ids =
+        response_try!(validate_owner_user_ids(&b.owner_user_ids)
+            .map_err(|e| validation(Some(&c), e.message())));
     let input = PromotionDistributionInput {
         stock_id: b.stock_id,
         owner_user_ids,
@@ -1030,9 +1027,7 @@ fn parse_i64_field(value: &str, name: &str) -> Result<i64, CommerceServiceError>
         })
 }
 
-fn validate_owner_user_ids(
-    values: &[String],
-) -> Result<Vec<String>, CommerceServiceError> {
+fn validate_owner_user_ids(values: &[String]) -> Result<Vec<String>, CommerceServiceError> {
     if values.is_empty() {
         return Err(CommerceServiceError::validation(
             "ownerUserIds must not be empty",

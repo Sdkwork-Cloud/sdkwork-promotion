@@ -1,28 +1,40 @@
 {
-  "schemaVersion": 1,
-  "kind": "sdkwork.iam.module",
-  "moduleId": "promotion",
-  "domain": "commerce",
-  "permissions": {
-    "catalog": [
-      {
-        "code": "commerce.marketing.read",
-        "name": "Read marketing campaigns",
-        "resource": "commerce.marketing",
-        "action": "read",
-        "status": "active",
-        "since": "1.0.0",
-        "replacementCode": null
-      },
-      {
-        "code": "commerce.marketing.manage",
-        "name": "Manage marketing campaigns",
-        "resource": "commerce.marketing",
-        "action": "manage",
-        "status": "active",
-        "since": "1.0.0",
-        "replacementCode": null
-      }
-    ]
-  }
+ "schemaVersion": 1,
+ "kind": "sdkwork.iam.module",
+ "moduleId": "promotion",
+ "catalogVersion": "1.0.0",
+ "domain": "promotion",
+ "owner": "sdkwork-promotion",
+ "displayName": "promotion module",
+ "permissions": {
+  "catalog": [
+   {
+    "code": "commerce.marketing.read",
+    "name": "Read marketing campaigns",
+    "resource": "commerce.marketing",
+    "action": "read",
+    "status": "active",
+    "since": "1.0.0",
+    "replacementCode": null
+   },
+   {
+    "code": "commerce.marketing.manage",
+    "name": "Manage marketing campaigns",
+    "resource": "commerce.marketing",
+    "action": "manage",
+    "status": "active",
+    "since": "1.0.0",
+    "replacementCode": null
+   },
+   {
+    "code": "promotion.app.read",
+    "name": "Read promotion app surfaces",
+    "resource": "promotion.app",
+    "action": "read",
+    "status": "active",
+    "since": "1.0.0",
+    "replacementCode": null
+   }
+  ]
+ }
 }

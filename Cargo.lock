@@ -1578,7 +1578,7 @@ dependencies = [
  "tokio",
  "tokio-rustls",
  "tower",
- "tower-http 0.6.11",
+ "tower-http",
  "tower-service",
  "url",
  "wasm-bindgen",
@@ -1689,6 +1689,8 @@ dependencies = [
  "sdkwork-promotion-service-host",
  "sdkwork-routes-promotion-app-api",
  "sdkwork-routes-promotion-backend-api",
+ "sdkwork-web-bootstrap",
+ "sdkwork-web-core",
  "tokio",
 ]
 
@@ -1702,7 +1704,7 @@ dependencies = [
  "sdkwork-promotion-service-host",
  "sdkwork-web-bootstrap",
  "tokio",
- "tower-http 0.5.2",
+ "tower-http",
  "tracing",
  "tracing-subscriber",
 ]
@@ -1714,6 +1716,7 @@ dependencies = [
  "chrono",
  "sdkwork-commerce-promotion-service",
  "sdkwork-contract-service",
+ "sdkwork-utils-rust",
  "serde",
  "serde_json",
  "sqlx",
@@ -1987,7 +1990,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tower",
- "tower-http 0.6.11",
+ "tower-http",
  "tracing",
 ]
 
@@ -2006,7 +2009,7 @@ dependencies = [
  "serde_json",
  "sqlx",
  "tokio",
- "tower-http 0.6.11",
+ "tower-http",
  "tracing",
  "tracing-subscriber",
 ]
@@ -2664,23 +2667,6 @@ dependencies = [
 
 [[package]]
 name = "tower-http"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e9cd434a998747dd2c4276bc96ee2e0c7a2eadf3cae88e52be55a05fa9053f5"
-dependencies = [
- "bitflags",
- "bytes",
- "http",
- "http-body",
- "http-body-util",
- "pin-project-lite",
- "tower-layer",
- "tower-service",
- "tracing",
-]
-
-[[package]]
-name = "tower-http"
 version = "0.6.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4cfcf7e2740e6fc6d4d688b4ef00650406bb94adf4731e43c096c3a19fe40840"
@@ -2694,6 +2680,7 @@ dependencies = [
  "tower",
  "tower-layer",
  "tower-service",
+ "tracing",
  "url",
 ]
 

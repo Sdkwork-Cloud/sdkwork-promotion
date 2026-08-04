@@ -4,17 +4,34 @@
 //! Multi-surface merges mount shared infrastructure routes once at the assembly layer
 //! so `/healthz`, `/livez`, `/readyz`, and `/metrics` are not duplicated per surface.
 
-use axum::Router;
-use sdkwork_promotion_service_host::PromotionServiceHost;
+use sdkwork_web_bootstrap::{ApiAssemblyContribution, ReadinessCheck};
+use sdkwork_web_core::{DomainContextInjector, HttpRouteManifest};
 use std::sync::Arc;
 
-pub struct ApiAssembly {
-    pub router: Router,
+/// Indivisible host-neutral API assembly contribution (web-bootstrap contract).
+pub type ApiAssembly = ApiAssemblyContribution;
+
+fn combined_route_manifest() -> HttpRouteManifest {
+    let app_manifest = sdkwork_routes_promotion_app_api::promotion_app_api_route_manifest();
+    let backend_manifest = sdkwork_routes_promotion_backend_api::gateway_route_manifest();
+    let mut routes = app_manifest.routes().to_vec();
+    routes.extend(backend_manifest.routes());
+    HttpRouteManifest::new(&routes)
 }
 
-pub async fn assemble_api_router(host: Arc<PromotionServiceHost>) -> ApiAssembly {
-    let mut router = Router::new();
+pub async fn assemble_api_router(
+    host: Arc<sdkwork_promotion_service_host::PromotionServiceHost>,
+) -> ApiAssembly {
+    let mut router = axum::Router::new();
     router = router.merge(sdkwork_routes_promotion_app_api::gateway_mount(host.clone()).await);
     router = router.merge(sdkwork_routes_promotion_backend_api::gateway_mount(host.clone()).await);
-    ApiAssembly { router }
+    ApiAssemblyContribution::from_manifest(
+        "sdkwork-promotion",
+        "SDKWork Promotion API",
+        router,
+        combined_route_manifest(),
+        Vec::<Arc<dyn DomainContextInjector>>::new(),
+        Arc::new(sdkwork_web_bootstrap::AlwaysReady) as Arc<dyn ReadinessCheck>,
+    )
+    .expect("promotion route manifest is valid")
 }
