@@ -15,7 +15,7 @@ use crate::coupon_benefit::{parse_admin_coupon_benefit, serialize_admin_coupon_b
 use crate::promotion_admin::AdminPool;
 
 const CAMPAIGN_COLUMNS: &str = "id, campaign_no, campaign_code, display_name, description, channel_scope, audience_scope, CAST(starts_at AS TEXT) AS starts_at, CAST(ends_at AS TEXT) AS ends_at, status, version, CAST(updated_at AS TEXT) AS updated_at";
-const OFFER_COLUMNS: &str = "o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.display_name, o.description, o.priority, CAST(o.starts_at AS TEXT) AS starts_at, CAST(o.ends_at AS TEXT) AS ends_at, o.status, v.discount_type, CAST(v.discount_value AS TEXT) AS discount_value, CAST(v.minimum_amount AS TEXT) AS minimum_amount, CAST(v.maximum_discount_amount AS TEXT) AS maximum_discount_amount, v.currency_code, CAST(v.rule_json AS TEXT) AS rule_json, o.version, CAST(o.updated_at AS TEXT) AS updated_at";
+const OFFER_COLUMNS: &str = "o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.audience_scope, o.combinability, o.goods_scope, o.display_name, o.description, o.priority, CAST(o.starts_at AS TEXT) AS starts_at, CAST(o.ends_at AS TEXT) AS ends_at, o.status, v.discount_type, CAST(v.discount_value AS TEXT) AS discount_value, CAST(v.minimum_amount AS TEXT) AS minimum_amount, CAST(v.maximum_discount_amount AS TEXT) AS maximum_discount_amount, v.currency_code, CAST(v.rule_json AS TEXT) AS rule_json, o.version, CAST(o.updated_at AS TEXT) AS updated_at";
 
 pub(crate) async fn list_campaigns(
     pool: &AdminPool,
@@ -1280,13 +1280,6 @@ impl ManagementRow {
         }
         .map_err(|error| decode(name, error))
     }
-    fn optional_i64(&self, name: &str) -> Result<Option<i64>, CommerceServiceError> {
-        match self {
-            Self::Postgres(row) => row.try_get(name),
-            Self::Sqlite(row) => row.try_get(name),
-        }
-        .map_err(|error| decode(name, error))
-    }
 }
 
 fn map_campaign(row: ManagementRow) -> Result<PromotionCampaignItem, CommerceServiceError> {
@@ -1314,6 +1307,9 @@ fn map_offer(row: ManagementRow) -> Result<PromotionOfferItem, CommerceServiceEr
         offer_no: row.string("offer_no")?,
         offer_code: row.optional_string("offer_code")?,
         offer_type: row.string("offer_type")?,
+        audience_scope: row.string("audience_scope")?,
+        combinability: row.string("combinability")?,
+        goods_scope: row.string("goods_scope")?,
         display_name: row.string("display_name")?,
         description: row.optional_string("description")?,
         priority: row.i32("priority")?,

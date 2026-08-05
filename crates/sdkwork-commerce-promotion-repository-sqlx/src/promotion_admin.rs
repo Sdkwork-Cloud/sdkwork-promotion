@@ -40,9 +40,9 @@ WHERE tenant_id = ?1 AND organization_id = ?2
 "#;
 
 const POSTGRES_OFFER_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_offer WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(display_name) LIKE $3 OR LOWER(COALESCE(offer_code, '')) LIKE $3) AND ($4 IS NULL OR status = $4)";
-const POSTGRES_OFFER_LIST_SQL: &str = "SELECT o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.display_name, o.description, o.priority, o.starts_at AS starts_at, o.ends_at AS ends_at, o.status, v.discount_type, v.discount_value AS discount_value, v.minimum_amount AS minimum_amount, v.maximum_discount_amount AS maximum_discount_amount, v.currency_code, v.rule_json AS rule_json, o.version, o.updated_at AS updated_at FROM promotion_offer o LEFT JOIN promotion_offer_version v ON v.id = o.current_offer_version_id AND v.tenant_id = o.tenant_id WHERE o.tenant_id = $1 AND o.organization_id = $2 AND ($3 = '%%' OR LOWER(o.display_name) LIKE $3 OR LOWER(COALESCE(o.offer_code, '')) LIKE $3) AND ($4 IS NULL OR o.status = $4) ORDER BY o.priority DESC, o.starts_at DESC LIMIT $5 OFFSET $6";
+const POSTGRES_OFFER_LIST_SQL: &str = "SELECT o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.audience_scope, o.combinability, o.goods_scope, o.display_name, o.description, o.priority, o.starts_at AS starts_at, o.ends_at AS ends_at, o.status, v.discount_type, v.discount_value AS discount_value, v.minimum_amount AS minimum_amount, v.maximum_discount_amount AS maximum_discount_amount, v.currency_code, v.rule_json AS rule_json, o.version, o.updated_at AS updated_at FROM promotion_offer o LEFT JOIN promotion_offer_version v ON v.id = o.current_offer_version_id AND v.tenant_id = o.tenant_id WHERE o.tenant_id = $1 AND o.organization_id = $2 AND ($3 = '%%' OR LOWER(o.display_name) LIKE $3 OR LOWER(COALESCE(o.offer_code, '')) LIKE $3) AND ($4 IS NULL OR o.status = $4) ORDER BY o.priority DESC, o.starts_at DESC LIMIT $5 OFFSET $6";
 const SQLITE_OFFER_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_offer WHERE tenant_id = ?1 AND organization_id = ?2 AND (?3 = '%%' OR LOWER(display_name) LIKE ?3 OR LOWER(COALESCE(offer_code, '')) LIKE ?3) AND (?4 IS NULL OR status = ?4)";
-const SQLITE_OFFER_LIST_SQL: &str = "SELECT o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.display_name, o.description, o.priority, o.starts_at AS starts_at, o.ends_at AS ends_at, o.status, v.discount_type, v.discount_value AS discount_value, v.minimum_amount AS minimum_amount, v.maximum_discount_amount AS maximum_discount_amount, v.currency_code, v.rule_json AS rule_json, o.version, o.updated_at AS updated_at FROM promotion_offer o LEFT JOIN promotion_offer_version v ON v.id = o.current_offer_version_id AND v.tenant_id = o.tenant_id WHERE o.tenant_id = ?1 AND o.organization_id = ?2 AND (?3 = '%%' OR LOWER(o.display_name) LIKE ?3 OR LOWER(COALESCE(o.offer_code, '')) LIKE ?3) AND (?4 IS NULL OR o.status = ?4) ORDER BY o.priority DESC, o.starts_at DESC LIMIT ?5 OFFSET ?6";
+const SQLITE_OFFER_LIST_SQL: &str = "SELECT o.id, o.campaign_id, o.offer_no, o.offer_code, o.offer_type, o.audience_scope, o.combinability, o.goods_scope, o.display_name, o.description, o.priority, o.starts_at AS starts_at, o.ends_at AS ends_at, o.status, v.discount_type, v.discount_value AS discount_value, v.minimum_amount AS minimum_amount, v.maximum_discount_amount AS maximum_discount_amount, v.currency_code, v.rule_json AS rule_json, o.version, o.updated_at AS updated_at FROM promotion_offer o LEFT JOIN promotion_offer_version v ON v.id = o.current_offer_version_id AND v.tenant_id = o.tenant_id WHERE o.tenant_id = ?1 AND o.organization_id = ?2 AND (?3 = '%%' OR LOWER(o.display_name) LIKE ?3 OR LOWER(COALESCE(o.offer_code, '')) LIKE ?3) AND (?4 IS NULL OR o.status = ?4) ORDER BY o.priority DESC, o.starts_at DESC LIMIT ?5 OFFSET ?6";
 
 const POSTGRES_STOCK_COUNT_SQL: &str = "SELECT COUNT(*) FROM promotion_coupon_stock WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(stock_no) LIKE $3) AND ($4 IS NULL OR status = $4)";
 const POSTGRES_STOCK_LIST_SQL: &str = "SELECT id, offer_id, stock_no, stock_type, code_issue_mode, total_quantity, available_quantity, claimed_quantity, redeemed_quantity, locked_quantity, per_user_limit, claim_starts_at AS claim_starts_at, claim_ends_at AS claim_ends_at, status FROM promotion_coupon_stock WHERE tenant_id = $1 AND organization_id = $2 AND ($3 = '%%' OR LOWER(stock_no) LIKE $3) AND ($4 IS NULL OR status = $4) ORDER BY created_at DESC LIMIT $5 OFFSET $6";
@@ -125,13 +125,6 @@ impl AdminRow {
         .map_err(|error| decode_error(name, error))
     }
 
-    fn optional_i64(&self, name: &str) -> Result<Option<i64>, CommerceServiceError> {
-        match self {
-            Self::Postgres(row) => row.try_get(name),
-            Self::Sqlite(row) => row.try_get(name),
-        }
-        .map_err(|error| decode_error(name, error))
-    }
 }
 
 macro_rules! impl_admin_repository {
@@ -514,6 +507,9 @@ async fn list_offers(
                 offer_no: row.string("offer_no")?,
                 offer_code: row.optional_string("offer_code")?,
                 offer_type: row.string("offer_type")?,
+                audience_scope: row.string("audience_scope")?,
+                combinability: row.string("combinability")?,
+                goods_scope: row.string("goods_scope")?,
                 display_name: row.string("display_name")?,
                 description: row.optional_string("description")?,
                 priority: row.i32("priority")?,

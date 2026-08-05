@@ -5,6 +5,9 @@ export interface PromotionOffer {
   offerNo: string;
   offerCode?: string | null;
   offerType: string;
+  audienceScope: string;
+  combinability: string;
+  goodsScope: string;
   displayName: string;
   description?: string | null;
   priority: number;

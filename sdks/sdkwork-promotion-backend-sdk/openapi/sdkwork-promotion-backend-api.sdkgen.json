@@ -1564,7 +1564,10 @@
           "startsAt",
           "status",
           "updatedAt",
-          "version"
+          "version",
+          "audienceScope",
+          "combinability",
+          "goodsScope"
         ],
         "properties": {
           "id": {
@@ -1580,6 +1583,15 @@
             ]
           },
           "offerType": {
+            "type": "string"
+          },
+          "audienceScope": {
+            "type": "string"
+          },
+          "combinability": {
+            "type": "string"
+          },
+          "goodsScope": {
             "type": "string"
           },
           "displayName": {
