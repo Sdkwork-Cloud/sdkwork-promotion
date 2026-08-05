@@ -6,8 +6,6 @@ import {
 } from "../../../../../../sdkwork-account/apps/sdkwork-account-pc/tests/test-utils/account-service-mock";
 import {
   configureMembershipServiceMockSession,
-  configureOrderServiceMock,
-  createOrderAppServiceMock,
   createMembershipAppServiceMock,
   resetMembershipServiceMockSession,
 } from "../../../../../../sdkwork-membership/apps/sdkwork-membership-pc/tests/test-utils/membership-service-mock";
@@ -599,20 +597,6 @@ describe("sdkwork-promotion-pc-points service", () => {
   });
 
   it("passes locale into the default membership mutation boundary used by plan upgrades", async () => {
-    configureOrderServiceMock(createOrderAppServiceMock({
-      memberships: {
-        orders: {
-          create: vi.fn().mockResolvedValue({
-            code: 0,
-            data: {
-              orderId: "ORDER-LOCALE-1",
-              orderNo: "REQ-LOCALE-1",
-            },
-            traceId: "trace-locale-order",
-          }),
-        },
-      },
-    }));
     const service = createSdkworkPointsService({
       membershipAppService: createMembershipAppServiceMock({
         memberships: {

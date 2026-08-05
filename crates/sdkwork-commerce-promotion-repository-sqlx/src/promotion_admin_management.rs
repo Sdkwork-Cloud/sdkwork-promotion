@@ -286,11 +286,11 @@ pub(crate) async fn create_coupon_stock(
     let stock_no = reference("STK");
     match pool {
         AdminPool::Postgres(pool) => {
-            let version_id = sqlx::query_scalar::<_, Option<i64>>("SELECT current_offer_version_id FROM promotion_offer WHERE id=$1 AND tenant_id=$2 AND organization_id=$3").bind(input.offer_id.to_string()).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).fetch_optional(pool).await.map_err(|error| storage("resolve offer version", error))?.flatten().ok_or_else(|| CommerceServiceError::not_found("promotion offer not found"))?;
+            let version_id = sqlx::query_scalar::<_, Option<String>>("SELECT current_offer_version_id FROM promotion_offer WHERE id=$1 AND tenant_id=$2 AND organization_id=$3").bind(input.offer_id.to_string()).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).fetch_optional(pool).await.map_err(|error| storage("resolve offer version", error))?.flatten().ok_or_else(|| CommerceServiceError::not_found("promotion offer not found"))?;
             sqlx::query("INSERT INTO promotion_coupon_stock (id,uuid,tenant_id,organization_id,offer_id,offer_version_id,stock_no,stock_type,code_issue_mode,total_quantity,available_quantity,claimed_quantity,redeemed_quantity,locked_quantity,per_user_limit,claim_starts_at,claim_ends_at,status,version,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10,0,0,0,$11,$12,$13,$14,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind(id.as_str()).bind(uuid).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(input.offer_id.to_string()).bind(version_id.to_string()).bind(stock_no).bind(input.stock_type.trim()).bind(input.code_issue_mode.trim()).bind(input.total_quantity).bind(input.per_user_limit).bind(trimmed(&input.claim_starts_at)).bind(trimmed(&input.claim_ends_at)).bind(&input.status).execute(pool).await.map_err(|error| storage("create coupon stock", error))?;
         }
         AdminPool::Sqlite(pool) => {
-            let version_id = sqlx::query_scalar::<_, Option<i64>>("SELECT current_offer_version_id FROM promotion_offer WHERE id=?1 AND tenant_id=?2 AND organization_id=?3").bind(input.offer_id.to_string()).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).fetch_optional(pool).await.map_err(|error| storage("resolve offer version", error))?.flatten().ok_or_else(|| CommerceServiceError::not_found("promotion offer not found"))?;
+            let version_id = sqlx::query_scalar::<_, Option<String>>("SELECT current_offer_version_id FROM promotion_offer WHERE id=?1 AND tenant_id=?2 AND organization_id=?3").bind(input.offer_id.to_string()).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).fetch_optional(pool).await.map_err(|error| storage("resolve offer version", error))?.flatten().ok_or_else(|| CommerceServiceError::not_found("promotion offer not found"))?;
             sqlx::query("INSERT INTO promotion_coupon_stock (id,uuid,tenant_id,organization_id,offer_id,offer_version_id,stock_no,stock_type,code_issue_mode,total_quantity,available_quantity,claimed_quantity,redeemed_quantity,locked_quantity,per_user_limit,claim_starts_at,claim_ends_at,status,version,created_at,updated_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?10,0,0,0,?11,?12,?13,?14,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind(id.as_str()).bind(uuid).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(input.offer_id.to_string()).bind(version_id.to_string()).bind(stock_no).bind(input.stock_type.trim()).bind(input.code_issue_mode.trim()).bind(input.total_quantity).bind(input.per_user_limit).bind(trimmed(&input.claim_starts_at)).bind(trimmed(&input.claim_ends_at)).bind(&input.status).execute(pool).await.map_err(|error| storage("create coupon stock", error))?;
         }
     }
@@ -515,7 +515,7 @@ async fn insert_offer_version_postgres(
     input: &PromotionOfferInput,
 ) -> Result<(), CommerceServiceError> {
     let rule_json = serialize_admin_coupon_benefit(input.coupon_benefit.as_ref())?;
-    sqlx::query("INSERT INTO promotion_offer_version (id,uuid,tenant_id,offer_id,version_no,discount_type,discount_value,minimum_amount,maximum_discount_amount,maximum_quantity_per_order,currency_code,rule_json,stack_rule_json,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,1,$10,$11,NULL,TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'))")
+    sqlx::query("INSERT INTO promotion_offer_version (id,uuid,tenant_id,offer_id,version_no,discount_type,discount_value,minimum_amount,maximum_discount_amount,maximum_quantity_per_order,currency_code,rule_json,stack_rule_json,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,1,$10,$11,NULL,TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'),TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS'))")
         .bind(version_id.to_string()).bind(uuid).bind(tenant_id).bind(offer_id.to_string()).bind(version_no).bind(input.discount_type.trim()).bind(input.discount_value.trim()).bind(input.minimum_amount.trim()).bind(trimmed(&input.maximum_discount_amount)).bind(input.currency_code.trim()).bind(rule_json)
         .execute(&mut **tx).await.map_err(|error| storage("insert offer version", error))?;
     Ok(())
@@ -531,7 +531,7 @@ async fn insert_offer_version_sqlite(
     input: &PromotionOfferInput,
 ) -> Result<(), CommerceServiceError> {
     let rule_json = serialize_admin_coupon_benefit(input.coupon_benefit.as_ref())?;
-    sqlx::query("INSERT INTO promotion_offer_version (id,uuid,tenant_id,offer_id,version_no,discount_type,discount_value,minimum_amount,maximum_discount_amount,maximum_quantity_per_order,currency_code,rule_json,stack_rule_json,created_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,1,?10,?11,NULL,CURRENT_TIMESTAMP)")
+    sqlx::query("INSERT INTO promotion_offer_version (id,uuid,tenant_id,offer_id,version_no,discount_type,discount_value,minimum_amount,maximum_discount_amount,maximum_quantity_per_order,currency_code,rule_json,stack_rule_json,created_at,updated_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,1,?10,?11,NULL,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)")
         .bind(version_id.to_string()).bind(uuid).bind(tenant_id).bind(offer_id.to_string()).bind(version_no).bind(input.discount_type.trim()).bind(input.discount_value.trim()).bind(input.minimum_amount.trim()).bind(trimmed(&input.maximum_discount_amount)).bind(input.currency_code.trim()).bind(rule_json)
         .execute(&mut **tx).await.map_err(|error| storage("insert offer version", error))?;
     Ok(())
@@ -579,8 +579,8 @@ pub(crate) async fn list_code_batches(
     let columns = "id,stock_id,offer_id,batch_no,code_type,requested_quantity,generated_quantity,code_length,code_prefix,CAST(starts_at AS TEXT) AS starts_at,CAST(expires_at AS TEXT) AS expires_at,status,CAST(created_at AS TEXT) AS created_at";
     let (total_items, rows) = match pool {
         AdminPool::Postgres(pool) => {
-            let total=sqlx::query_scalar::<_,i64>("SELECT COUNT(*) FROM promotion_code_batch WHERE tenant_id=$1 AND organization_id=$2 AND ($3='%%' OR LOWER(batch_no) LIKE $3) AND ($5 IS NULL OR stock_id=$5)").bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(&search).bind(query.stock_id).fetch_one(pool).await.map_err(|error|storage("list code batches",error))?;
-            let sql=format!("SELECT {columns} FROM promotion_code_batch WHERE tenant_id=$1 AND organization_id=$2 AND ($3='%%' OR LOWER(batch_no) LIKE $3) AND ($5 IS NULL OR stock_id=$5) ORDER BY created_at DESC LIMIT $6 OFFSET $7");
+            let total=sqlx::query_scalar::<_,i64>("SELECT COUNT(*) FROM promotion_code_batch WHERE tenant_id=$1 AND organization_id=$2 AND ($3='%%' OR LOWER(batch_no) LIKE $3) AND ($4 IS NULL OR stock_id=CAST($4 AS TEXT))").bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(&search).bind(query.stock_id).fetch_one(pool).await.map_err(|error|storage("list code batches",error))?;
+            let sql=format!("SELECT {columns} FROM promotion_code_batch WHERE tenant_id=$1 AND organization_id=$2 AND ($3='%%' OR LOWER(batch_no) LIKE $3) AND ($4 IS NULL OR stock_id=CAST($4 AS TEXT)) ORDER BY created_at DESC LIMIT $5 OFFSET $6");
             let rows = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(scope.tenant_id.to_string())
                 .bind(scope.organization_id.to_string())
@@ -599,8 +599,8 @@ pub(crate) async fn list_code_batches(
             )
         }
         AdminPool::Sqlite(pool) => {
-            let total=sqlx::query_scalar::<_,i64>("SELECT COUNT(*) FROM promotion_code_batch WHERE tenant_id=?1 AND organization_id=?2 AND (?3='%%' OR LOWER(batch_no) LIKE ?3) AND (?5 IS NULL OR stock_id=?5)").bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(&search).bind(query.stock_id).fetch_one(pool).await.map_err(|error|storage("list code batches",error))?;
-            let sql=format!("SELECT {columns} FROM promotion_code_batch WHERE tenant_id=?1 AND organization_id=?2 AND (?3='%%' OR LOWER(batch_no) LIKE ?3) AND (?5 IS NULL OR stock_id=?5) ORDER BY created_at DESC LIMIT ?6 OFFSET ?7");
+            let total=sqlx::query_scalar::<_,i64>("SELECT COUNT(*) FROM promotion_code_batch WHERE tenant_id=?1 AND organization_id=?2 AND (?3='%%' OR LOWER(batch_no) LIKE ?3) AND (?4 IS NULL OR stock_id=?4)").bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(&search).bind(query.stock_id).fetch_one(pool).await.map_err(|error|storage("list code batches",error))?;
+            let sql=format!("SELECT {columns} FROM promotion_code_batch WHERE tenant_id=?1 AND organization_id=?2 AND (?3='%%' OR LOWER(batch_no) LIKE ?3) AND (?4 IS NULL OR stock_id=?4) ORDER BY created_at DESC LIMIT ?5 OFFSET ?6");
             let rows = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()))
                 .bind(scope.tenant_id.to_string())
                 .bind(scope.organization_id.to_string())
@@ -685,10 +685,10 @@ async fn create_code_batch_postgres(
         .await
         .map_err(|error| storage("begin code generation", error))?;
     let stock=sqlx::query("SELECT offer_id,offer_version_id FROM promotion_coupon_stock WHERE id=$1 AND tenant_id=$2 AND organization_id=$3 AND status='active'").bind(input.stock_id.to_string()).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).fetch_optional(&mut *tx).await.map_err(|error|storage("resolve code stock",error))?.ok_or_else(||CommerceServiceError::not_found("active coupon stock not found"))?;
-    let offer_id: i64 = stock
+    let offer_id: String = stock
         .try_get("offer_id")
         .map_err(|error| decode("offer_id", error))?;
-    let version_id: i64 = stock
+    let version_id: String = stock
         .try_get("offer_version_id")
         .map_err(|error| decode("offer_version_id", error))?;
     sqlx::query("INSERT INTO promotion_code_batch (id,uuid,tenant_id,organization_id,stock_id,offer_id,offer_version_id,batch_no,code_type,requested_quantity,generated_quantity,code_length,code_prefix,starts_at,expires_at,status,idempotency_key,created_by,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,0,$11,$12,$13,$14,'GENERATING',$15,$16,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind(batch_id.to_string()).bind(batch_uuid).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(input.stock_id.to_string()).bind(offer_id.to_string()).bind(version_id.to_string()).bind(batch_no).bind(input.code_type.trim()).bind(input.quantity).bind(input.code_length).bind(input.code_prefix.trim()).bind(trimmed(&input.starts_at)).bind(trimmed(&input.expires_at)).bind(input.idempotency_key.trim()).bind(actor_id.to_string()).execute(&mut *tx).await.map_err(|error|storage("create code batch",error))?;
@@ -719,10 +719,10 @@ async fn create_code_batch_sqlite(
         .await
         .map_err(|error| storage("begin code generation", error))?;
     let stock=sqlx::query("SELECT offer_id,offer_version_id FROM promotion_coupon_stock WHERE id=?1 AND tenant_id=?2 AND organization_id=?3 AND status='active'").bind(input.stock_id.to_string()).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).fetch_optional(&mut *tx).await.map_err(|error|storage("resolve code stock",error))?.ok_or_else(||CommerceServiceError::not_found("active coupon stock not found"))?;
-    let offer_id: i64 = stock
+    let offer_id: String = stock
         .try_get("offer_id")
         .map_err(|error| decode("offer_id", error))?;
-    let version_id: i64 = stock
+    let version_id: String = stock
         .try_get("offer_version_id")
         .map_err(|error| decode("offer_version_id", error))?;
     sqlx::query("INSERT INTO promotion_code_batch (id,uuid,tenant_id,organization_id,stock_id,offer_id,offer_version_id,batch_no,code_type,requested_quantity,generated_quantity,code_length,code_prefix,starts_at,expires_at,status,idempotency_key,created_by,created_at,updated_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,0,?11,?12,?13,?14,'GENERATING',?15,?16,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)").bind(batch_id.to_string()).bind(batch_uuid).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).bind(input.stock_id.to_string()).bind(offer_id.to_string()).bind(version_id.to_string()).bind(batch_no).bind(input.code_type.trim()).bind(input.quantity).bind(input.code_length).bind(input.code_prefix.trim()).bind(trimmed(&input.starts_at)).bind(trimmed(&input.expires_at)).bind(input.idempotency_key.trim()).bind(actor_id.to_string()).execute(&mut *tx).await.map_err(|error|storage("create code batch",error))?;
@@ -900,10 +900,10 @@ async fn create_distribution_postgres(
         .await
         .map_err(|error| storage("begin coupon distribution", error))?;
     let stock=sqlx::query("SELECT offer_id,offer_version_id,stock_type,available_quantity,CAST(claim_ends_at AS TEXT) AS expires_at FROM promotion_coupon_stock WHERE id=$1 AND tenant_id=$2 AND organization_id=$3 AND status='active' FOR UPDATE").bind(input.stock_id.to_string()).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).fetch_optional(&mut *tx).await.map_err(|error|storage("resolve distribution stock",error))?.ok_or_else(||CommerceServiceError::not_found("active coupon stock not found"))?;
-    let offer_id: i64 = stock
+    let offer_id: String = stock
         .try_get("offer_id")
         .map_err(|error| decode("offer_id", error))?;
-    let version_id: i64 = stock
+    let version_id: String = stock
         .try_get("offer_version_id")
         .map_err(|error| decode("offer_version_id", error))?;
     let stock_type: String = stock
@@ -1002,10 +1002,10 @@ async fn create_distribution_sqlite(
         .await
         .map_err(|error| storage("begin coupon distribution", error))?;
     let stock=sqlx::query("SELECT offer_id,offer_version_id,stock_type,available_quantity,CAST(claim_ends_at AS TEXT) AS expires_at FROM promotion_coupon_stock WHERE id=?1 AND tenant_id=?2 AND organization_id=?3 AND status='active'").bind(input.stock_id.to_string()).bind(scope.tenant_id.to_string()).bind(scope.organization_id.to_string()).fetch_optional(&mut *tx).await.map_err(|error|storage("resolve distribution stock",error))?.ok_or_else(||CommerceServiceError::not_found("active coupon stock not found"))?;
-    let offer_id: i64 = stock
+    let offer_id: String = stock
         .try_get("offer_id")
         .map_err(|error| decode("offer_id", error))?;
-    let version_id: i64 = stock
+    let version_id: String = stock
         .try_get("offer_version_id")
         .map_err(|error| decode("offer_version_id", error))?;
     let stock_type: String = stock
@@ -1291,7 +1291,7 @@ impl ManagementRow {
 
 fn map_campaign(row: ManagementRow) -> Result<PromotionCampaignItem, CommerceServiceError> {
     Ok(PromotionCampaignItem {
-        id: row.i64("id")?.to_string(),
+        id: row.string("id")?,
         campaign_no: row.string("campaign_no")?,
         campaign_code: row.optional_string("campaign_code")?,
         display_name: row.string("display_name")?,
@@ -1309,10 +1309,8 @@ fn map_campaign(row: ManagementRow) -> Result<PromotionCampaignItem, CommerceSer
 fn map_offer(row: ManagementRow) -> Result<PromotionOfferItem, CommerceServiceError> {
     let coupon_benefit = parse_admin_coupon_benefit(row.optional_string("rule_json")?.as_deref())?;
     Ok(PromotionOfferItem {
-        id: row.i64("id")?.to_string(),
-        campaign_id: row
-            .optional_i64("campaign_id")?
-            .map(|value| value.to_string()),
+        id: row.string("id")?,
+        campaign_id: row.optional_string("campaign_id")?,
         offer_no: row.string("offer_no")?,
         offer_code: row.optional_string("offer_code")?,
         offer_type: row.string("offer_type")?,
@@ -1335,8 +1333,8 @@ fn map_offer(row: ManagementRow) -> Result<PromotionOfferItem, CommerceServiceEr
 
 fn map_stock(row: ManagementRow) -> Result<PromotionCouponStockItem, CommerceServiceError> {
     Ok(PromotionCouponStockItem {
-        id: row.i64("id")?.to_string(),
-        offer_id: row.i64("offer_id")?.to_string(),
+        id: row.string("id")?,
+        offer_id: row.string("offer_id")?,
         stock_no: row.string("stock_no")?,
         stock_type: row.string("stock_type")?,
         code_issue_mode: row.string("code_issue_mode")?,
@@ -1354,9 +1352,9 @@ fn map_stock(row: ManagementRow) -> Result<PromotionCouponStockItem, CommerceSer
 
 fn map_code_batch(row: ManagementRow) -> Result<PromotionCodeBatchItem, CommerceServiceError> {
     Ok(PromotionCodeBatchItem {
-        id: row.i64("id")?.to_string(),
-        stock_id: row.i64("stock_id")?.to_string(),
-        offer_id: row.i64("offer_id")?.to_string(),
+        id: row.string("id")?,
+        stock_id: row.string("stock_id")?,
+        offer_id: row.string("offer_id")?,
         batch_no: row.string("batch_no")?,
         code_type: row.string("code_type")?,
         requested_quantity: row.i64("requested_quantity")?,
@@ -1374,9 +1372,9 @@ fn map_distribution_task(
     row: ManagementRow,
 ) -> Result<PromotionDistributionTaskItem, CommerceServiceError> {
     Ok(PromotionDistributionTaskItem {
-        id: row.i64("id")?.to_string(),
-        stock_id: row.i64("stock_id")?.to_string(),
-        offer_id: row.i64("offer_id")?.to_string(),
+        id: row.string("id")?,
+        stock_id: row.string("stock_id")?,
+        offer_id: row.string("offer_id")?,
         task_no: row.string("task_no")?,
         distribution_type: row.string("distribution_type")?,
         requested_quantity: row.i64("requested_quantity")?,
@@ -1392,11 +1390,11 @@ fn map_user_coupon(
     row: ManagementRow,
 ) -> Result<PromotionAdminUserCouponItem, CommerceServiceError> {
     Ok(PromotionAdminUserCouponItem {
-        id: row.i64("id")?.to_string(),
+        id: row.string("id")?,
         coupon_no: row.string("coupon_no")?,
-        stock_id: row.i64("stock_id")?.to_string(),
-        offer_id: row.i64("offer_id")?.to_string(),
-        owner_user_id: row.i64("owner_user_id")?.to_string(),
+        stock_id: row.string("stock_id")?,
+        offer_id: row.string("offer_id")?,
+        owner_user_id: row.string("owner_user_id")?,
         coupon_code: mask_code(&row.string("coupon_code")?),
         status: row.string("status")?,
         claimed_at: row.string("claimed_at")?,
@@ -1405,21 +1403,21 @@ fn map_user_coupon(
         redeemed_at: row.optional_string("redeemed_at")?,
         source_type: row.optional_string("source_type")?,
         source_id: row
-            .optional_i64("source_id")?
+            .optional_string("source_id")?
             .map(|value| value.to_string()),
     })
 }
 
 fn map_ledger(row: ManagementRow) -> Result<PromotionCouponLedgerItem, CommerceServiceError> {
     Ok(PromotionCouponLedgerItem {
-        id: row.i64("id")?.to_string(),
-        stock_id: row.i64("stock_id")?.to_string(),
+        id: row.string("id")?,
+        stock_id: row.string("stock_id")?,
         user_coupon_id: row
-            .optional_i64("user_coupon_id")?
+            .optional_string("user_coupon_id")?
             .map(|value| value.to_string()),
-        offer_id: row.i64("offer_id")?.to_string(),
+        offer_id: row.string("offer_id")?,
         subject_id: row
-            .optional_i64("subject_id")?
+            .optional_string("subject_id")?
             .map(|value| value.to_string()),
         direction: row.string("direction")?,
         quantity_delta: row.i64("quantity_delta")?,
@@ -1497,33 +1495,15 @@ mod tests {
         let pool = SqlitePool::connect("sqlite::memory:")
             .await
             .expect("sqlite pool");
-        sqlx::query(
-            "CREATE TABLE promotion_offer (
-                id INTEGER PRIMARY KEY, uuid TEXT NOT NULL, tenant_id INTEGER NOT NULL,
-                organization_id INTEGER NOT NULL, campaign_id INTEGER, offer_no TEXT NOT NULL,
-                offer_code TEXT, offer_type TEXT NOT NULL, audience_scope TEXT NOT NULL,
-                combinability TEXT NOT NULL, priority INTEGER NOT NULL, goods_scope TEXT NOT NULL,
-                current_offer_version_id INTEGER NOT NULL, display_name TEXT NOT NULL,
-                description TEXT, starts_at TEXT NOT NULL, ends_at TEXT, status TEXT NOT NULL DEFAULT 'active',
-                version INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
-            )",
-        )
-        .execute(&pool)
-        .await
-        .expect("offer schema");
-        sqlx::query(
-            "CREATE TABLE promotion_offer_version (
-                id INTEGER PRIMARY KEY, uuid TEXT NOT NULL, tenant_id INTEGER NOT NULL,
-                offer_id INTEGER NOT NULL, version_no INTEGER NOT NULL,
-                discount_type TEXT NOT NULL, discount_value TEXT NOT NULL,
-                minimum_amount TEXT NOT NULL, maximum_discount_amount TEXT,
-                maximum_quantity_per_order INTEGER NOT NULL, currency_code TEXT NOT NULL,
-                rule_json TEXT, stack_rule_json TEXT, created_at TEXT NOT NULL
-            )",
-        )
-        .execute(&pool)
-        .await
-        .expect("offer version schema");
+        let baseline = std::fs::read_to_string(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../database/ddl/baseline/postgres/0001_promotion_baseline.sql",
+        ))
+        .expect("promotion baseline");
+        sqlx::query(sqlx::AssertSqlSafe(baseline.as_str()))
+            .execute(&pool)
+            .await
+            .expect("promotion baseline schema");
 
         let coupon_benefit = PromotionCouponBenefit::subscription(
             "seed-product-membership",

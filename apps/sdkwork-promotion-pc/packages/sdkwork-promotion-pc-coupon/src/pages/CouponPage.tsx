@@ -71,10 +71,10 @@ function SdkworkCouponPageContent({
   ];
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="px-4 py-4 sm:px-5 sm:py-5">
-        <div className="mx-auto max-w-5xl space-y-4">
-          <section className="rounded-[var(--sdk-radius-panel)] border border-[var(--sdk-color-border-default)] bg-[var(--sdk-color-surface-panel)]">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col px-4 py-4 sm:px-5 sm:py-5">
+        <div className="mx-auto flex min-h-0 w-full max-w-5xl flex-1 flex-col gap-4">
+          <section className="shrink-0 rounded-[var(--sdk-radius-panel)] border border-[var(--sdk-color-border-default)] bg-[var(--sdk-color-surface-panel)]">
             <div className="flex flex-col gap-4 border-b border-[var(--sdk-color-border-subtle)] px-5 py-5 sm:flex-row sm:items-start sm:justify-between sm:px-6">
               <div>
                 <h1 className="text-lg font-semibold tracking-tight text-[var(--sdk-color-text-primary)]">
@@ -106,16 +106,22 @@ function SdkworkCouponPageContent({
             </dl>
           </section>
 
-          {state.isLoading && !state.isBootstrapped ? <LoadingBlock label={copy.page.loading} /> : null}
-
-          {state.lastError && !state.isMutating ? (
-            <StatusNotice title={copy.page.errorTitle} tone="danger">
-              {state.lastError}
-            </StatusNotice>
+          {state.isLoading && !state.isBootstrapped ? (
+            <div className="shrink-0">
+              <LoadingBlock label={copy.page.loading} />
+            </div>
           ) : null}
 
-          <section className="rounded-[var(--sdk-radius-panel)] border border-[var(--sdk-color-border-default)] bg-[var(--sdk-color-surface-panel)]">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--sdk-color-border-subtle)] px-5 py-4 sm:px-6">
+          {state.lastError && !state.isMutating ? (
+            <div className="shrink-0">
+              <StatusNotice title={copy.page.errorTitle} tone="danger">
+                {state.lastError}
+              </StatusNotice>
+            </div>
+          ) : null}
+
+          <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--sdk-radius-panel)] border border-[var(--sdk-color-border-default)] bg-[var(--sdk-color-surface-panel)]">
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[var(--sdk-color-border-subtle)] px-5 py-4 sm:px-6">
               <div>
                 <h2 className="text-sm font-semibold text-[var(--sdk-color-text-primary)]">
                   {copy.page.inventoryTitle}
@@ -135,99 +141,105 @@ function SdkworkCouponPageContent({
               </div>
             </div>
 
-            {state.activeTab === "discover" ? (
-              <div className="divide-y divide-[var(--sdk-color-border-subtle)]">
-                {state.visibleCatalogCoupons.length === 0 ? (
-                  <div className="px-5 py-10 text-sm text-[var(--sdk-color-text-secondary)] sm:px-6">
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {state.activeTab === "discover" ? (
+                state.visibleCatalogCoupons.length === 0 ? (
+                  <div className="flex min-h-full items-center justify-center px-5 py-10 text-sm text-[var(--sdk-color-text-secondary)] sm:px-6">
                     {copy.inventory.emptyDiscover}
                   </div>
-                ) : state.visibleCatalogCoupons.map((coupon) => (
-                  <article className="px-5 py-4 sm:px-6" key={coupon.id}>
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-sm font-medium text-[var(--sdk-color-text-primary)]">{coupon.name}</h3>
-                          <span
-                            className="rounded-full border border-[var(--sdk-color-border-default)] px-2 py-0.5 text-xs text-[var(--sdk-color-text-secondary)]"
-                            data-sdk-coupon-status={coupon.status}
-                            data-sdk-tone={resolveSdkworkCouponStatusTone(coupon.status)}
-                          >
-                            {formatStatus(coupon.status)}
-                          </span>
+                ) : (
+                  <div className="divide-y divide-[var(--sdk-color-border-subtle)]">
+                    {state.visibleCatalogCoupons.map((coupon) => (
+                      <article className="px-5 py-4 sm:px-6" key={coupon.id}>
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-sm font-medium text-[var(--sdk-color-text-primary)]">{coupon.name}</h3>
+                              <span
+                                className="rounded-full border border-[var(--sdk-color-border-default)] px-2 py-0.5 text-xs text-[var(--sdk-color-text-secondary)]"
+                                data-sdk-coupon-status={coupon.status}
+                                data-sdk-tone={resolveSdkworkCouponStatusTone(coupon.status)}
+                              >
+                                {formatStatus(coupon.status)}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-sm text-[var(--sdk-color-text-secondary)]">
+                              {coupon.description || copy.inventory.catalogFallbackDescription}
+                            </p>
+                            <p className="mt-2 text-lg font-semibold tabular-nums text-[var(--sdk-color-text-primary)]">
+                              {formatCurrencyCny(coupon.amountCny)}
+                            </p>
+                            <p className="mt-1 text-xs text-[var(--sdk-color-text-muted)]">
+                              {copy.inventory.pointCostLabel}: {formatPointCost(coupon.pointCost)}
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 flex-wrap gap-2">
+                            <Button onClick={() => void controller.openCatalogDetail(coupon.id).catch(() => {})} type="button" variant="outline">
+                              {copy.actions.viewDetails}
+                            </Button>
+                            {coupon.canReceive ? (
+                              <Button onClick={() => void controller.receiveCoupon(coupon.id).catch(() => {})} type="button">
+                                {copy.actions.claimCoupon}
+                              </Button>
+                            ) : null}
+                            {coupon.pointsExchange ? (
+                              <Button onClick={() => void controller.exchangeCouponByPoints({ couponId: coupon.id }).catch(() => {})} type="button" variant="outline">
+                                {copy.actions.exchangePoints}
+                              </Button>
+                            ) : null}
+                          </div>
                         </div>
-                        <p className="mt-1 text-sm text-[var(--sdk-color-text-secondary)]">
-                          {coupon.description || copy.inventory.catalogFallbackDescription}
-                        </p>
-                        <p className="mt-2 text-lg font-semibold tabular-nums text-[var(--sdk-color-text-primary)]">
-                          {formatCurrencyCny(coupon.amountCny)}
-                        </p>
-                        <p className="mt-1 text-xs text-[var(--sdk-color-text-muted)]">
-                          {copy.inventory.pointCostLabel}: {formatPointCost(coupon.pointCost)}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 flex-wrap gap-2">
-                        <Button onClick={() => void controller.openCatalogDetail(coupon.id).catch(() => {})} type="button" variant="outline">
-                          {copy.actions.viewDetails}
-                        </Button>
-                        {coupon.canReceive ? (
-                          <Button onClick={() => void controller.receiveCoupon(coupon.id).catch(() => {})} type="button">
-                            {copy.actions.claimCoupon}
-                          </Button>
-                        ) : null}
-                        {coupon.pointsExchange ? (
-                          <Button onClick={() => void controller.exchangeCouponByPoints({ couponId: coupon.id }).catch(() => {})} type="button" variant="outline">
-                            {copy.actions.exchangePoints}
-                          </Button>
-                        ) : null}
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <div className="divide-y divide-[var(--sdk-color-border-subtle)]">
-                {state.visibleUserCoupons.length === 0 ? (
-                  <div className="px-5 py-10 text-sm text-[var(--sdk-color-text-secondary)] sm:px-6">
+                      </article>
+                    ))}
+                  </div>
+                )
+              ) : (
+                state.visibleUserCoupons.length === 0 ? (
+                  <div className="flex min-h-full items-center justify-center px-5 py-10 text-sm text-[var(--sdk-color-text-secondary)] sm:px-6">
                     {copy.inventory.emptyVisible}
                   </div>
-                ) : state.visibleUserCoupons.map((coupon) => (
-                  <article className="px-5 py-4 sm:px-6" key={coupon.id}>
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-sm font-medium text-[var(--sdk-color-text-primary)]">{coupon.name}</h3>
-                          <span
-                            className="rounded-full border border-[var(--sdk-color-border-default)] px-2 py-0.5 text-xs text-[var(--sdk-color-text-secondary)]"
-                            data-sdk-coupon-status={coupon.status}
-                            data-sdk-tone={resolveSdkworkCouponStatusTone(coupon.status)}
-                          >
-                            {formatStatus(coupon.status)}
-                          </span>
+                ) : (
+                  <div className="divide-y divide-[var(--sdk-color-border-subtle)]">
+                    {state.visibleUserCoupons.map((coupon) => (
+                      <article className="px-5 py-4 sm:px-6" key={coupon.id}>
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-sm font-medium text-[var(--sdk-color-text-primary)]">{coupon.name}</h3>
+                              <span
+                                className="rounded-full border border-[var(--sdk-color-border-default)] px-2 py-0.5 text-xs text-[var(--sdk-color-text-secondary)]"
+                                data-sdk-coupon-status={coupon.status}
+                                data-sdk-tone={resolveSdkworkCouponStatusTone(coupon.status)}
+                              >
+                                {formatStatus(coupon.status)}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-sm text-[var(--sdk-color-text-secondary)]">
+                              {copy.inventory.codeLabel}: {coupon.code || copy.common.emptyValue}
+                            </p>
+                            <p className="mt-2 text-lg font-semibold tabular-nums text-[var(--sdk-color-text-primary)]">
+                              {formatCurrencyCny(coupon.amountCny)}
+                            </p>
+                            <p className="mt-1 text-xs text-[var(--sdk-color-text-muted)]">
+                              {copy.inventory.remainingDaysLabel}: {formatRemainingDays(coupon.remainingDays)}
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 gap-2">
+                            <Button
+                              onClick={() => void controller.openUserCouponDetail(coupon.userCouponId ?? coupon.id).catch(() => {})}
+                              type="button"
+                              variant="outline"
+                            >
+                              {copy.actions.viewDetails}
+                            </Button>
+                          </div>
                         </div>
-                        <p className="mt-1 text-sm text-[var(--sdk-color-text-secondary)]">
-                          {copy.inventory.codeLabel}: {coupon.code || copy.common.emptyValue}
-                        </p>
-                        <p className="mt-2 text-lg font-semibold tabular-nums text-[var(--sdk-color-text-primary)]">
-                          {formatCurrencyCny(coupon.amountCny)}
-                        </p>
-                        <p className="mt-1 text-xs text-[var(--sdk-color-text-muted)]">
-                          {copy.inventory.remainingDaysLabel}: {formatRemainingDays(coupon.remainingDays)}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 gap-2">
-                        <Button
-                          onClick={() => void controller.openUserCouponDetail(coupon.userCouponId ?? coupon.id).catch(() => {})}
-                          type="button"
-                          variant="outline"
-                        >
-                          {copy.actions.viewDetails}
-                        </Button>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
+                      </article>
+                    ))}
+                  </div>
+                )
+              )}
+            </div>
           </section>
         </div>
       </div>
