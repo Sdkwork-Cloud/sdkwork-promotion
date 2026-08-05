@@ -89,6 +89,13 @@ struct OfferRequest {
 enum CouponBenefitRequest {
     TokenBankCredit {
         grant_amount: String,
+        bonus_amount: Option<String>,
+    },
+    PointsCredit {
+        grant_points: String,
+    },
+    CashCredit {
+        grant_amount: String,
     },
     Subscription {
         product_id: String,
@@ -270,6 +277,13 @@ enum CouponBenefitResponse {
     TokenBankCredit {
         target_asset: &'static str,
         grant_amount: String,
+        bonus_amount: Option<String>,
+    },
+    PointsCredit {
+        grant_points: String,
+    },
+    CashCredit {
+        grant_amount: String,
     },
     Subscription {
         product_id: String,
@@ -285,8 +299,18 @@ enum CouponBenefitResponse {
 impl From<PromotionCouponBenefit> for CouponBenefitResponse {
     fn from(value: PromotionCouponBenefit) -> Self {
         match value {
-            PromotionCouponBenefit::TokenBankCredit { grant_amount } => Self::TokenBankCredit {
+            PromotionCouponBenefit::TokenBankCredit {
+                grant_amount,
+                bonus_amount,
+            } => Self::TokenBankCredit {
                 target_asset: "token_bank",
+                grant_amount: grant_amount.to_string(),
+                bonus_amount: (bonus_amount > 0).then(|| bonus_amount.to_string()),
+            },
+            PromotionCouponBenefit::PointsCredit { grant_points } => Self::PointsCredit {
+                grant_points: grant_points.to_string(),
+            },
+            PromotionCouponBenefit::CashCredit { grant_amount } => Self::CashCredit {
                 grant_amount: grant_amount.to_string(),
             },
             PromotionCouponBenefit::Subscription {
@@ -991,12 +1015,20 @@ fn coupon_benefit_input(
     benefit: CouponBenefitRequest,
 ) -> Result<PromotionCouponBenefit, CommerceServiceError> {
     match benefit {
-        CouponBenefitRequest::TokenBankCredit { grant_amount } => {
-            PromotionCouponBenefit::token_bank_credit(parse_i64_field(
-                &grant_amount,
-                "couponBenefit.grantAmount",
-            )?)
-        }
+        CouponBenefitRequest::TokenBankCredit {
+            grant_amount,
+            bonus_amount,
+        } => PromotionCouponBenefit::token_bank_credit_with_bonus(
+            parse_i64_field(&grant_amount, "couponBenefit.grantAmount")?,
+            parse_optional_i64(bonus_amount.as_deref(), "couponBenefit.bonusAmount")?
+                .unwrap_or(0),
+        ),
+        CouponBenefitRequest::PointsCredit { grant_points } => PromotionCouponBenefit::points_credit(
+            parse_i64_field(&grant_points, "couponBenefit.grantPoints")?,
+        ),
+        CouponBenefitRequest::CashCredit { grant_amount } => PromotionCouponBenefit::cash_credit(
+            parse_i64_field(&grant_amount, "couponBenefit.grantAmount")?,
+        ),
         CouponBenefitRequest::Subscription {
             product_id,
             sku_id,

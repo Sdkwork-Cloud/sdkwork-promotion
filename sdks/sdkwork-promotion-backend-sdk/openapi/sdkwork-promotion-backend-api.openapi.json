@@ -1378,6 +1378,12 @@
             "$ref": "#/components/schemas/PromotionTokenBankCouponBenefit"
           },
           {
+            "$ref": "#/components/schemas/PromotionPointsCouponBenefit"
+          },
+          {
+            "$ref": "#/components/schemas/PromotionCashCouponBenefit"
+          },
+          {
             "$ref": "#/components/schemas/PromotionSubscriptionCouponBenefit"
           }
         ],
@@ -1385,6 +1391,8 @@
           "propertyName": "kind",
           "mapping": {
             "token_bank_credit": "#/components/schemas/PromotionTokenBankCouponBenefit",
+            "points_credit": "#/components/schemas/PromotionPointsCouponBenefit",
+            "cash_credit": "#/components/schemas/PromotionCashCouponBenefit",
             "subscription": "#/components/schemas/PromotionSubscriptionCouponBenefit"
           }
         }
@@ -1395,6 +1403,12 @@
             "$ref": "#/components/schemas/PromotionTokenBankCouponBenefitRequest"
           },
           {
+            "$ref": "#/components/schemas/PromotionPointsCouponBenefit"
+          },
+          {
+            "$ref": "#/components/schemas/PromotionCashCouponBenefit"
+          },
+          {
             "$ref": "#/components/schemas/PromotionSubscriptionCouponBenefit"
           }
         ],
@@ -1402,6 +1416,8 @@
           "propertyName": "kind",
           "mapping": {
             "token_bank_credit": "#/components/schemas/PromotionTokenBankCouponBenefitRequest",
+            "points_credit": "#/components/schemas/PromotionPointsCouponBenefit",
+            "cash_credit": "#/components/schemas/PromotionCashCouponBenefit",
             "subscription": "#/components/schemas/PromotionSubscriptionCouponBenefit"
           }
         }
@@ -1421,6 +1437,10 @@
           "grantAmount": {
             "type": "string",
             "pattern": "^[1-9][0-9]*$"
+          },
+          "bonusAmount": {
+            "type": "string",
+            "pattern": "^[0-9]+$"
           }
         }
       },
@@ -1440,6 +1460,46 @@
           "targetAsset": {
             "type": "string",
             "const": "token_bank"
+          },
+          "grantAmount": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "bonusAmount": {
+            "type": "string",
+            "pattern": "^[0-9]+$"
+          }
+        }
+      },
+      "PromotionPointsCouponBenefit": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "grantPoints"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "points_credit"
+          },
+          "grantPoints": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          }
+        }
+      },
+      "PromotionCashCouponBenefit": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "grantAmount"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "const": "cash_credit"
           },
           "grantAmount": {
             "type": "string",

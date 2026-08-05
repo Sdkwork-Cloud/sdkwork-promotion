@@ -32,7 +32,22 @@ pub(crate) fn parse_order_coupon_benefit(
                     "Token Bank coupon targetAsset must be token_bank",
                 ));
             }
+            // 赠送额度在订单侧合并为总发放额度（legacy 数据无 bonusAmount 时按 0 处理）
+            let bonus_units = non_negative_integer(benefit, "bonusAmount")?;
+            let grant_units = grant_units.checked_add(bonus_units).ok_or_else(|| {
+                CommerceServiceError::validation(
+                    "Token Bank coupon grant amount exceeds the supported range",
+                )
+            })?;
             PromotionOrderCouponBenefit::new(grant_units, legacy_currency_code, replayed)
+        }
+        "points_credit" => {
+            let grant_points = positive_integer(benefit, "grantPoints")?;
+            PromotionOrderCouponBenefit::points_credit(grant_points, replayed)
+        }
+        "cash_credit" => {
+            let grant_units = positive_integer(benefit, "grantAmount")?;
+            PromotionOrderCouponBenefit::cash_credit(grant_units, legacy_currency_code, replayed)
         }
         "subscription" => {
             let product_id = required_text(benefit, "productId")?;
@@ -52,7 +67,7 @@ pub(crate) fn parse_order_coupon_benefit(
             )
         }
         _ => Err(CommerceServiceError::validation(
-            "promotion coupon benefit kind must be token_bank_credit or subscription",
+            "promotion coupon benefit kind must be token_bank_credit, points_credit, cash_credit, or subscription",
         )),
     }
 }
@@ -69,7 +84,14 @@ pub(crate) fn parse_admin_coupon_benefit(
     };
     let kind = required_text(benefit, "kind")?;
     match kind.trim().to_ascii_lowercase().as_str() {
-        "token_bank_credit" => Ok(Some(PromotionCouponBenefit::token_bank_credit(
+        "token_bank_credit" => Ok(Some(PromotionCouponBenefit::token_bank_credit_with_bonus(
+            positive_integer(benefit, "grantAmount")?,
+            non_negative_integer(benefit, "bonusAmount")?,
+        )?)),
+        "points_credit" => Ok(Some(PromotionCouponBenefit::points_credit(
+            positive_integer(benefit, "grantPoints")?,
+        )?)),
+        "cash_credit" => Ok(Some(PromotionCouponBenefit::cash_credit(
             positive_integer(benefit, "grantAmount")?,
         )?)),
         "subscription" => Ok(Some(PromotionCouponBenefit::subscription(
@@ -82,7 +104,7 @@ pub(crate) fn parse_admin_coupon_benefit(
             positive_integer(benefit, "totalQuota")?,
         )?)),
         _ => Err(CommerceServiceError::validation(
-            "promotion coupon benefit kind must be token_bank_credit or subscription",
+            "promotion coupon benefit kind must be token_bank_credit, points_credit, cash_credit, or subscription",
         )),
     }
 }
@@ -95,9 +117,26 @@ pub(crate) fn serialize_admin_coupon_benefit(
     };
     benefit.validate()?;
     let coupon_benefit = match benefit {
-        PromotionCouponBenefit::TokenBankCredit { grant_amount } => serde_json::json!({
-            "kind": "token_bank_credit",
-            "targetAsset": "token_bank",
+        PromotionCouponBenefit::TokenBankCredit {
+            grant_amount,
+            bonus_amount,
+        } => {
+            let mut value = serde_json::json!({
+                "kind": "token_bank_credit",
+                "targetAsset": "token_bank",
+                "grantAmount": grant_amount.to_string(),
+            });
+            if *bonus_amount > 0 {
+                value["bonusAmount"] = serde_json::json!(bonus_amount.to_string());
+            }
+            value
+        }
+        PromotionCouponBenefit::PointsCredit { grant_points } => serde_json::json!({
+            "kind": "points_credit",
+            "grantPoints": grant_points.to_string(),
+        }),
+        PromotionCouponBenefit::CashCredit { grant_amount } => serde_json::json!({
+            "kind": "cash_credit",
             "grantAmount": grant_amount.to_string(),
         }),
         PromotionCouponBenefit::Subscription {
@@ -210,6 +249,21 @@ fn positive_integer(value: &Value, field: &str) -> Result<i64, CommerceServiceEr
         })
 }
 
+fn non_negative_integer(value: &Value, field: &str) -> Result<i64, CommerceServiceError> {
+    // 可选字段（如 bonusAmount）：缺失视为 0，保持与旧数据兼容
+    let Some(raw) = value.get(field) else {
+        return Ok(0);
+    };
+    raw.as_i64()
+        .or_else(|| raw.as_str().and_then(|text| text.trim().parse::<i64>().ok()))
+        .filter(|value| *value >= 0)
+        .ok_or_else(|| {
+            CommerceServiceError::validation(format!(
+                "promotion coupon benefit {field} must be a non-negative integer"
+            ))
+        })
+}
+
 fn required_text(value: &Value, field: &str) -> Result<String, CommerceServiceError> {
     optional_text(value, field).ok_or_else(|| {
         CommerceServiceError::validation(format!("promotion coupon benefit {field} is required"))
@@ -293,5 +347,76 @@ mod tests {
             parse_admin_coupon_benefit(Some(r#"{"minimumQuantity":2}"#)).expect("legacy rule"),
             None
         );
+    }
+
+    #[test]
+    fn token_bank_bonus_is_merged_into_order_grant_units() {
+        let rule = r#"{"couponBenefit":{"kind":"token_bank_credit","targetAsset":"token_bank","grantAmount":"500","bonusAmount":"50"}}"#;
+        let benefit = parse_order_coupon_benefit(Some(rule), "0", "CNY", false)
+            .expect("token bank benefit with bonus");
+        assert!(matches!(
+            benefit.kind,
+            PromotionOrderCouponBenefitKind::TokenBankCredit {
+                grant_units: 550,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn token_bank_without_bonus_stays_unchanged_for_order_parsing() {
+        let rule = r#"{"couponBenefit":{"kind":"token_bank_credit","targetAsset":"token_bank","grantAmount":"500"}}"#;
+        let benefit = parse_order_coupon_benefit(Some(rule), "0", "CNY", false)
+            .expect("token bank benefit without bonus");
+        assert!(matches!(
+            benefit.kind,
+            PromotionOrderCouponBenefitKind::TokenBankCredit {
+                grant_units: 500,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn order_points_credit_parses_grant_points() {
+        let rule = r#"{"couponBenefit":{"kind":"points_credit","grantPoints":"1000"}}"#;
+        let benefit = parse_order_coupon_benefit(Some(rule), "0", "CNY", false)
+            .expect("points benefit");
+        assert!(matches!(
+            benefit.kind,
+            PromotionOrderCouponBenefitKind::PointsCredit { grant_points: 1000 }
+        ));
+    }
+
+    #[test]
+    fn order_cash_credit_parses_grant_amount_with_offer_currency() {
+        let rule = r#"{"couponBenefit":{"kind":"cash_credit","grantAmount":"100"}}"#;
+        let benefit = parse_order_coupon_benefit(Some(rule), "0", "CNY", false)
+            .expect("cash benefit");
+        assert_eq!(
+            benefit.kind,
+            PromotionOrderCouponBenefitKind::CashCredit {
+                grant_units: 100,
+                currency_code: "CNY".to_owned(),
+            }
+        );
+    }
+
+    #[test]
+    fn admin_points_and_cash_benefits_round_trip_through_canonical_rule_json() {
+        for benefit in [
+            PromotionCouponBenefit::points_credit(1000).expect("points benefit"),
+            PromotionCouponBenefit::cash_credit(100).expect("cash benefit"),
+            PromotionCouponBenefit::token_bank_credit_with_bonus(500, 50)
+                .expect("token bank benefit"),
+        ] {
+            let rule_json = serialize_admin_coupon_benefit(Some(&benefit))
+                .expect("serialize benefit")
+                .expect("rule json");
+            assert_eq!(
+                parse_admin_coupon_benefit(Some(&rule_json)).expect("parse benefit"),
+                Some(benefit)
+            );
+        }
     }
 }

@@ -8,6 +8,8 @@ export type { PromotionCouponBenefit } from './promotion-coupon-benefit';
 export type { PromotionCouponBenefitRequest } from './promotion-coupon-benefit-request';
 export type { PromotionTokenBankCouponBenefitRequest } from './promotion-token-bank-coupon-benefit-request';
 export type { PromotionTokenBankCouponBenefit } from './promotion-token-bank-coupon-benefit';
+export type { PromotionPointsCouponBenefit } from './promotion-points-coupon-benefit';
+export type { PromotionCashCouponBenefit } from './promotion-cash-coupon-benefit';
 export type { PromotionSubscriptionCouponBenefit } from './promotion-subscription-coupon-benefit';
 export type { CouponStock } from './coupon-stock';
 export type { PromotionCode } from './promotion-code';

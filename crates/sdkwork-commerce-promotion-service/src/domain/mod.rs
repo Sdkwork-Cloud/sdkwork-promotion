@@ -101,6 +101,13 @@ pub enum PromotionSubscriptionPeriod {
 pub enum PromotionCouponBenefit {
     TokenBankCredit {
         grant_amount: i64,
+        bonus_amount: i64,
+    },
+    PointsCredit {
+        grant_points: i64,
+    },
+    CashCredit {
+        grant_amount: i64,
     },
     Subscription {
         product_id: String,
@@ -116,6 +123,13 @@ pub enum PromotionCouponBenefit {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum PromotionOrderCouponBenefitKind {
     TokenBankCredit {
+        grant_units: i64,
+        currency_code: String,
+    },
+    PointsCredit {
+        grant_points: i64,
+    },
+    CashCredit {
         grant_units: i64,
         currency_code: String,
     },
@@ -178,7 +192,29 @@ impl PromotionSubscriptionPeriod {
 
 impl PromotionCouponBenefit {
     pub fn token_bank_credit(grant_amount: i64) -> Result<Self, CommerceServiceError> {
-        let benefit = Self::TokenBankCredit { grant_amount };
+        Self::token_bank_credit_with_bonus(grant_amount, 0)
+    }
+
+    pub fn token_bank_credit_with_bonus(
+        grant_amount: i64,
+        bonus_amount: i64,
+    ) -> Result<Self, CommerceServiceError> {
+        let benefit = Self::TokenBankCredit {
+            grant_amount,
+            bonus_amount,
+        };
+        benefit.validate()?;
+        Ok(benefit)
+    }
+
+    pub fn points_credit(grant_points: i64) -> Result<Self, CommerceServiceError> {
+        let benefit = Self::PointsCredit { grant_points };
+        benefit.validate()?;
+        Ok(benefit)
+    }
+
+    pub fn cash_credit(grant_amount: i64) -> Result<Self, CommerceServiceError> {
+        let benefit = Self::CashCredit { grant_amount };
         benefit.validate()?;
         Ok(benefit)
     }
@@ -208,10 +244,32 @@ impl PromotionCouponBenefit {
 
     pub fn validate(&self) -> Result<(), CommerceServiceError> {
         match self {
-            Self::TokenBankCredit { grant_amount } => {
+            Self::TokenBankCredit {
+                grant_amount,
+                bonus_amount,
+            } => {
                 if *grant_amount <= 0 {
                     return Err(CommerceServiceError::validation(
                         "promotion Token Bank coupon grant amount must be greater than zero",
+                    ));
+                }
+                if *bonus_amount < 0 {
+                    return Err(CommerceServiceError::validation(
+                        "promotion Token Bank coupon bonus amount must not be negative",
+                    ));
+                }
+            }
+            Self::PointsCredit { grant_points } => {
+                if *grant_points <= 0 {
+                    return Err(CommerceServiceError::validation(
+                        "promotion points coupon grant points must be greater than zero",
+                    ));
+                }
+            }
+            Self::CashCredit { grant_amount } => {
+                if *grant_amount <= 0 {
+                    return Err(CommerceServiceError::validation(
+                        "promotion cash coupon grant amount must be greater than zero",
                     ));
                 }
             }
@@ -278,6 +336,41 @@ impl PromotionOrderCouponBenefit {
         require_non_empty_service("currency_code", currency_code)?;
         Ok(Self {
             kind: PromotionOrderCouponBenefitKind::TokenBankCredit {
+                grant_units,
+                currency_code: currency_code.trim().to_ascii_uppercase(),
+            },
+            replayed,
+        })
+    }
+
+    pub fn points_credit(
+        grant_points: i64,
+        replayed: bool,
+    ) -> Result<Self, CommerceServiceError> {
+        if grant_points <= 0 {
+            return Err(CommerceServiceError::validation(
+                "promotion order coupon grant points must be greater than zero",
+            ));
+        }
+        Ok(Self {
+            kind: PromotionOrderCouponBenefitKind::PointsCredit { grant_points },
+            replayed,
+        })
+    }
+
+    pub fn cash_credit(
+        grant_units: i64,
+        currency_code: &str,
+        replayed: bool,
+    ) -> Result<Self, CommerceServiceError> {
+        if grant_units <= 0 {
+            return Err(CommerceServiceError::validation(
+                "promotion order coupon grant must be greater than zero",
+            ));
+        }
+        require_non_empty_service("currency_code", currency_code)?;
+        Ok(Self {
+            kind: PromotionOrderCouponBenefitKind::CashCredit {
                 grant_units,
                 currency_code: currency_code.trim().to_ascii_uppercase(),
             },
@@ -599,5 +692,68 @@ mod tests {
             99,
         )
         .is_err());
+    }
+
+    #[test]
+    fn token_bank_coupon_accepts_bonus_amount() {
+        let benefit = PromotionCouponBenefit::token_bank_credit_with_bonus(500, 50)
+            .expect("token bank benefit with bonus");
+        assert_eq!(
+            benefit,
+            PromotionCouponBenefit::TokenBankCredit {
+                grant_amount: 500,
+                bonus_amount: 50,
+            }
+        );
+    }
+
+    #[test]
+    fn token_bank_coupon_rejects_negative_bonus_amount() {
+        assert!(PromotionCouponBenefit::token_bank_credit_with_bonus(500, -1).is_err());
+    }
+
+    #[test]
+    fn points_coupon_rejects_non_positive_grant() {
+        assert!(PromotionCouponBenefit::points_credit(0).is_err());
+        assert!(PromotionCouponBenefit::points_credit(-100).is_err());
+        assert_eq!(
+            PromotionCouponBenefit::points_credit(1000).expect("points benefit"),
+            PromotionCouponBenefit::PointsCredit { grant_points: 1000 }
+        );
+    }
+
+    #[test]
+    fn cash_coupon_rejects_non_positive_grant() {
+        assert!(PromotionCouponBenefit::cash_credit(0).is_err());
+        assert_eq!(
+            PromotionCouponBenefit::cash_credit(100).expect("cash benefit"),
+            PromotionCouponBenefit::CashCredit { grant_amount: 100 }
+        );
+    }
+
+    #[test]
+    fn order_points_credit_rejects_non_positive_grant() {
+        assert!(PromotionOrderCouponBenefit::points_credit(0, false).is_err());
+        let benefit =
+            PromotionOrderCouponBenefit::points_credit(1000, true).expect("order points benefit");
+        assert!(benefit.replayed);
+        assert_eq!(
+            benefit.kind,
+            PromotionOrderCouponBenefitKind::PointsCredit { grant_points: 1000 }
+        );
+    }
+
+    #[test]
+    fn order_cash_credit_requires_currency_code() {
+        assert!(PromotionOrderCouponBenefit::cash_credit(100, "", false).is_err());
+        let benefit =
+            PromotionOrderCouponBenefit::cash_credit(100, "cny", false).expect("order cash benefit");
+        assert_eq!(
+            benefit.kind,
+            PromotionOrderCouponBenefitKind::CashCredit {
+                grant_units: 100,
+                currency_code: "CNY".to_owned(),
+            }
+        );
     }
 }

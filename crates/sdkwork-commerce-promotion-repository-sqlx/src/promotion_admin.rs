@@ -882,7 +882,8 @@ mod tests {
             offers.items[0].coupon_benefit,
             Some(
                 sdkwork_commerce_promotion_service::PromotionCouponBenefit::TokenBankCredit {
-                    grant_amount: 500
+                    grant_amount: 500,
+                    ..
                 }
             )
         ));
