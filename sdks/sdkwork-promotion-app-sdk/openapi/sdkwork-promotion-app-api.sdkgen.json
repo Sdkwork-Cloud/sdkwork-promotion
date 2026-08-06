@@ -1206,6 +1206,244 @@
         "x-sdkwork-api-surface": "app-api",
         "x-sdkwork-permission": "commerce.promotions.userCoupons.access"
       }
+    },
+    "/app/v3/api/promotions/member_cards": {
+      "get": {
+        "description": "Member card operation.",
+        "operationId": "promotions.memberCards.list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembercardsListResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          }
+        },
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.memberCards",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.memberCards.access",
+        "tags": [
+          "promotions"
+        ],
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ]
+      }
+    },
+    "/app/v3/api/promotions/member_cards/{cardId}": {
+      "get": {
+        "description": "Member card operation.",
+        "operationId": "promotions.memberCards.retrieve",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembercardsRetrieveResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          }
+        },
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.memberCards",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.memberCards.access",
+        "tags": [
+          "promotions"
+        ],
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ]
+      }
+    },
+    "/app/v3/api/promotions/member_cards/{cardId}/consumptions": {
+      "post": {
+        "description": "Member card operation.",
+        "operationId": "promotions.memberCards.consumptions.create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembercardsConsumptionsCreateResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionsMemberCardsConsumptionsCreateRequest"
+              }
+            }
+          },
+          "description": "Typed request payload for create.",
+          "required": true
+        },
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.memberCards",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.memberCards.access",
+        "tags": [
+          "promotions"
+        ],
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ]
+      }
+    },
+    "/app/v3/api/promotions/codes/redemptions/preview": {
+      "post": {
+        "description": "Preview promotion code redemption without consuming stock or recording.",
+        "operationId": "promotions.codes.redemptions.preview",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionsCodesRedemptionsCreateRequest"
+              }
+            }
+          },
+          "description": "Typed request payload for preview.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionsCodesRedemptionsPreviewResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          }
+        },
+        "x-sdkwork-domain": "promotion",
+        "x-sdkwork-resource": "promotions.codes.redemptions",
+        "x-sdkwork-owner": "sdkwork-promotion",
+        "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
+        "x-sdkwork-api-surface": "app-api",
+        "x-sdkwork-permission": "commerce.promotions.codes.redemptions.access",
+        "tags": [
+          "promotions"
+        ],
+        "security": [
+          {
+            "AccessToken": [],
+            "AuthToken": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -1722,6 +1960,139 @@
         "maximum": 79999,
         "minimum": 40001,
         "type": "integer"
+      },
+      "MembercardsListResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by MembercardsListResult.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "MembercardsListResult schema exposed by Cloud Router.",
+        "x-operation-id": "promotions.memberCards.list"
+      },
+      "MembercardsRetrieveResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by MembercardsRetrieveResult.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "MembercardsRetrieveResult schema exposed by Cloud Router.",
+        "x-operation-id": "promotions.memberCards.retrieve"
+      },
+      "MembercardsConsumptionsCreateResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by MembercardsConsumptionsCreateResult.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "MembercardsConsumptionsCreateResult schema exposed by Cloud Router.",
+        "x-operation-id": "promotions.memberCards.consumptions.create"
+      },
+      "PromotionsMemberCardsConsumptionsCreateRequest": {
+        "additionalProperties": false,
+        "description": "Promotions member cards consumptions create request schema exposed by Cloud Router.",
+        "properties": {
+          "amount": {
+            "description": "Amount field on promotions member cards consumptions create request.",
+            "pattern": "^[1-9][0-9]*$",
+            "type": "string"
+          },
+          "sourceId": {
+            "description": "Source id field on promotions member cards consumptions create request.",
+            "maxLength": 128,
+            "type": "string"
+          },
+          "sourceType": {
+            "description": "Source type field on promotions member cards consumptions create request.",
+            "maxLength": 64,
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount"
+        ],
+        "type": "object"
+      },
+      "PromotionsCodesRedemptionsPreviewResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SdkWorkApiResponse"
+          },
+          {
+            "additionalProperties": false,
+            "description": "Object schema used by promotions codes redemptions preview result.",
+            "properties": {
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/NoData"
+                  }
+                ],
+                "description": "No business data returned by this operation."
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "Promotions codes redemptions preview result schema exposed by Cloud Router.",
+        "x-operation-id": "promotions.codes.redemptions.preview"
       }
     },
     "securitySchemes": {

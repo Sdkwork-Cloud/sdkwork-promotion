@@ -1,9 +1,6 @@
 export interface PromotionSubscriptionCouponBenefit {
   kind: 'subscription';
-  productId: string;
-  skuId: string;
-  packageId: string;
-  period: 'day' | 'week' | 'month' | 'year';
+  period: 'day' | 'week' | 'month' | 'quarter' | 'year';
   durationDays: string;
   dailyQuota: string;
   totalQuota: string;

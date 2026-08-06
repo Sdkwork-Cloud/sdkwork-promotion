@@ -95,9 +95,6 @@ pub(crate) fn parse_admin_coupon_benefit(
             positive_integer(benefit, "grantAmount")?,
         )?)),
         "subscription" => Ok(Some(PromotionCouponBenefit::subscription(
-            &required_text(benefit, "productId")?,
-            &required_text(benefit, "skuId")?,
-            positive_integer(benefit, "packageId")?,
             PromotionSubscriptionPeriod::parse(&required_text(benefit, "period")?)?,
             positive_integer(benefit, "durationDays")?,
             positive_integer(benefit, "dailyQuota")?,
@@ -140,18 +137,12 @@ pub(crate) fn serialize_admin_coupon_benefit(
             "grantAmount": grant_amount.to_string(),
         }),
         PromotionCouponBenefit::Subscription {
-            product_id,
-            sku_id,
-            package_id,
             period,
             duration_days,
             daily_quota,
             total_quota,
         } => serde_json::json!({
             "kind": "subscription",
-            "productId": product_id,
-            "skuId": sku_id,
-            "packageId": package_id.to_string(),
             "period": period.as_str(),
             "durationDays": duration_days,
             "dailyQuota": daily_quota.to_string(),
@@ -323,9 +314,6 @@ mod tests {
     #[test]
     fn admin_subscription_benefit_round_trips_through_canonical_rule_json() {
         let benefit = PromotionCouponBenefit::subscription(
-            "seed-product-membership",
-            "sku-standard-monthly",
-            1002,
             PromotionSubscriptionPeriod::Month,
             30,
             1000,
@@ -339,6 +327,24 @@ mod tests {
             parse_admin_coupon_benefit(Some(&rule_json)).expect("parse benefit"),
             Some(benefit)
         );
+    }
+
+    #[test]
+    fn admin_parser_accepts_legacy_subscription_rule_with_package_fields() {
+        // 存量订阅券规则含套餐字段（productId/skuId/packageId），新模型解析时忽略
+        let rule = r#"{"couponBenefit":{"kind":"subscription","productId":"membership","skuId":"sku-pro-month","packageId":"1002","period":"month","durationDays":30,"dailyQuota":"1000","totalQuota":"30000"}}"#;
+        let benefit = parse_admin_coupon_benefit(Some(rule))
+            .expect("legacy subscription benefit")
+            .expect("benefit");
+        assert!(matches!(
+            benefit,
+            PromotionCouponBenefit::Subscription {
+                period: PromotionSubscriptionPeriod::Month,
+                duration_days: 30,
+                daily_quota: 1000,
+                total_quota: 30000,
+            }
+        ));
     }
 
     #[test]

@@ -116,3 +116,59 @@ fn optional_text(value: Option<&str>) -> Option<String> {
         .filter(|value| !value.is_empty())
         .map(str::to_string)
 }
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MemberCardListQuery {
+    pub organization_id: Option<String>,
+    pub owner_user_id: String,
+    pub tenant_id: String,
+}
+
+impl MemberCardListQuery {
+    pub fn new(
+        tenant_id: &str,
+        organization_id: Option<&str>,
+        owner_user_id: &str,
+    ) -> Result<Self, sdkwork_contract_service::CommerceServiceError> {
+        crate::validation::require_non_empty("tenant_id", tenant_id)?;
+        crate::validation::require_non_empty("owner_user_id", owner_user_id)?;
+        Ok(Self {
+            organization_id: organization_id
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .map(str::to_string),
+            owner_user_id: owner_user_id.trim().to_string(),
+            tenant_id: tenant_id.trim().to_string(),
+        })
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RetrieveMemberCardQuery {
+    pub card_id: String,
+    pub organization_id: Option<String>,
+    pub owner_user_id: String,
+    pub tenant_id: String,
+}
+
+impl RetrieveMemberCardQuery {
+    pub fn new(
+        tenant_id: &str,
+        organization_id: Option<&str>,
+        owner_user_id: &str,
+        card_id: &str,
+    ) -> Result<Self, sdkwork_contract_service::CommerceServiceError> {
+        crate::validation::require_non_empty("tenant_id", tenant_id)?;
+        crate::validation::require_non_empty("owner_user_id", owner_user_id)?;
+        crate::validation::require_non_empty("card_id", card_id)?;
+        Ok(Self {
+            card_id: card_id.trim().to_string(),
+            organization_id: organization_id
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .map(str::to_string),
+            owner_user_id: owner_user_id.trim().to_string(),
+            tenant_id: tenant_id.trim().to_string(),
+        })
+    }
+}

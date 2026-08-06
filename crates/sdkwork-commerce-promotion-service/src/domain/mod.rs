@@ -87,6 +87,78 @@ pub struct PromotionCodeRedemptionOutcome {
     pub amount: CommerceMoney,
     pub credited_points: i64,
     pub balance: i64,
+    /// 兑现的权益类型（token_bank_credit/points_credit/cash_credit/subscription）。
+    pub benefit_kind: Option<String>,
+    /// 入账金额（最小单位字符串；会员卡场景为空）。
+    pub credited_amount: Option<String>,
+    /// 入账资产类型（token_bank/points/cash；会员卡场景为空）。
+    pub asset_type: Option<String>,
+    pub member_card_id: Option<String>,
+    pub member_card_no: Option<String>,
+    /// 兑换生成的用户券 ID 与券码。
+    pub user_coupon_id: String,
+    pub coupon_code: String,
+}
+
+/// 兑换码预览结果：不落库、不消耗库存，展示可得权益。
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PromotionCodeRedemptionPreview {
+    pub benefit_kind: Option<String>,
+    pub credited_amount: Option<String>,
+    pub asset_type: Option<String>,
+    pub period: Option<String>,
+    pub duration_days: Option<i64>,
+    pub daily_quota: Option<i64>,
+    pub total_quota: Option<i64>,
+    pub expires_at: Option<String>,
+}
+
+/// 会员卡（订阅权益券兑现的独立载体）：承载每日使用限额与总额度。
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PromotionMemberCard {
+    pub id: String,
+    pub card_no: String,
+    pub offer_id: String,
+    pub offer_version_id: String,
+    pub user_coupon_id: String,
+    pub owner_user_id: String,
+    pub period: PromotionSubscriptionPeriod,
+    pub duration_days: i64,
+    pub daily_quota: i64,
+    pub total_quota: i64,
+    pub total_used: i64,
+    pub status: String,
+    pub starts_at: String,
+    pub expires_at: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+/// 会员卡额度消耗流水。
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PromotionMemberCardConsumption {
+    pub id: String,
+    pub card_id: String,
+    pub amount: i64,
+    pub balance_after: i64,
+    pub business_type: String,
+    pub source_type: Option<String>,
+    pub source_id: Option<String>,
+    pub occurred_at: String,
+}
+
+/// 会员卡额度消耗结果。
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct MemberCardConsumptionOutcome {
+    pub accepted: bool,
+    pub replayed: bool,
+    pub card_id: String,
+    pub consumed_amount: i64,
+    pub used_today: i64,
+    pub daily_quota: i64,
+    pub total_used: i64,
+    pub total_quota: i64,
+    pub balance: i64,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -94,6 +166,7 @@ pub enum PromotionSubscriptionPeriod {
     Day,
     Week,
     Month,
+    Quarter,
     Year,
 }
 
@@ -110,9 +183,6 @@ pub enum PromotionCouponBenefit {
         grant_amount: i64,
     },
     Subscription {
-        product_id: String,
-        sku_id: String,
-        package_id: i64,
         period: PromotionSubscriptionPeriod,
         duration_days: i64,
         daily_quota: i64,
@@ -156,9 +226,10 @@ impl PromotionSubscriptionPeriod {
             "day" | "daily" => Ok(Self::Day),
             "week" | "weekly" => Ok(Self::Week),
             "month" | "monthly" => Ok(Self::Month),
+            "quarter" | "quarterly" => Ok(Self::Quarter),
             "year" | "yearly" => Ok(Self::Year),
             _ => Err(CommerceServiceError::validation(
-                "promotion subscription coupon period must be day, week, month, or year",
+                "promotion subscription coupon period must be day, week, month, quarter, or year",
             )),
         }
     }
@@ -168,6 +239,7 @@ impl PromotionSubscriptionPeriod {
             Self::Day => "day",
             Self::Week => "week",
             Self::Month => "month",
+            Self::Quarter => "quarter",
             Self::Year => "year",
         }
     }
@@ -177,6 +249,7 @@ impl PromotionSubscriptionPeriod {
             Self::Day => duration_days == 1,
             Self::Week => duration_days == 7,
             Self::Month => (28..=31).contains(&duration_days),
+            Self::Quarter => (90..=92).contains(&duration_days),
             Self::Year => (365..=366).contains(&duration_days),
         };
         if valid {
@@ -219,20 +292,13 @@ impl PromotionCouponBenefit {
         Ok(benefit)
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn subscription(
-        product_id: &str,
-        sku_id: &str,
-        package_id: i64,
         period: PromotionSubscriptionPeriod,
         duration_days: i64,
         daily_quota: i64,
         total_quota: i64,
     ) -> Result<Self, CommerceServiceError> {
         let benefit = Self::Subscription {
-            product_id: product_id.trim().to_owned(),
-            sku_id: sku_id.trim().to_owned(),
-            package_id,
             period,
             duration_days,
             daily_quota,
@@ -274,21 +340,11 @@ impl PromotionCouponBenefit {
                 }
             }
             Self::Subscription {
-                product_id,
-                sku_id,
-                package_id,
                 period,
                 duration_days,
                 daily_quota,
                 total_quota,
             } => {
-                require_non_empty_service("product_id", product_id)?;
-                require_non_empty_service("sku_id", sku_id)?;
-                if *package_id <= 0 {
-                    return Err(CommerceServiceError::validation(
-                        "promotion subscription coupon package id must be greater than zero",
-                    ));
-                }
                 period.validate_duration_days(*duration_days)?;
                 if *daily_quota <= 0 || *total_quota <= 0 {
                     return Err(CommerceServiceError::validation(
@@ -389,10 +445,8 @@ impl PromotionOrderCouponBenefit {
         total_quota: i64,
         replayed: bool,
     ) -> Result<Self, CommerceServiceError> {
+        // 复用营销券订阅权益的额度契约校验（周期/时长/每日与总额度）
         PromotionCouponBenefit::subscription(
-            product_id,
-            sku_id,
-            package_id,
             period,
             duration_days,
             daily_quota,
@@ -654,7 +708,39 @@ impl PromotionCodeRedemptionOutcome {
             amount: CommerceMoney::new(amount).map_err(CommerceServiceError::validation)?,
             credited_points,
             balance,
+            benefit_kind: None,
+            credited_amount: None,
+            asset_type: None,
+            member_card_id: None,
+            member_card_no: None,
+            user_coupon_id: String::new(),
+            coupon_code: String::new(),
         })
+    }
+
+    /// 附加兑换生成的券标识（用户券 ID 与券码）。
+    pub fn with_coupon(mut self, user_coupon_id: String, coupon_code: String) -> Self {
+        self.user_coupon_id = user_coupon_id;
+        self.coupon_code = coupon_code;
+        self
+    }
+
+    /// 附加权益兑现信息（按权益类型分发的入账结果）。
+    #[allow(clippy::too_many_arguments)]
+    pub fn with_benefit_credit(
+        mut self,
+        benefit_kind: Option<String>,
+        credited_amount: Option<String>,
+        asset_type: Option<String>,
+        member_card_id: Option<String>,
+        member_card_no: Option<String>,
+    ) -> Self {
+        self.benefit_kind = benefit_kind;
+        self.credited_amount = credited_amount;
+        self.asset_type = asset_type;
+        self.member_card_id = member_card_id;
+        self.member_card_no = member_card_no;
+        self
     }
 }
 
@@ -669,9 +755,6 @@ mod tests {
     #[test]
     fn subscription_coupon_rejects_quota_that_cannot_be_consumed_before_expiry() {
         assert!(PromotionCouponBenefit::subscription(
-            "seed-product-membership",
-            "sku-weekly",
-            1001,
             PromotionSubscriptionPeriod::Week,
             7,
             100,
@@ -683,13 +766,39 @@ mod tests {
     #[test]
     fn daily_subscription_coupon_requires_equal_daily_and_total_quota() {
         assert!(PromotionCouponBenefit::subscription(
-            "seed-product-membership",
-            "sku-daily",
-            1001,
             PromotionSubscriptionPeriod::Day,
             1,
             100,
             99,
+        )
+        .is_err());
+    }
+
+    #[test]
+    fn quarter_subscription_period_validates_90_to_92_days() {
+        assert!(PromotionSubscriptionPeriod::parse("quarter").is_ok());
+        assert!(PromotionSubscriptionPeriod::parse("quarterly").is_ok());
+        for days in [90, 91, 92] {
+            assert!(PromotionCouponBenefit::subscription(
+                PromotionSubscriptionPeriod::Quarter,
+                days,
+                100,
+                100 * days,
+            )
+            .is_ok());
+        }
+        assert!(PromotionCouponBenefit::subscription(
+            PromotionSubscriptionPeriod::Quarter,
+            89,
+            100,
+            8900,
+        )
+        .is_err());
+        assert!(PromotionCouponBenefit::subscription(
+            PromotionSubscriptionPeriod::Quarter,
+            93,
+            100,
+            9300,
         )
         .is_err());
     }

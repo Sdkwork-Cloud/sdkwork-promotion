@@ -17,6 +17,8 @@ use tower_http::trace::TraceLayer;
 async fn main() {
     tracing_subscriber::fmt::init();
     let host = Arc::new(PromotionServiceHost::new().await);
+    // 会员卡生命周期 worker：排期激活 + 到期过期（间隔由 PROMOTION_LIFECYCLE_SWEEP_INTERVAL_SECONDS 配置）
+    host.spawn_member_card_lifecycle_worker();
     let business = assemble_api_router(host).await.router;
     let business = business.layer(TraceLayer::new_for_http());
     let app = service_router(business, ServiceRouterConfig::default().with_always_ready());

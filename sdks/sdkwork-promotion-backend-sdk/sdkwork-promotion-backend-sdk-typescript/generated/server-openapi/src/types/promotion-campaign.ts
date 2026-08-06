@@ -8,7 +8,7 @@ export interface PromotionCampaign {
   audienceScope: string;
   startsAt: string;
   endsAt?: string | null;
-  status: 'DRAFT' | 'SCHEDULED' | 'ACTIVE' | 'PAUSED' | 'ENDED' | 'CANCELLED' | 'ARCHIVED';
+  status: 'draft' | 'scheduled' | 'active' | 'paused' | 'ended' | 'cancelled' | 'archived';
   version: string;
   updatedAt: string;
 }

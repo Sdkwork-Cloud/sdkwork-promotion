@@ -2,7 +2,7 @@ export interface CouponStock {
   id: string;
   offerId: string;
   stockNo: string;
-  stockType: string;
+  stockType: 'limited' | 'unlimited';
   totalQuantity: string;
   availableQuantity: string;
   claimedQuantity: string;
@@ -12,5 +12,5 @@ export interface CouponStock {
   claimStartsAt?: string | null;
   claimEndsAt?: string | null;
   status: 'active' | 'disabled';
-  codeIssueMode: 'REALTIME' | 'BATCH';
+  codeIssueMode: 'realtime' | 'batch';
 }

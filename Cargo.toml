@@ -24,7 +24,7 @@ http = "1"
 tokio = { version = "1.51", features = ["macros", "rt-multi-thread", "net", "sync"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "sqlite", "uuid", "chrono"] }
+sqlx = { version = "0.9", default-features = false, features = ["runtime-tokio", "postgres", "uuid", "chrono"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 tower = "0.5"
@@ -44,7 +44,7 @@ sdkwork_iam_context_service = { path = "../sdkwork-iam/crates/sdkwork-iam-contex
 sdkwork_database_config = { path = "../sdkwork-database/crates/sdkwork-database-config", package = "sdkwork-database-config" }
 sdkwork_database_lifecycle = { path = "../sdkwork-database/crates/sdkwork-database-lifecycle", package = "sdkwork-database-lifecycle" }
 sdkwork_database_spi = { path = "../sdkwork-database/crates/sdkwork-database-spi", package = "sdkwork-database-spi" }
-sdkwork_database_sqlx = { path = "../sdkwork-database/crates/sdkwork-database-sqlx", package = "sdkwork-database-sqlx", features = ["postgres", "sqlite"] }
+sdkwork_database_sqlx = { path = "../sdkwork-database/crates/sdkwork-database-sqlx", package = "sdkwork-database-sqlx", features = ["postgres"] }
 sdkwork_commerce_promotion_service = { path = "crates/sdkwork-commerce-promotion-service", package = "sdkwork-commerce-promotion-service" }
 sdkwork_commerce_promotion_repository_sqlx = { path = "crates/sdkwork-commerce-promotion-repository-sqlx", package = "sdkwork-commerce-promotion-repository-sqlx" }
 sdkwork_routes_promotion_app_api = { path = "crates/sdkwork-routes-promotion-app-api", package = "sdkwork-routes-promotion-app-api" }

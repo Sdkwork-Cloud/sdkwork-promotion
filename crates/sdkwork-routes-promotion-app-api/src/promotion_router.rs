@@ -1,23 +1,24 @@
-use axum::extract::{Extension, Query, State};
+use axum::extract::{Extension, Path, Query, State};
 use axum::http::HeaderMap;
 use axum::response::Response;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use sdkwork_commerce_promotion_repository_sqlx::{
-    PostgresCommerceExchangeStore, PostgresCommercePromotionStore, SqliteCommerceExchangeStore,
-    SqliteCommercePromotionStore,
+    PostgresCommerceExchangeStore, PostgresCommercePromotionStore,
 };
 use sdkwork_commerce_promotion_service::{
-    ApplyPromotionDiscountCommand, ClaimPromotionUserCouponCommand, PointsBalance,
+    ApplyPromotionDiscountCommand, ClaimPromotionUserCouponCommand, ConsumeMemberCardCommand,
+    GrantMemberCardCommand, MemberCardConsumptionOutcome, MemberCardListQuery, PointsBalance,
+    PromotionCodeRedemptionPreview,
     PointsBalanceQuery, PointsHistoryItem, PointsHistoryQuery, PromotionCodeRedemptionCommand,
-    PromotionCodeRedemptionOutcome, PromotionUserCouponItem, PromotionUserCouponListQuery,
-    ReversePromotionDiscountCommand,
+    PromotionCodeRedemptionOutcome, PromotionMemberCard, PromotionUserCouponItem,
+    PromotionUserCouponListQuery, RetrieveMemberCardQuery, ReversePromotionDiscountCommand,
 };
 use sdkwork_contract_service::CommerceServiceError;
 use sdkwork_iam_context_service::IamAppContext;
 use sdkwork_web_core::WebRequestContext;
 use serde::{Deserialize, Serialize};
-use sqlx::{PgPool, SqlitePool};
+use sqlx::PgPool;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -46,6 +47,11 @@ pub trait CommercePromotionStore: Send + Sync {
         query: PointsHistoryQuery,
     ) -> CommercePromotionFuture<'a, Vec<PointsHistoryItem>>;
 
+    fn preview_promotion_code<'a>(
+        &'a self,
+        command: PromotionCodeRedemptionCommand,
+    ) -> CommercePromotionFuture<'a, PromotionCodeRedemptionPreview>;
+
     fn redeem_promotion_code<'a>(
         &'a self,
         command: PromotionCodeRedemptionCommand,
@@ -65,6 +71,26 @@ pub trait CommercePromotionStore: Send + Sync {
         &'a self,
         command: ReversePromotionDiscountCommand,
     ) -> CommercePromotionFuture<'a, PromotionUserCouponItem>;
+
+    fn grant_member_card<'a>(
+        &'a self,
+        command: GrantMemberCardCommand,
+    ) -> CommercePromotionFuture<'a, PromotionMemberCard>;
+
+    fn consume_member_card<'a>(
+        &'a self,
+        command: ConsumeMemberCardCommand,
+    ) -> CommercePromotionFuture<'a, MemberCardConsumptionOutcome>;
+
+    fn list_member_cards<'a>(
+        &'a self,
+        query: MemberCardListQuery,
+    ) -> CommercePromotionFuture<'a, Vec<PromotionMemberCard>>;
+
+    fn retrieve_member_card<'a>(
+        &'a self,
+        query: RetrieveMemberCardQuery,
+    ) -> CommercePromotionFuture<'a, Option<PromotionMemberCard>>;
 }
 
 #[derive(Clone)]
@@ -138,58 +164,14 @@ struct PromotionCodeRedemptionOutcomeResponse {
     amount: String,
     credited_points: i64,
     balance: i64,
+    benefit_kind: Option<String>,
+    credited_amount: Option<String>,
+    asset_type: Option<String>,
+    member_card_id: Option<String>,
+    member_card_no: Option<String>,
 }
 
-impl CommercePromotionStore for SqliteCommercePromotionStore {
-    fn list_promotion_user_coupons<'a>(
-        &'a self,
-        query: PromotionUserCouponListQuery,
-    ) -> CommercePromotionFuture<'a, Vec<PromotionUserCouponItem>> {
-        Box::pin(async move { self.list_promotion_user_coupons(query).await })
-    }
 
-    fn retrieve_points_balance<'a>(
-        &'a self,
-        query: PointsBalanceQuery,
-    ) -> CommercePromotionFuture<'a, PointsBalance> {
-        Box::pin(async move { self.retrieve_points_balance(query).await })
-    }
-
-    fn list_points_history<'a>(
-        &'a self,
-        query: PointsHistoryQuery,
-    ) -> CommercePromotionFuture<'a, Vec<PointsHistoryItem>> {
-        Box::pin(async move { self.list_points_history(query).await })
-    }
-
-    fn redeem_promotion_code<'a>(
-        &'a self,
-        command: PromotionCodeRedemptionCommand,
-    ) -> CommercePromotionFuture<'a, PromotionCodeRedemptionOutcome> {
-        Box::pin(async move { self.redeem_promotion_code(command).await })
-    }
-
-    fn claim_promotion_user_coupon<'a>(
-        &'a self,
-        command: ClaimPromotionUserCouponCommand,
-    ) -> CommercePromotionFuture<'a, PromotionUserCouponItem> {
-        Box::pin(async move { self.claim_promotion_user_coupon(command).await })
-    }
-
-    fn apply_promotion_discount<'a>(
-        &'a self,
-        command: ApplyPromotionDiscountCommand,
-    ) -> CommercePromotionFuture<'a, PromotionUserCouponItem> {
-        Box::pin(async move { self.apply_promotion_discount(command).await })
-    }
-
-    fn reverse_promotion_discount<'a>(
-        &'a self,
-        command: ReversePromotionDiscountCommand,
-    ) -> CommercePromotionFuture<'a, PromotionUserCouponItem> {
-        Box::pin(async move { self.reverse_promotion_discount(command).await })
-    }
-}
 
 impl CommercePromotionStore for PostgresCommercePromotionStore {
     fn list_promotion_user_coupons<'a>(
@@ -213,6 +195,13 @@ impl CommercePromotionStore for PostgresCommercePromotionStore {
         Box::pin(async move { self.list_points_history(query).await })
     }
 
+    fn preview_promotion_code<'a>(
+        &'a self,
+        command: PromotionCodeRedemptionCommand,
+    ) -> CommercePromotionFuture<'a, PromotionCodeRedemptionPreview> {
+        Box::pin(async move { self.preview_promotion_code(command).await })
+    }
+
     fn redeem_promotion_code<'a>(
         &'a self,
         command: PromotionCodeRedemptionCommand,
@@ -240,15 +229,37 @@ impl CommercePromotionStore for PostgresCommercePromotionStore {
     ) -> CommercePromotionFuture<'a, PromotionUserCouponItem> {
         Box::pin(async move { self.reverse_promotion_discount(command).await })
     }
+
+    fn grant_member_card<'a>(
+        &'a self,
+        command: GrantMemberCardCommand,
+    ) -> CommercePromotionFuture<'a, PromotionMemberCard> {
+        Box::pin(async move { self.grant_member_card(command).await })
+    }
+
+    fn consume_member_card<'a>(
+        &'a self,
+        command: ConsumeMemberCardCommand,
+    ) -> CommercePromotionFuture<'a, MemberCardConsumptionOutcome> {
+        Box::pin(async move { self.consume_member_card(command).await })
+    }
+
+    fn list_member_cards<'a>(
+        &'a self,
+        query: MemberCardListQuery,
+    ) -> CommercePromotionFuture<'a, Vec<PromotionMemberCard>> {
+        Box::pin(async move { self.list_member_cards(query).await })
+    }
+
+    fn retrieve_member_card<'a>(
+        &'a self,
+        query: RetrieveMemberCardQuery,
+    ) -> CommercePromotionFuture<'a, Option<PromotionMemberCard>> {
+        Box::pin(async move { self.retrieve_member_card(query).await })
+    }
 }
 
-pub fn app_promotion_router_with_sqlite_pool(pool: SqlitePool) -> Router {
-    build_app_promotion_router(Arc::new(SqliteCommercePromotionStore::new(pool.clone()))).merge(
-        crate::exchange_router::build_app_exchange_router(Arc::new(
-            SqliteCommerceExchangeStore::new(pool),
-        )),
-    )
-}
+
 
 pub fn app_promotion_router_with_postgres_pool(pool: PgPool) -> Router {
     build_app_promotion_router(Arc::new(PostgresCommercePromotionStore::new(pool.clone()))).merge(
@@ -293,6 +304,22 @@ pub fn build_app_promotion_router(store: Arc<dyn CommercePromotionStore>) -> Rou
         .route(
             "/app/v3/api/promotions/codes/redemptions",
             post(redeem_promotion_code),
+        )
+        .route(
+            "/app/v3/api/promotions/codes/redemptions/preview",
+            post(preview_promotion_code),
+        )
+        .route(
+            "/app/v3/api/promotions/member_cards",
+            get(fetch_my_member_cards),
+        )
+        .route(
+            "/app/v3/api/promotions/member_cards/{cardId}",
+            get(retrieve_member_card),
+        )
+        .route(
+            "/app/v3/api/promotions/member_cards/{cardId}/consumptions",
+            post(consume_member_card),
         )
         .route(
             "/app/v3/api/promotions/discount_applications",
@@ -535,6 +562,65 @@ async fn reverse_promotion_discount(
     }
 }
 
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct PromotionCodeRedemptionPreviewResponse {
+    benefit_kind: Option<String>,
+    credited_amount: Option<String>,
+    asset_type: Option<String>,
+    period: Option<String>,
+    duration_days: Option<i64>,
+    daily_quota: Option<i64>,
+    total_quota: Option<i64>,
+    expires_at: Option<String>,
+}
+
+fn map_redemption_preview(value: PromotionCodeRedemptionPreview) -> PromotionCodeRedemptionPreviewResponse {
+    PromotionCodeRedemptionPreviewResponse {
+        benefit_kind: value.benefit_kind,
+        credited_amount: value.credited_amount,
+        asset_type: value.asset_type,
+        period: value.period,
+        duration_days: value.duration_days,
+        daily_quota: value.daily_quota,
+        total_quota: value.total_quota,
+        expires_at: value.expires_at,
+    }
+}
+
+async fn preview_promotion_code(
+    State(state): State<AppPromotionState>,
+    runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
+    Json(request): Json<PromotionCodeRedemptionRequest>,
+) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
+    let subject = match app_runtime_subject_from_extension(runtime_context) {
+        Ok(subject) => subject,
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
+    };
+    let code = match validate_promotion_code_redemption_request(request) {
+        Ok(code) => code,
+        Err(message) => return crate::api_response::validation(ctx, message),
+    };
+    let command = match PromotionCodeRedemptionCommand::new(
+        &subject.tenant_id,
+        subject.organization_id.as_deref(),
+        &subject.user_id,
+        &code,
+        &fallback_request_no(&subject, &code, "preview"),
+        &format!("preview-{}", code),
+    ) {
+        Ok(command) => command,
+        Err(error) => return crate::api_response::map_service_error(ctx, error),
+    };
+    match state.store.preview_promotion_code(command).await {
+        Ok(preview) => crate::api_response::success_item(ctx, map_redemption_preview(preview)),
+        Err(error) => crate::api_response::map_service_error(ctx, error),
+    }
+}
+
 async fn redeem_promotion_code(
     State(state): State<AppPromotionState>,
     runtime_context: Option<Extension<IamAppContext>>,
@@ -757,6 +843,189 @@ fn map_promotion_code_redemption_outcome(
         amount: value.amount.as_str().to_owned(),
         credited_points: value.credited_points,
         balance: value.balance,
+        benefit_kind: value.benefit_kind,
+        credited_amount: value.credited_amount,
+        asset_type: value.asset_type,
+        member_card_id: value.member_card_id,
+        member_card_no: value.member_card_no,
+    }
+}
+
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MemberCardResponse {
+    id: String,
+    card_no: String,
+    offer_id: String,
+    offer_version_id: String,
+    user_coupon_id: String,
+    period: String,
+    duration_days: i64,
+    daily_quota: i64,
+    total_quota: i64,
+    total_used: i64,
+    balance: i64,
+    status: String,
+    starts_at: String,
+    expires_at: Option<String>,
+    created_at: String,
+}
+
+fn map_member_card(value: PromotionMemberCard) -> MemberCardResponse {
+    MemberCardResponse {
+        id: value.id,
+        card_no: value.card_no,
+        offer_id: value.offer_id,
+        offer_version_id: value.offer_version_id,
+        user_coupon_id: value.user_coupon_id,
+        period: value.period.as_str().to_owned(),
+        duration_days: value.duration_days,
+        daily_quota: value.daily_quota,
+        total_quota: value.total_quota,
+        total_used: value.total_used,
+        balance: value.total_quota - value.total_used,
+        status: value.status,
+        starts_at: value.starts_at,
+        expires_at: value.expires_at,
+        created_at: value.created_at,
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MemberCardConsumptionRequest {
+    amount: String,
+    source_type: Option<String>,
+    source_id: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MemberCardConsumptionResponse {
+    accepted: bool,
+    replayed: bool,
+    card_id: String,
+    consumed_amount: i64,
+    used_today: i64,
+    daily_quota: i64,
+    total_used: i64,
+    total_quota: i64,
+    balance: i64,
+}
+
+fn map_member_card_consumption(value: MemberCardConsumptionOutcome) -> MemberCardConsumptionResponse {
+    MemberCardConsumptionResponse {
+        accepted: value.accepted,
+        replayed: value.replayed,
+        card_id: value.card_id,
+        consumed_amount: value.consumed_amount,
+        used_today: value.used_today,
+        daily_quota: value.daily_quota,
+        total_used: value.total_used,
+        total_quota: value.total_quota,
+        balance: value.balance,
+    }
+}
+
+async fn fetch_my_member_cards(
+    State(state): State<AppPromotionState>,
+    runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
+) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
+    let subject = match app_runtime_subject_from_extension(runtime_context) {
+        Ok(subject) => subject,
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
+    };
+    let query = match MemberCardListQuery::new(
+        &subject.tenant_id,
+        subject.organization_id.as_deref(),
+        &subject.user_id,
+    ) {
+        Ok(query) => query,
+        Err(error) => return crate::api_response::map_service_error(ctx, error),
+    };
+    match state.store.list_member_cards(query).await {
+        Ok(items) => {
+            let cards = items.into_iter().map(map_member_card).collect::<Vec<_>>();
+            let page_size = cards.len() as i64;
+            crate::api_response::success_items(ctx, cards, 1, page_size)
+        }
+        Err(error) => crate::api_response::map_service_error(ctx, error),
+    }
+}
+
+async fn retrieve_member_card(
+    State(state): State<AppPromotionState>,
+    runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
+    Path(card_id): Path<String>,
+) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
+    let subject = match app_runtime_subject_from_extension(runtime_context) {
+        Ok(subject) => subject,
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
+    };
+    let query = match RetrieveMemberCardQuery::new(
+        &subject.tenant_id,
+        subject.organization_id.as_deref(),
+        &subject.user_id,
+        &card_id,
+    ) {
+        Ok(query) => query,
+        Err(error) => return crate::api_response::map_service_error(ctx, error),
+    };
+    match state.store.retrieve_member_card(query).await {
+        Ok(Some(card)) => crate::api_response::success_item(ctx, map_member_card(card)),
+        Ok(None) => crate::api_response::not_found(ctx, "member card is not found"),
+        Err(error) => crate::api_response::map_service_error(ctx, error),
+    }
+}
+
+async fn consume_member_card(
+    State(state): State<AppPromotionState>,
+    runtime_context: Option<Extension<IamAppContext>>,
+    request_context: Option<Extension<WebRequestContext>>,
+    headers: HeaderMap,
+    Path(card_id): Path<String>,
+    body: Json<MemberCardConsumptionRequest>,
+) -> Response {
+    let ctx = request_context.as_ref().map(|ext| &ext.0);
+    let subject = match app_runtime_subject_from_extension(runtime_context) {
+        Ok(subject) => subject,
+        Err(message) => return crate::api_response::unauthorized(ctx, message),
+    };
+    let write_headers = match validate_app_write_payload(
+        &headers,
+        "promotions.memberCards.consume",
+        &*body,
+        |idempotency_key| fallback_request_no(&subject, &card_id, idempotency_key),
+    ) {
+        Ok(value) => value,
+        Err(response) => return response,
+    };
+    let amount: i64 = match body.amount.trim().parse() {
+        Ok(value) if value > 0 => value,
+        _ => return crate::api_response::validation(ctx, "member card consumption amount must be a positive integer"),
+    };
+    let command = match ConsumeMemberCardCommand::new(
+        &subject.tenant_id,
+        subject.organization_id.as_deref(),
+        &subject.user_id,
+        &card_id,
+        amount,
+        body.source_type.as_deref(),
+        body.source_id.as_deref(),
+        &write_headers.request_no,
+        &write_headers.idempotency_key,
+    ) {
+        Ok(command) => command,
+        Err(error) => return crate::api_response::map_service_error(ctx, error),
+    };
+    match state.store.consume_member_card(command).await {
+        Ok(outcome) => crate::api_response::success_item(ctx, map_member_card_consumption(outcome)),
+        Err(error) => crate::api_response::map_service_error(ctx, error),
     }
 }
 

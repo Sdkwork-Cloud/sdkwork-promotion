@@ -10,6 +10,6 @@ export interface PromotionCodeBatch {
   codePrefix: string;
   startsAt?: string | null;
   expiresAt?: string | null;
-  status: string;
+  status: 'pending' | 'generating' | 'ready';
   createdAt: string;
 }

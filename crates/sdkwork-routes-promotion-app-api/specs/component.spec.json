@@ -69,9 +69,7 @@
     "requiredPorts": [],
     "runtimeEntrypoints": [
       "app_exchange_router_with_postgres_pool",
-      "app_exchange_router_with_sqlite_pool",
       "app_promotion_router_with_postgres_pool",
-      "app_promotion_router_with_sqlite_pool",
       "build_app_exchange_router",
       "build_app_promotion_router",
       "build_promotion_app_router",

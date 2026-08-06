@@ -18,3 +18,8 @@ export type { PromotionsUserCouponsWalletListResult } from './promotions-user-co
 export type { PromotionsUserCouponsWalletRetrieveResult } from './promotions-user-coupons-wallet-retrieve-result';
 export type { SdkWorkApiResponse } from './sdk-work-api-response';
 export type { SdkWorkPlatformErrorCode } from './sdk-work-platform-error-code';
+export type { MembercardsListResult } from './membercards-list-result';
+export type { MembercardsRetrieveResult } from './membercards-retrieve-result';
+export type { MembercardsConsumptionsCreateResult } from './membercards-consumptions-create-result';
+export type { PromotionsMemberCardsConsumptionsCreateRequest } from './promotions-member-cards-consumptions-create-request';
+export type { PromotionsCodesRedemptionsPreviewResult } from './promotions-codes-redemptions-preview-result';

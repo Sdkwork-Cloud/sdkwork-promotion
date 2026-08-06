@@ -21,7 +21,7 @@ Migration status: complete for active promotion ownership. Release workflow gove
 
 - Rust domain services and SQLx repositories (`RUST_CODE_SPEC.md`).
 - Axum HTTP routers integrated through `sdkwork-web-framework` (`WEB_FRAMEWORK_SPEC.md`).
-- SQLx for PostgreSQL and SQLite repository implementations (`DATABASE_FRAMEWORK_SPEC.md`).
+- SQLx for PostgreSQL repository implementations (DATABASE_SPEC: authoritative-server persistence is PostgreSQL-only; SQLite is client-local).
 - TypeScript React PC packages following SDKWork PC app package boundaries (`APP_PC_ARCHITECTURE_SPEC.md`).
 - Sibling path dependencies from this repository's `Cargo.toml`; local Rust crates use `sdkwork_promotion_*` package aliases and canonical `sdkwork-<domain>-<capability>-*` crate names.
 
@@ -30,7 +30,7 @@ Migration status: complete for active promotion ownership. Release workflow gove
 | Layer | Owner | Notes |
 | --- | --- | --- |
 | Domain commands/queries | `sdkwork-commerce-promotion-service` | Business validation and ports |
-| SQL repositories | `sdkwork-commerce-promotion-repository-sqlx` | Tenant-scoped PostgreSQL/SQLite persistence |
+| SQL repositories | `sdkwork-commerce-promotion-repository-sqlx` | Tenant-scoped PostgreSQL persistence (DATABASE_SPEC) |
 | HTTP route builders | `sdkwork-routes-promotion-app-api`, `sdkwork-routes-promotion-backend-api` | `build_*_router` exports without IAM |
 | IAM / gateway composition | `sdkwork-api-promotion-standalone-gateway` | IAM middleware at the standalone gateway |
 | Gateway assembly | `sdkwork-api-promotion-assembly` | Deterministic route composition inputs |

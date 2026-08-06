@@ -98,9 +98,6 @@ enum CouponBenefitRequest {
         grant_amount: String,
     },
     Subscription {
-        product_id: String,
-        sku_id: String,
-        package_id: String,
         period: String,
         duration_days: String,
         daily_quota: String,
@@ -126,7 +123,7 @@ struct CouponStockRequest {
 struct CodeBatchRequest {
     stock_id: String,
     code_type: String,
-    quantity: String,
+    requested_quantity: String,
     code_length: i32,
     code_prefix: String,
     starts_at: Option<String>,
@@ -292,9 +289,6 @@ enum CouponBenefitResponse {
         grant_amount: String,
     },
     Subscription {
-        product_id: String,
-        sku_id: String,
-        package_id: String,
         period: &'static str,
         duration_days: i64,
         daily_quota: String,
@@ -320,17 +314,11 @@ impl From<PromotionCouponBenefit> for CouponBenefitResponse {
                 grant_amount: grant_amount.to_string(),
             },
             PromotionCouponBenefit::Subscription {
-                product_id,
-                sku_id,
-                package_id,
                 period,
                 duration_days,
                 daily_quota,
                 total_quota,
             } => Self::Subscription {
-                product_id,
-                sku_id,
-                package_id: package_id.to_string(),
                 period: period.as_str(),
                 duration_days,
                 daily_quota: daily_quota.to_string(),
@@ -881,7 +869,7 @@ async fn create_code_batch(
         stock_id: b.stock_id,
         code_type: b.code_type,
         quantity: response_try!(
-            parse_i64_field(&b.quantity, "quantity").map_err(|e| validation(Some(&c), e.message()))
+            parse_i64_field(&b.requested_quantity, "requestedQuantity").map_err(|e| validation(Some(&c), e.message()))
         ),
         code_length: b.code_length,
         code_prefix: b.code_prefix,
@@ -1036,17 +1024,11 @@ fn coupon_benefit_input(
             parse_i64_field(&grant_amount, "couponBenefit.grantAmount")?,
         ),
         CouponBenefitRequest::Subscription {
-            product_id,
-            sku_id,
-            package_id,
             period,
             duration_days,
             daily_quota,
             total_quota,
         } => PromotionCouponBenefit::subscription(
-            &product_id,
-            &sku_id,
-            parse_i64_field(&package_id, "couponBenefit.packageId")?,
             PromotionSubscriptionPeriod::parse(&period)?,
             parse_i64_field(&duration_days, "couponBenefit.durationDays")?,
             parse_i64_field(&daily_quota, "couponBenefit.dailyQuota")?,
@@ -1169,9 +1151,6 @@ mod tests {
     fn subscription_coupon_request_maps_to_validated_domain_benefit() {
         let request: CouponBenefitRequest = serde_json::from_value(json!({
             "kind": "subscription",
-            "productId": "seed-product-membership",
-            "skuId": "sku-standard-monthly",
-            "packageId": "1002",
             "period": "month",
             "durationDays": "30",
             "dailyQuota": "1000",
@@ -1181,7 +1160,6 @@ mod tests {
         assert!(matches!(
             coupon_benefit_input(request).expect("coupon benefit"),
             PromotionCouponBenefit::Subscription {
-                package_id: 1002,
                 daily_quota: 1000,
                 total_quota: 30000,
                 ..

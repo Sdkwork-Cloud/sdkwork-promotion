@@ -7,7 +7,7 @@ export interface PromotionDistributionTask {
   requestedQuantity: string;
   succeededQuantity: string;
   failedQuantity: string;
-  status: string;
+  status: 'pending' | 'running' | 'succeeded' | 'failed';
   createdAt: string;
   completedAt?: string | null;
 }

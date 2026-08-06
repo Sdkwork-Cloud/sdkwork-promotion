@@ -1673,8 +1673,7 @@
             ]
           },
           "version": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           }
         }
       },
@@ -1818,9 +1817,6 @@
         "additionalProperties": false,
         "required": [
           "kind",
-          "productId",
-          "skuId",
-          "packageId",
           "period",
           "durationDays",
           "dailyQuota",
@@ -1831,24 +1827,13 @@
             "type": "string",
             "const": "subscription"
           },
-          "productId": {
-            "type": "string",
-            "minLength": 1
-          },
-          "skuId": {
-            "type": "string",
-            "minLength": 1
-          },
-          "packageId": {
-            "type": "string",
-            "pattern": "^[1-9][0-9]*$"
-          },
           "period": {
             "type": "string",
             "enum": [
               "day",
               "week",
               "month",
+              "quarter",
               "year"
             ]
           },
@@ -1895,7 +1880,11 @@
             "type": "string"
           },
           "stockType": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "limited",
+              "unlimited"
+            ]
           },
           "totalQuantity": {
             "type": "integer",
@@ -1943,8 +1932,8 @@
           "codeIssueMode": {
             "type": "string",
             "enum": [
-              "REALTIME",
-              "BATCH"
+              "realtime",
+              "batch"
             ]
           }
         }
@@ -2360,18 +2349,17 @@
           "status": {
             "type": "string",
             "enum": [
-              "DRAFT",
-              "SCHEDULED",
-              "ACTIVE",
-              "PAUSED",
-              "ENDED",
-              "CANCELLED",
-              "ARCHIVED"
+              "draft",
+              "scheduled",
+              "active",
+              "paused",
+              "ended",
+              "cancelled",
+              "archived"
             ]
           },
           "version": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           },
           "updatedAt": {
             "type": "string"
@@ -2542,14 +2530,13 @@
         ],
         "properties": {
           "offerId": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           },
           "stockType": {
             "type": "string",
             "enum": [
-              "LIMITED",
-              "UNLIMITED"
+              "limited",
+              "unlimited"
             ]
           },
           "totalQuantity": {
@@ -2585,8 +2572,8 @@
           "codeIssueMode": {
             "type": "string",
             "enum": [
-              "REALTIME",
-              "BATCH"
+              "realtime",
+              "batch"
             ],
             "default": "REALTIME",
             "description": "Coupon code issuance mode: REALTIME generates a code at claim time; BATCH dispenses a pre-generated pool code"
@@ -2652,7 +2639,12 @@
             ]
           },
           "status": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "pending",
+              "generating",
+              "ready"
+            ]
           },
           "createdAt": {
             "type": "string"
@@ -2664,24 +2656,17 @@
         "required": [
           "stockId",
           "codeType",
-          "quantity",
+          "requestedQuantity",
           "codeLength",
           "codePrefix",
           "idempotencyKey"
         ],
         "properties": {
           "stockId": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           },
           "codeType": {
             "type": "string"
-          },
-          "quantity": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 1,
-            "maximum": 5000
           },
           "codeLength": {
             "type": "integer",
@@ -2706,6 +2691,12 @@
           },
           "idempotencyKey": {
             "type": "string"
+          },
+          "requestedQuantity": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 5000
           }
         }
       },
@@ -2752,7 +2743,13 @@
             "format": "int64"
           },
           "status": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "succeeded",
+              "failed"
+            ]
           },
           "createdAt": {
             "type": "string"
@@ -2774,8 +2771,7 @@
         ],
         "properties": {
           "stockId": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string"
           },
           "ownerUserIds": {
             "type": "array",

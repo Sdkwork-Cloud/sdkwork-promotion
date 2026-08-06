@@ -1,17 +1,21 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use sdkwork_commerce_promotion_service::{
-    ApplyPromotionDiscountCommand, ClaimPromotionUserCouponCommand, PointsBalance,
+    ApplyPromotionDiscountCommand, ClaimPromotionUserCouponCommand, ConsumeMemberCardCommand,
+    GrantMemberCardCommand, MemberCardConsumptionOutcome, MemberCardListQuery, PointsBalance,
     PointsBalanceQuery, PointsHistoryItem, PointsHistoryQuery, PromotionCodeRedemptionCommand,
-    PromotionCodeRedemptionOutcome, PromotionOrderCouponBenefit, PromotionUserCouponItem,
-    PromotionUserCouponListQuery, ReversePromotionDiscountCommand,
+    PromotionCodeRedemptionOutcome, PromotionCodeRedemptionPreview, PromotionCouponBenefit,
+    PromotionMemberCard,
+    PromotionOrderCouponBenefit, PromotionSubscriptionPeriod,
+    PromotionUserCouponItem, PromotionUserCouponListQuery, RetrieveMemberCardQuery,
+    ReversePromotionDiscountCommand,
 };
 use sdkwork_contract_service::{
     CommerceAccountAssetType, CommerceLedgerDirection, CommerceServiceError,
 };
 use sqlx::{PgPool, Postgres, Row, Transaction};
 
-use crate::coupon_benefit::parse_order_coupon_benefit;
+use crate::coupon_benefit::{parse_admin_coupon_benefit, parse_order_coupon_benefit};
 
 const POINTS_CURRENCY_CODE: &str = "POINT";
 const PROMOTION_CODE_REDEMPTION_SCOPE: &str = "promotions.codes.redemptions.create";
@@ -34,6 +38,7 @@ struct ClaimPromotion {
     offer_version_id: String,
     stock_type: String,
     discount_value: String,
+    rule_json: Option<String>,
     total_quantity: Option<i64>,
     available_quantity: i64,
     stock_claimed_quantity: i64,
@@ -334,10 +339,8 @@ impl PostgresCommercePromotionStore {
 
         let promotion = load_promotion_for_redeem(&mut tx, &command, &now).await?;
         ensure_promotion_can_be_redeemed(&mut tx, &command, &promotion).await?;
-        let account = ensure_points_account(&mut tx, &command, &now).await?;
-        let credited_points = coupon_credit_points(&promotion.discount_value)?;
-        let balance_after = checked_points_add(account.available_points, credited_points)?;
         let coupon_id = coupon_id(&command);
+        let credit = credit_coupon_benefit_in_tx(&mut tx, &command, &promotion, &coupon_id, &now).await?;
         let coupon_ledger_entry_id = coupon_ledger_entry_id(&command);
 
         insert_user_coupon(&mut tx, &command, &promotion, &coupon_id, &now).await?;
@@ -351,41 +354,20 @@ impl PostgresCommercePromotionStore {
         )
         .await?;
         update_promotion_counters(&mut tx, &promotion, &now).await?;
-        update_account_points(
-            &mut tx,
-            &account.id,
-            account.available_points,
-            credited_points,
-            &now,
-        )
-        .await?;
-        insert_account_ledger(
-            &mut tx,
-            &command,
-            &account.id,
-            balance_after,
-            credited_points,
-            &coupon_id,
-            &now,
-        )
-        .await?;
-        insert_redeem_billing_history(
-            &mut tx,
-            &command,
-            &coupon_id,
-            &points_to_money_string(credited_points),
-            &promotion.currency_code,
-            credited_points,
-            &now,
-        )
-        .await?;
-        let amount = points_to_minor_units_string(credited_points);
         let outcome = PromotionCodeRedemptionOutcome::new(
             "Promotion code redeemed",
-            &amount,
-            credited_points,
-            balance_after,
-        )?;
+            &credit.amount_minor,
+            credit.credited_points,
+            credit.balance,
+        )?
+        .with_benefit_credit(
+            credit.benefit_kind,
+            credit.credited_amount,
+            credit.asset_type,
+            credit.member_card_id,
+            credit.member_card_no,
+        )
+        .with_coupon(coupon_id.clone(), issued_coupon_code(&command));
         complete_redeem_idempotency(&mut tx, &command, &outcome, &now).await?;
 
         tx.commit().await.map_err(|error| {
@@ -474,6 +456,269 @@ impl PostgresCommercePromotionStore {
             )
         })?;
         Ok(coupon)
+    }
+
+    pub async fn grant_member_card(
+        &self,
+        command: GrantMemberCardCommand,
+    ) -> Result<PromotionMemberCard, CommerceServiceError> {
+        let mut tx = self.pool.begin().await.map_err(|error| {
+            store_error("failed to begin member card grant transaction", error)
+        })?;
+        let card = grant_member_card_in_tx(&mut tx, &command).await?;
+        tx.commit().await.map_err(|error| {
+            store_error("failed to commit member card grant transaction", error)
+        })?;
+        Ok(card)
+    }
+
+    pub async fn consume_member_card(
+        &self,
+        command: ConsumeMemberCardCommand,
+    ) -> Result<MemberCardConsumptionOutcome, CommerceServiceError> {
+        let mut tx = self.pool.begin().await.map_err(|error| {
+            store_error("failed to begin member card consumption transaction", error)
+        })?;
+        let now = current_timestamp_string();
+
+        // 幂等：同一请求键的消耗直接重放
+        let consumption_id = member_card_consumption_id(&command);
+        if let Some(replayed) = load_member_card_consumption_replay(&mut tx, &command, &consumption_id).await? {
+            tx.commit().await.map_err(|error| {
+                store_error("failed to commit member card consumption replay", error)
+            })?;
+            return Ok(replayed);
+        }
+
+        let card = sqlx::query(
+            r#"
+            SELECT id, card_no, offer_id, offer_version_id, user_coupon_id, owner_user_id,
+                   period, duration_days, daily_quota, total_quota, total_used, status,
+                   starts_at, expires_at, created_at, updated_at
+            FROM promotion_member_card
+            WHERE tenant_id = $1
+              AND ((organization_id = $2) OR (organization_id IS NULL AND $2 IS NULL))
+              AND owner_user_id = $3
+              AND id = $4
+              AND status = 'active'
+            FOR UPDATE
+            "#,
+        )
+        .bind(&command.tenant_id)
+        .bind(command.organization_id.as_deref())
+        .bind(&command.owner_user_id)
+        .bind(&command.card_id)
+        .fetch_optional(&mut *tx)
+        .await
+        .map_err(|error| store_error("failed to load member card for consumption", error))?
+        .ok_or_else(|| CommerceServiceError::conflict("member card is not available"))?;
+        let card = map_member_card_row(card)?;
+
+        if let Some(expires_at) = &card.expires_at {
+            if expires_at.as_str() < now.as_str() {
+                return Err(CommerceServiceError::conflict("member card has expired"));
+            }
+        }
+        let used_today: i64 = sqlx::query_scalar(
+            r#"
+            SELECT COALESCE(SUM(amount), 0)
+            FROM promotion_member_card_consumption
+            WHERE tenant_id = $1 AND card_id = $2
+              AND CAST(occurred_at AS TIMESTAMP) >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'UTC')
+            "#,
+        )
+        .bind(&command.tenant_id)
+        .bind(&command.card_id)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(|error| store_error("failed to sum member card daily consumption", error))?;
+        if command.amount > card.daily_quota.saturating_sub(used_today) {
+            return Err(CommerceServiceError::conflict(
+                "member card daily quota is exhausted",
+            ));
+        }
+        if command.amount > card.total_quota.saturating_sub(card.total_used) {
+            return Err(CommerceServiceError::conflict(
+                "member card total quota is exhausted",
+            ));
+        }
+
+        let next_total_used = card.total_used + command.amount;
+        let balance_after = card.total_quota - next_total_used;
+        let consumption_uuid = sdkwork_utils_rust::uuid();
+        sqlx::query(
+            r#"
+            UPDATE promotion_member_card
+            SET total_used = total_used + $3, version = version + 1,
+                updated_at = $4
+            WHERE id = $1 AND tenant_id = $2 AND status = 'active'
+              AND total_used + $3 <= total_quota
+            "#,
+        )
+        .bind(&command.card_id)
+        .bind(&command.tenant_id)
+        .bind(command.amount)
+        .bind(&now)
+        .execute(&mut *tx)
+        .await
+        .map_err(|error| store_error("failed to update member card usage", error))?;
+        sqlx::query(
+            r#"
+            INSERT INTO promotion_member_card_consumption
+                (id, uuid, tenant_id, organization_id, card_id, amount, balance_after,
+                 business_type, source_type, source_id, request_no, idempotency_key, trace_id,
+                 occurred_at, created_at)
+            VALUES
+                ($1, $2, $3, $4, $5, $6, $7, 'usage', $8, $9, $10, $11, '', $12, $12)
+            "#,
+        )
+        .bind(&consumption_id)
+        .bind(&consumption_uuid)
+        .bind(&command.tenant_id)
+        .bind(command.organization_id.as_deref())
+        .bind(&command.card_id)
+        .bind(command.amount)
+        .bind(balance_after)
+        .bind(command.source_type.as_deref())
+        .bind(command.source_id.as_deref())
+        .bind(&command.request_no)
+        .bind(&command.idempotency_key)
+        .bind(&now)
+        .execute(&mut *tx)
+        .await
+        .map_err(|error| store_error("failed to record member card consumption", error))?;
+
+        tx.commit().await.map_err(|error| {
+            store_error("failed to commit member card consumption transaction", error)
+        })?;
+        Ok(MemberCardConsumptionOutcome {
+            accepted: true,
+            replayed: false,
+            card_id: card.id,
+            consumed_amount: command.amount,
+            used_today: used_today + command.amount,
+            daily_quota: card.daily_quota,
+            total_used: next_total_used,
+            total_quota: card.total_quota,
+            balance: balance_after,
+        })
+    }
+
+    pub async fn list_member_cards(
+        &self,
+        query: MemberCardListQuery,
+    ) -> Result<Vec<PromotionMemberCard>, CommerceServiceError> {
+        let rows = sqlx::query(
+            r#"
+            SELECT id, card_no, offer_id, offer_version_id, user_coupon_id, owner_user_id,
+                   period, duration_days, daily_quota, total_quota, total_used, status,
+                   starts_at, expires_at, created_at, updated_at
+            FROM promotion_member_card
+            WHERE tenant_id = $1
+              AND ((organization_id = $2) OR (organization_id IS NULL AND $2 IS NULL))
+              AND owner_user_id = $3
+            ORDER BY created_at DESC
+            "#,
+        )
+        .bind(&query.tenant_id)
+        .bind(query.organization_id.as_deref())
+        .bind(&query.owner_user_id)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|error| store_error("failed to list member cards", error))?;
+        rows.into_iter().map(map_member_card_row).collect()
+    }
+
+    pub async fn retrieve_member_card(
+        &self,
+        query: RetrieveMemberCardQuery,
+    ) -> Result<Option<PromotionMemberCard>, CommerceServiceError> {
+        let row = sqlx::query(
+            r#"
+            SELECT id, card_no, offer_id, offer_version_id, user_coupon_id, owner_user_id,
+                   period, duration_days, daily_quota, total_quota, total_used, status,
+                   starts_at, expires_at, created_at, updated_at
+            FROM promotion_member_card
+            WHERE tenant_id = $1
+              AND ((organization_id = $2) OR (organization_id IS NULL AND $2 IS NULL))
+              AND owner_user_id = $3
+              AND id = $4
+            "#,
+        )
+        .bind(&query.tenant_id)
+        .bind(query.organization_id.as_deref())
+        .bind(&query.owner_user_id)
+        .bind(&query.card_id)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|error| store_error("failed to retrieve member card", error))?;
+        row.map(map_member_card_row).transpose()
+    }
+
+    /// 生命周期扫描：激活已到排期生效时间的会员卡（scheduled → active）。
+    pub async fn activate_due_member_cards(&self) -> Result<i64, CommerceServiceError> {
+        let result = sqlx::query(
+            r#"
+            UPDATE promotion_member_card
+            SET status = 'active', version = version + 1,
+                updated_at = TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+            WHERE status = 'scheduled'
+              AND starts_at <= TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+            "#,
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|error| store_error("failed to activate due member cards", error))?;
+        Ok(result.rows_affected() as i64)
+    }
+
+    /// 生命周期扫描（advisory lock 保护，防多实例并发）：排期激活 + 到期过期。
+    pub async fn run_member_card_lifecycle_sweep(&self) -> Result<MemberCardLifecycleSweepOutcome, CommerceServiceError> {
+        let mut conn = self.pool.acquire().await.map_err(|error| {
+            store_error("failed to acquire connection for member card lifecycle sweep", error)
+        })?;
+        let locked: bool = sqlx::query_scalar("SELECT pg_try_advisory_lock($1)")
+            .bind(MEMBER_CARD_LIFECYCLE_SWEEP_LOCK_KEY)
+            .fetch_one(&mut *conn)
+            .await
+            .map_err(|error| store_error("failed to acquire member card lifecycle sweep lock", error))?;
+        if !locked {
+            // 另一实例正在执行本轮扫描
+            return Ok(MemberCardLifecycleSweepOutcome {
+                activated: 0,
+                expired: 0,
+                skipped: true,
+            });
+        }
+        let activated = self.activate_due_member_cards().await?;
+        let expired = self.expire_due_member_cards().await?;
+        let _ = sqlx::query("SELECT pg_advisory_unlock($1)")
+            .bind(MEMBER_CARD_LIFECYCLE_SWEEP_LOCK_KEY)
+            .execute(&mut *conn)
+            .await;
+        Ok(MemberCardLifecycleSweepOutcome {
+            activated,
+            expired,
+            skipped: false,
+        })
+    }
+
+    /// 生命周期扫描：过期到期的会员卡（active → expired）。
+    pub async fn expire_due_member_cards(&self) -> Result<i64, CommerceServiceError> {
+        let result = sqlx::query(
+            r#"
+            UPDATE promotion_member_card
+            SET status = 'expired', version = version + 1,
+                updated_at = TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+            WHERE status = 'active'
+              AND expires_at IS NOT NULL
+              AND expires_at < TO_CHAR(CURRENT_TIMESTAMP AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')
+            "#,
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|error| store_error("failed to expire due member cards", error))?;
+        Ok(result.rows_affected() as i64)
     }
 
     pub async fn apply_promotion_discount(
@@ -1173,7 +1418,7 @@ async fn mark_user_coupon_applied(
     let updated = sqlx::query(
         r#"
         UPDATE promotion_user_coupon
-        SET status = 'used', redeemed_at = $1, updated_at = $2
+        SET status = 'redeemed', redeemed_at = $1, updated_at = $2
         WHERE tenant_id = CAST($3 AS TEXT)
           AND id = CAST($4 AS TEXT)
           AND owner_user_id = CAST($5 AS TEXT)
@@ -1206,7 +1451,7 @@ async fn reverse_discount_application(
     let updated = sqlx::query(
         r#"
         UPDATE promotion_discount_application
-        SET status = 'reversed', rolled_back_at = $1, updated_at = $2
+        SET status = 'rolled_back', rolled_back_at = $1, updated_at = $2
         WHERE tenant_id = CAST($3 AS TEXT)
           AND user_coupon_id = CAST($4 AS TEXT)
           AND subject_type = $5
@@ -1245,7 +1490,7 @@ async fn restore_user_coupon_after_reverse(
         WHERE tenant_id = CAST($2 AS TEXT)
           AND id = CAST($3 AS TEXT)
           AND owner_user_id = CAST($4 AS TEXT)
-          AND LOWER(COALESCE(status, '')) = 'used'
+          AND LOWER(COALESCE(status, '')) = 'redeemed'
        "#,
     )
     .bind(now)
@@ -1375,6 +1620,13 @@ async fn complete_redeem_idempotency(
         "amount": outcome.amount.as_str(),
         "creditedPoints": outcome.credited_points,
         "balance": outcome.balance,
+        "benefitKind": outcome.benefit_kind,
+        "creditedAmount": outcome.credited_amount,
+        "assetType": outcome.asset_type,
+        "memberCardId": outcome.member_card_id,
+        "memberCardNo": outcome.member_card_no,
+        "userCouponId": outcome.user_coupon_id,
+        "couponCode": outcome.coupon_code,
     })
     .to_string();
     sqlx::query(
@@ -1427,7 +1679,18 @@ fn replay_redeem_outcome(
         .ok_or_else(|| CommerceServiceError::storage("redeem response balance is missing"))?;
 
     let amount = contract_money_minor_units(amount)?;
-    PromotionCodeRedemptionOutcome::new(message, &amount, credited_points, balance)
+    Ok(PromotionCodeRedemptionOutcome::new(message, &amount, credited_points, balance)?
+        .with_benefit_credit(
+            value.get("benefitKind").and_then(serde_json::Value::as_str).map(str::to_owned),
+            value.get("creditedAmount").and_then(serde_json::Value::as_str).map(str::to_owned),
+            value.get("assetType").and_then(serde_json::Value::as_str).map(str::to_owned),
+            value.get("memberCardId").and_then(serde_json::Value::as_str).map(str::to_owned),
+            value.get("memberCardNo").and_then(serde_json::Value::as_str).map(str::to_owned),
+        )
+        .with_coupon(
+            value.get("userCouponId").and_then(serde_json::Value::as_str).unwrap_or_default().to_owned(),
+            value.get("couponCode").and_then(serde_json::Value::as_str).unwrap_or_default().to_owned(),
+        ))
 }
 
 async fn load_promotion_for_redeem(
@@ -1467,6 +1730,7 @@ async fn load_promotion_for_redeem(
           AND pc.status = 'active'
           AND s.status = 'active'
           AND o.status = 'active'
+          AND o.deleted_at IS NULL
           AND v.lifecycle_status = 'published'
           AND (pc.starts_at IS NULL OR pc.starts_at <= $4)
           AND (pc.expires_at IS NULL OR pc.expires_at >= $4)
@@ -1538,6 +1802,7 @@ async fn ensure_promotion_can_be_redeemed(
           AND subject_type = $3
           AND subject_id = CAST($4 AS TEXT)
           AND code_id = $5
+          AND status NOT IN ('expired', 'disabled', 'voided', 'cancelled')
         "#,
     )
     .bind(&command.tenant_id)
@@ -2075,6 +2340,7 @@ async fn load_promotion_for_claim(
                s.offer_version_id AS offer_version_id,
                s.stock_type AS stock_type,
                CAST(v.discount_value AS TEXT) AS discount_value,
+               v.rule_json AS rule_json,
                s.total_quantity AS total_quantity,
                COALESCE(s.available_quantity, 0) AS available_quantity,
                COALESCE(s.claimed_quantity, 0) AS stock_claimed_quantity,
@@ -2091,6 +2357,7 @@ async fn load_promotion_for_claim(
           AND ((o.organization_id = CAST($2 AS TEXT)) OR (o.organization_id IS NULL AND $3 IS NULL))
           AND o.id = CAST($4 AS TEXT)
           AND o.status = 'active'
+          AND o.deleted_at IS NULL
           AND s.status = 'active'
           AND v.lifecycle_status = 'published'
           AND (s.claim_starts_at IS NULL OR s.claim_starts_at <= $5)
@@ -2121,6 +2388,7 @@ async fn load_promotion_for_claim(
         offer_version_id: string_cell(&row, "offer_version_id"),
         stock_type: string_cell(&row, "stock_type"),
         discount_value: string_cell(&row, "discount_value"),
+        rule_json: optional_string_cell(&row, "rule_json"),
         total_quantity: optional_integer_cell(&row, "total_quantity"),
         available_quantity: integer_cell(&row, "available_quantity"),
         stock_claimed_quantity: integer_cell(&row, "stock_claimed_quantity"),
@@ -2808,6 +3076,39 @@ fn civil_from_days(days: i64) -> (i64, i64, i64) {
 #[cfg(test)]
 mod tests {
     #[test]
+    fn member_card_dispatch_uses_atomic_guards_and_idempotency_constraints() {
+        let source = include_str!("postgres_promotion.rs");
+        // 消耗扣减必须带总额度原子守卫
+        assert!(source.contains("UPDATE promotion_member_card"));
+        assert!(source.contains("total_used + $3 <= total_quota"));
+        // 消耗流水必须带幂等键唯一约束
+        assert!(source.contains("INSERT INTO promotion_member_card_consumption"));
+        assert!(source.contains("idempotency_key"));
+        // 开卡必须按券幂等（ON CONFLICT (tenant_id, user_coupon_id)）
+        assert!(source.contains("ON CONFLICT (tenant_id, user_coupon_id) DO NOTHING"));
+        // 兑换分发必须解析权益规则
+        assert!(source.contains("credit_coupon_benefit_in_tx"));
+        assert!(source.contains("grant_member_card_in_tx"));
+        // 每日限额按 UTC 自然日聚合
+        assert!(source.contains("date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'UTC')"));
+        // 生命周期扫描：advisory lock 防多实例并发
+        assert!(source.contains("pg_try_advisory_lock"));
+        assert!(source.contains("pg_advisory_unlock"));
+        assert!(source.contains("activate_due_member_cards"));
+        assert!(source.contains("expire_due_member_cards"));
+        // 排期开卡：scheduled 状态由 starts_at 决定
+        assert!(source.contains("scheduled"));
+        assert!(source.contains("starts_at_value"));
+        // 兑换预览：不落库的 preview 链路
+        assert!(source.contains("preview_promotion_code"));
+        assert!(source.contains("map_redemption_preview"));
+        // 兑换响应携带券标识
+        assert!(source.contains("with_coupon"));
+        assert!(source.contains("issued_coupon_code"));
+        // 每人每码限领排除失效券（与 claim 口径一致）
+        assert!(source.contains("AND status NOT IN ('expired', 'disabled', 'voided', 'cancelled')"));
+    }
+
     fn postgres_promotion_redeem_updates_use_atomic_guards() {
         let source = include_str!("postgres_promotion.rs");
         let stock_update = source
@@ -2825,4 +3126,656 @@ mod tests {
         assert!(account_update.contains("available_amount::bigint = $4"));
         assert!(source.contains("account_update.rows_affected() != 1"));
     }
+}
+
+fn member_card_id(command: &GrantMemberCardCommand) -> String {
+    stable_storage_id(&["member-card", &command.tenant_id, &command.request_no])
+}
+
+fn member_card_consumption_id(command: &ConsumeMemberCardCommand) -> String {
+    stable_storage_id(&[
+        "member-card-usage",
+        &command.tenant_id,
+        command.organization_id.as_deref().unwrap_or("global"),
+        &command.owner_user_id,
+        &command.idempotency_key,
+    ])
+}
+
+async fn load_member_card_consumption_replay(
+    tx: &mut Transaction<'_, Postgres>,
+    command: &ConsumeMemberCardCommand,
+    consumption_id: &str,
+) -> Result<Option<MemberCardConsumptionOutcome>, CommerceServiceError> {
+    let row = sqlx::query(
+        r#"
+        SELECT c.card_id, c.amount, c.balance_after, card.daily_quota, card.total_quota,
+               card.total_used
+        FROM promotion_member_card_consumption c
+        JOIN promotion_member_card card ON card.tenant_id = c.tenant_id AND card.id = c.card_id
+        WHERE c.id = $1 AND c.tenant_id = $2
+        "#,
+    )
+    .bind(consumption_id)
+    .bind(&command.tenant_id)
+    .fetch_optional(&mut **tx)
+    .await
+    .map_err(|error| store_error("failed to load member card consumption replay", error))?;
+    let Some(row) = row else {
+        return Ok(None);
+    };
+    let used_today: i64 = sqlx::query_scalar(
+        r#"
+        SELECT COALESCE(SUM(amount), 0)
+        FROM promotion_member_card_consumption
+        WHERE tenant_id = $1 AND card_id = $2
+          AND CAST(occurred_at AS TIMESTAMP) >= date_trunc('day', CURRENT_TIMESTAMP AT TIME ZONE 'UTC')
+        "#,
+    )
+    .bind(&command.tenant_id)
+    .bind(string_cell(&row, "card_id"))
+    .fetch_one(&mut **tx)
+    .await
+    .map_err(|error| store_error("failed to sum member card daily consumption replay", error))?;
+    Ok(Some(MemberCardConsumptionOutcome {
+        accepted: true,
+        replayed: true,
+        card_id: string_cell(&row, "card_id"),
+        consumed_amount: integer_cell(&row, "amount"),
+        used_today,
+        daily_quota: integer_cell(&row, "daily_quota"),
+        total_used: integer_cell(&row, "total_used"),
+        total_quota: integer_cell(&row, "total_quota"),
+        balance: integer_cell(&row, "balance_after"),
+    }))
+}
+
+fn map_member_card_row(row: sqlx::postgres::PgRow) -> Result<PromotionMemberCard, CommerceServiceError> {
+    let period = PromotionSubscriptionPeriod::parse(&string_cell(&row, "period"))?;
+    Ok(PromotionMemberCard {
+        id: string_cell(&row, "id"),
+        card_no: string_cell(&row, "card_no"),
+        offer_id: string_cell(&row, "offer_id"),
+        offer_version_id: string_cell(&row, "offer_version_id"),
+        user_coupon_id: string_cell(&row, "user_coupon_id"),
+        owner_user_id: string_cell(&row, "owner_user_id"),
+        period,
+        duration_days: integer_cell(&row, "duration_days"),
+        daily_quota: integer_cell(&row, "daily_quota"),
+        total_quota: integer_cell(&row, "total_quota"),
+        total_used: integer_cell(&row, "total_used"),
+        status: string_cell(&row, "status"),
+        starts_at: string_cell(&row, "starts_at"),
+        expires_at: optional_string_cell(&row, "expires_at"),
+        created_at: string_cell(&row, "created_at"),
+        updated_at: string_cell(&row, "updated_at"),
+    })
+}
+
+async fn grant_member_card_in_tx(
+    tx: &mut Transaction<'_, Postgres>,
+    command: &GrantMemberCardCommand,
+) -> Result<PromotionMemberCard, CommerceServiceError> {
+    let now = current_timestamp_string();
+    let card_id = member_card_id(command);
+    let card_uuid = sdkwork_utils_rust::uuid();
+    let card_no = stable_storage_id(&["member-card", &command.tenant_id, &command.request_no]);
+    // 排期生效：starts_at 在未来 → scheduled，由生命周期 worker 激活；否则立即 active
+    let (status, starts_at_value) = match &command.starts_at {
+        Some(starts_at) if starts_at.as_str() > now.as_str() => ("scheduled", starts_at.clone()),
+        _ => ("active", now.clone()),
+    };
+    let inserted = sqlx::query(
+        r#"
+        INSERT INTO promotion_member_card
+            (id, uuid, tenant_id, organization_id, card_no, offer_id, offer_version_id,
+             user_coupon_id, subject_type, subject_id, owner_user_id, period, duration_days,
+             daily_quota, total_quota, total_used, status, starts_at, expires_at, version,
+             created_at, updated_at)
+        VALUES
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, 0, $16,
+             $17, to_char((CASE WHEN $18::TIMESTAMP IS NULL THEN CURRENT_TIMESTAMP
+                 ELSE $18::TIMESTAMP END) AT TIME ZONE 'UTC' + make_interval(days => $19),
+                 'YYYY-MM-DD HH24:MI:SS'), 0, $20, $20)
+        ON CONFLICT (tenant_id, user_coupon_id) DO NOTHING
+        "#,
+    )
+    .bind(&card_id)
+    .bind(&card_uuid)
+    .bind(&command.tenant_id)
+    .bind(command.organization_id.as_deref())
+    .bind(&card_no)
+    .bind(&command.offer_id)
+    .bind(&command.offer_version_id)
+    .bind(&command.user_coupon_id)
+    .bind(USER_SUBJECT_TYPE)
+    .bind(&command.owner_user_id)
+    .bind(&command.owner_user_id)
+    .bind(command.period.as_str())
+    .bind(command.duration_days)
+    .bind(command.daily_quota)
+    .bind(command.total_quota)
+    .bind(status)
+    .bind(&starts_at_value)
+    .bind(&command.starts_at)
+    .bind(command.duration_days)
+    .bind(&now)
+    .execute(&mut **tx)
+    .await
+    .map_err(|error| store_error("failed to grant member card", error))?
+    .rows_affected();
+
+    let row = if inserted == 0 {
+        // 幂等重放：同一张券已开卡，返回既有卡
+        sqlx::query(
+            r#"
+            SELECT id, card_no, offer_id, offer_version_id, user_coupon_id, owner_user_id,
+                   period, duration_days, daily_quota, total_quota, total_used, status,
+                   starts_at, expires_at, created_at, updated_at
+            FROM promotion_member_card
+            WHERE tenant_id = $1 AND user_coupon_id = $2
+            "#,
+        )
+        .bind(&command.tenant_id)
+        .bind(&command.user_coupon_id)
+        .fetch_one(&mut **tx)
+        .await
+        .map_err(|error| store_error("failed to replay member card grant", error))?
+    } else {
+        sqlx::query(
+            r#"
+            SELECT id, card_no, offer_id, offer_version_id, user_coupon_id, owner_user_id,
+                   period, duration_days, daily_quota, total_quota, total_used, status,
+                   starts_at, expires_at, created_at, updated_at
+            FROM promotion_member_card
+            WHERE id = $1 AND tenant_id = $2
+            "#,
+        )
+        .bind(&card_id)
+        .bind(&command.tenant_id)
+        .fetch_one(&mut **tx)
+        .await
+        .map_err(|error| store_error("failed to load granted member card", error))?
+    };
+    map_member_card_row(row)
+}
+
+
+
+/// 券兑现主体的通用字段（redeem 与 claim 共用）。
+struct CouponSubject<'a> {
+    tenant_id: &'a str,
+    organization_id: Option<&'a str>,
+    owner_user_id: &'a str,
+    request_no: &'a str,
+    idempotency_key: &'a str,
+    source_remark: &'a str,
+}
+
+/// 权益兑现结果：按券权益类型分发的入账/开卡信息。
+struct BenefitCredit {
+    amount_minor: String,
+    credited_points: i64,
+    balance: i64,
+    benefit_kind: Option<String>,
+    credited_amount: Option<String>,
+    asset_type: Option<String>,
+    member_card_id: Option<String>,
+    member_card_no: Option<String>,
+}
+
+/// 兑换码兑现分发：解析券权益并按类型入账（Token Bank/积分/现金）或开通会员卡。
+/// 无权益规则的存量券回退按 discount_value 记积分。
+async fn credit_coupon_benefit_in_tx(
+    tx: &mut Transaction<'_, Postgres>,
+    command: &PromotionCodeRedemptionCommand,
+    promotion: &RedeemPromotion,
+    coupon_id: &str,
+    now: &str,
+) -> Result<BenefitCredit, CommerceServiceError> {
+    let benefit = parse_admin_coupon_benefit(promotion.rule_json.as_deref())?;
+    let subject = CouponSubject {
+        tenant_id: &command.tenant_id,
+        organization_id: command.organization_id.as_deref(),
+        owner_user_id: &command.owner_user_id,
+        request_no: &command.request_no,
+        idempotency_key: &command.idempotency_key,
+        source_remark: &format!("redeem_promotion_code={}", command.code),
+    };
+    match benefit {
+        None => credit_legacy_points_in_tx(tx, command, promotion, coupon_id, now).await,
+        Some(PromotionCouponBenefit::PointsCredit { grant_points }) => {
+            let account = ensure_points_account(tx, command, now).await?;
+            let credited_points = grant_points;
+            let balance_after = checked_points_add(account.available_points, credited_points)?;
+            update_account_points(
+                tx,
+                &account.id,
+                account.available_points,
+                credited_points,
+                now,
+            )
+            .await?;
+            insert_account_ledger(
+                tx,
+                command,
+                &account.id,
+                balance_after,
+                credited_points,
+                coupon_id,
+                now,
+            )
+            .await?;
+            insert_redeem_billing_history(
+                tx,
+                command,
+                coupon_id,
+                &points_to_money_string(credited_points),
+                &promotion.currency_code,
+                credited_points,
+                now,
+            )
+            .await?;
+            Ok(BenefitCredit {
+                amount_minor: points_to_minor_units_string(credited_points),
+                credited_points,
+                balance: balance_after,
+                benefit_kind: Some("points_credit".to_owned()),
+                credited_amount: Some(credited_points.to_string()),
+                asset_type: Some("points".to_owned()),
+                member_card_id: None,
+                member_card_no: None,
+            })
+        }
+        Some(PromotionCouponBenefit::TokenBankCredit {
+            grant_amount,
+            bonus_amount,
+        }) => {
+            let total = grant_amount
+                .checked_add(bonus_amount)
+                .ok_or_else(|| {
+                    CommerceServiceError::validation(
+                        "promotion Token Bank coupon grant amount exceeds the supported range",
+                    )
+                })?;
+            let balance_after = credit_asset_account_in_tx(
+                tx,
+                &subject,
+                "token_bank",
+                &promotion.currency_code,
+                total,
+                "token-bank",
+                coupon_id,
+                now,
+            )
+            .await?;
+            Ok(BenefitCredit {
+                amount_minor: total.to_string(),
+                credited_points: 0,
+                balance: balance_after,
+                benefit_kind: Some("token_bank_credit".to_owned()),
+                credited_amount: Some(total.to_string()),
+                asset_type: Some("token_bank".to_owned()),
+                member_card_id: None,
+                member_card_no: None,
+            })
+        }
+        Some(PromotionCouponBenefit::CashCredit { grant_amount }) => {
+            let balance_after = credit_asset_account_in_tx(
+                tx,
+                &subject,
+                "cash",
+                &promotion.currency_code,
+                grant_amount,
+                "cash",
+                coupon_id,
+                now,
+            )
+            .await?;
+            Ok(BenefitCredit {
+                amount_minor: grant_amount.to_string(),
+                credited_points: 0,
+                balance: balance_after,
+                benefit_kind: Some("cash_credit".to_owned()),
+                credited_amount: Some(grant_amount.to_string()),
+                asset_type: Some("cash".to_owned()),
+                member_card_id: None,
+                member_card_no: None,
+            })
+        }
+        Some(PromotionCouponBenefit::Subscription {
+            period,
+            duration_days,
+            daily_quota,
+            total_quota,
+        }) => {
+            let card_command = GrantMemberCardCommand::new(
+                &command.tenant_id,
+                command.organization_id.as_deref(),
+                &command.owner_user_id,
+                &promotion.offer_id,
+                &promotion.offer_version_id,
+                coupon_id,
+                period,
+                duration_days,
+                daily_quota,
+                total_quota,
+                &command.request_no,
+                None,
+                &command.idempotency_key,
+            )?;
+            let card = grant_member_card_in_tx(tx, &card_command).await?;
+            Ok(BenefitCredit {
+                amount_minor: "0".to_owned(),
+                credited_points: 0,
+                balance: 0,
+                benefit_kind: Some("subscription".to_owned()),
+                credited_amount: None,
+                asset_type: None,
+                member_card_id: Some(card.id),
+                member_card_no: Some(card.card_no),
+            })
+        }
+    }
+}
+
+/// 存量无规则券兜底：按 discount_value 记积分。
+async fn credit_legacy_points_in_tx(
+    tx: &mut Transaction<'_, Postgres>,
+    command: &PromotionCodeRedemptionCommand,
+    promotion: &RedeemPromotion,
+    coupon_id: &str,
+    now: &str,
+) -> Result<BenefitCredit, CommerceServiceError> {
+    let account = ensure_points_account(tx, command, now).await?;
+    let credited_points = coupon_credit_points(&promotion.discount_value)?;
+    let balance_after = checked_points_add(account.available_points, credited_points)?;
+    update_account_points(
+        tx,
+        &account.id,
+        account.available_points,
+        credited_points,
+        now,
+    )
+    .await?;
+    insert_account_ledger(
+        tx,
+        command,
+        &account.id,
+        balance_after,
+        credited_points,
+        coupon_id,
+        now,
+    )
+    .await?;
+    insert_redeem_billing_history(
+        tx,
+        command,
+        coupon_id,
+        &points_to_money_string(credited_points),
+        &promotion.currency_code,
+        credited_points,
+        now,
+    )
+    .await?;
+    Ok(BenefitCredit {
+        amount_minor: points_to_minor_units_string(credited_points),
+        credited_points,
+        balance: balance_after,
+        benefit_kind: Some("points_credit".to_owned()),
+        credited_amount: Some(credited_points.to_string()),
+        asset_type: Some("points".to_owned()),
+        member_card_id: None,
+        member_card_no: None,
+    })
+}
+
+/// 通用资产账户入账（Token Bank/现金等）：确保账户、更新余额、写账户流水。
+async fn credit_asset_account_in_tx(
+    tx: &mut Transaction<'_, Postgres>,
+    subject: &CouponSubject<'_>,
+    asset_type: &str,
+    currency_code: &str,
+    amount: i64,
+    account_scope: &str,
+    source_coupon_id: &str,
+    now: &str,
+) -> Result<i64, CommerceServiceError> {
+    let account = ensure_asset_account(tx, subject, asset_type, currency_code, account_scope, now).await?;
+    let balance_after = checked_points_add(account.available_amount, amount)?;
+    update_account_points(tx, &account.id, account.available_amount, amount, now).await?;
+    insert_asset_account_ledger(
+        tx,
+        subject,
+        &account.id,
+        asset_type,
+        balance_after,
+        amount,
+        source_coupon_id,
+        now,
+    )
+    .await?;
+    Ok(balance_after)
+}
+
+#[derive(Debug, Clone)]
+struct AssetAccount {
+    id: String,
+    available_amount: i64,
+}
+
+async fn ensure_asset_account(
+    tx: &mut Transaction<'_, Postgres>,
+    subject: &CouponSubject<'_>,
+    asset_type: &str,
+    currency_code: &str,
+    account_scope: &str,
+    now: &str,
+) -> Result<AssetAccount, CommerceServiceError> {
+    if let Some(account) = load_asset_account(tx, subject, asset_type, currency_code).await? {
+        return Ok(account);
+    }
+    let account_id = stable_storage_id(&[
+        "account",
+        subject.tenant_id,
+        subject.organization_id.unwrap_or("global"),
+        subject.owner_user_id,
+        account_scope,
+        currency_code,
+    ]);
+    sqlx::query(
+        r#"
+        INSERT INTO commerce_account
+            (id, tenant_id, organization_id, owner_user_id, asset_type, currency_code,
+             available_amount, frozen_amount, version, status, created_at, updated_at)
+        VALUES
+            ($1, $2, $3, $4, $5, $6, '0', '0', 0, 'active', $7, $8)
+        ON CONFLICT (tenant_id, organization_id, owner_user_id, asset_type, currency_code)
+        DO NOTHING
+        "#,
+    )
+    .bind(&account_id)
+    .bind(subject.tenant_id)
+    .bind(subject.organization_id)
+    .bind(subject.owner_user_id)
+    .bind(asset_type)
+    .bind(currency_code)
+    .bind(now)
+    .bind(now)
+    .execute(&mut **tx)
+    .await
+    .map_err(|error| store_error("failed to create coupon asset account", error))?;
+
+    load_asset_account(tx, subject, asset_type, currency_code)
+        .await?
+        .ok_or_else(|| CommerceServiceError::storage("coupon asset account was not available after creation"))
+}
+
+async fn load_asset_account(
+    tx: &mut Transaction<'_, Postgres>,
+    subject: &CouponSubject<'_>,
+    asset_type: &str,
+    currency_code: &str,
+) -> Result<Option<AssetAccount>, CommerceServiceError> {
+    let row = sqlx::query(
+        r#"
+        SELECT id, CAST(COALESCE(available_amount, '0') AS BIGINT) AS available_amount
+        FROM commerce_account
+        WHERE tenant_id = CAST($1 AS TEXT)
+          AND ((organization_id = CAST($2 AS TEXT)) OR (organization_id IS NULL AND $2 IS NULL))
+          AND owner_user_id = CAST($3 AS TEXT)
+          AND asset_type = $4
+          AND currency_code = $5
+          AND status = 'active'
+        ORDER BY id ASC
+        LIMIT 1
+        FOR UPDATE
+        "#,
+    )
+    .bind(subject.tenant_id)
+    .bind(subject.organization_id)
+    .bind(subject.owner_user_id)
+    .bind(asset_type)
+    .bind(currency_code)
+    .fetch_optional(&mut **tx)
+    .await
+    .map_err(|error| store_error("failed to load coupon asset account", error))?;
+    Ok(row.map(|row| AssetAccount {
+        id: string_cell(&row, "id"),
+        available_amount: integer_cell(&row, "available_amount"),
+    }))
+}
+
+async fn insert_asset_account_ledger(
+    tx: &mut Transaction<'_, Postgres>,
+    subject: &CouponSubject<'_>,
+    account_id: &str,
+    asset_type: &str,
+    balance_after: i64,
+    amount: i64,
+    source_coupon_id: &str,
+    now: &str,
+) -> Result<(), CommerceServiceError> {
+    sqlx::query(
+        r#"
+        INSERT INTO commerce_account_ledger_entry
+            (id, tenant_id, organization_id, account_id, owner_user_id, asset_type, direction,
+             amount, balance_after, business_type, transaction_no, request_no, idempotency_key,
+             source_type, source_id, remark, created_at)
+        VALUES
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'redeem', $10, $11, $12, $13, $14, $15, $16)
+        "#,
+    )
+    .bind(stable_storage_id(&[
+        "ledger",
+        subject.tenant_id,
+        asset_type,
+        subject.request_no,
+    ]))
+    .bind(subject.tenant_id)
+    .bind(subject.organization_id)
+    .bind(account_id)
+    .bind(subject.owner_user_id)
+    .bind(asset_type)
+    .bind(CommerceLedgerDirection::Credit.as_str())
+    .bind(amount.to_string())
+    .bind(balance_after.to_string())
+    .bind(subject.request_no)
+    .bind(subject.request_no)
+    .bind(subject.idempotency_key)
+    .bind(PROMOTION_USER_COUPON_SOURCE_TYPE)
+    .bind(source_coupon_id)
+    .bind(subject.source_remark.to_owned())
+    .bind(now)
+    .execute(&mut **tx)
+    .await
+    .map_err(|error| store_error("failed to insert coupon asset account ledger entry", error))?;
+    Ok(())
+}
+
+fn map_redemption_preview(
+    benefit: Option<PromotionCouponBenefit>,
+    expires_at: Option<&str>,
+) -> Result<PromotionCodeRedemptionPreview, CommerceServiceError> {
+    Ok(match benefit {
+        None => PromotionCodeRedemptionPreview {
+            benefit_kind: Some("points_credit".to_owned()),
+            credited_amount: None,
+            asset_type: Some("points".to_owned()),
+            period: None,
+            duration_days: None,
+            daily_quota: None,
+            total_quota: None,
+            expires_at: expires_at.map(str::to_owned),
+        },
+        Some(PromotionCouponBenefit::PointsCredit { grant_points }) => PromotionCodeRedemptionPreview {
+            benefit_kind: Some("points_credit".to_owned()),
+            credited_amount: Some(grant_points.to_string()),
+            asset_type: Some("points".to_owned()),
+            period: None,
+            duration_days: None,
+            daily_quota: None,
+            total_quota: None,
+            expires_at: expires_at.map(str::to_owned),
+        },
+        Some(PromotionCouponBenefit::TokenBankCredit {
+            grant_amount,
+            bonus_amount,
+        }) => PromotionCodeRedemptionPreview {
+            benefit_kind: Some("token_bank_credit".to_owned()),
+            credited_amount: Some(
+                grant_amount
+                    .checked_add(bonus_amount)
+                    .ok_or_else(|| {
+                        CommerceServiceError::validation(
+                            "promotion Token Bank coupon grant amount exceeds the supported range",
+                        )
+                    })?
+                    .to_string(),
+            ),
+            asset_type: Some("token_bank".to_owned()),
+            period: None,
+            duration_days: None,
+            daily_quota: None,
+            total_quota: None,
+            expires_at: expires_at.map(str::to_owned),
+        },
+        Some(PromotionCouponBenefit::CashCredit { grant_amount }) => PromotionCodeRedemptionPreview {
+            benefit_kind: Some("cash_credit".to_owned()),
+            credited_amount: Some(grant_amount.to_string()),
+            asset_type: Some("cash".to_owned()),
+            period: None,
+            duration_days: None,
+            daily_quota: None,
+            total_quota: None,
+            expires_at: expires_at.map(str::to_owned),
+        },
+        Some(PromotionCouponBenefit::Subscription {
+            period,
+            duration_days,
+            daily_quota,
+            total_quota,
+        }) => PromotionCodeRedemptionPreview {
+            benefit_kind: Some("subscription".to_owned()),
+            credited_amount: None,
+            asset_type: None,
+            period: Some(period.as_str().to_owned()),
+            duration_days: Some(duration_days),
+            daily_quota: Some(daily_quota),
+            total_quota: Some(total_quota),
+            expires_at: expires_at.map(str::to_owned),
+        },
+    })
+}
+
+/// advisory lock 键：会员卡生命周期扫描（防多实例并发）。
+const MEMBER_CARD_LIFECYCLE_SWEEP_LOCK_KEY: i64 = 71_091_238_410;
+
+/// 会员卡生命周期扫描结果。
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct MemberCardLifecycleSweepOutcome {
+    pub activated: i64,
+    pub expired: i64,
+    /// true 表示本轮被 advisory lock 跳过（另一实例正在执行）。
+    pub skipped: bool,
 }

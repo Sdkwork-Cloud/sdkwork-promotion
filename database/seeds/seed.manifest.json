@@ -5,7 +5,9 @@
   "profiles": {
     "standard": {
       "locales": {},
-      "common": []
+      "common": [
+        "001_bootstrap.sql"
+      ]
     }
   },
   "kind": "sdkwork.database.seed",

@@ -52,8 +52,8 @@ impl PromotionAdminScope {
     }
 }
 
-pub const CODE_ISSUE_MODE_REALTIME: &str = "REALTIME";
-pub const CODE_ISSUE_MODE_BATCH: &str = "BATCH";
+pub const CODE_ISSUE_MODE_REALTIME: &str = "realtime";
+pub const CODE_ISSUE_MODE_BATCH: &str = "batch";
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PromotionAdminListQuery {
@@ -605,7 +605,7 @@ impl PromotionAdminService {
         input: &PromotionCouponStockInput,
     ) -> Result<PromotionCouponStockItem, CommerceServiceError> {
         positive_id("offer_id", &input.offer_id)?;
-        let is_unlimited = input.stock_type.trim().eq_ignore_ascii_case("UNLIMITED");
+        let is_unlimited = input.stock_type.trim().eq_ignore_ascii_case("unlimited");
         if (!is_unlimited && input.total_quantity <= 0) || input.per_user_limit <= 0 {
             return Err(CommerceServiceError::validation(
                 "total_quantity must be positive for limited stock; per_user_limit must be positive",
@@ -617,7 +617,7 @@ impl PromotionAdminService {
             CODE_ISSUE_MODE_REALTIME | CODE_ISSUE_MODE_BATCH
         ) {
             return Err(CommerceServiceError::validation(
-                "code_issue_mode must be REALTIME or BATCH",
+                "code_issue_mode must be realtime or batch",
             ));
         }
         self.repository.create_coupon_stock(scope, input).await
@@ -718,7 +718,7 @@ fn validate_campaign(input: &PromotionCampaignInput) -> Result<(), CommerceServi
     required("starts_at", &input.starts_at)?;
     if !matches!(
         input.status.as_str(),
-        "DRAFT" | "SCHEDULED" | "ACTIVE" | "PAUSED" | "ENDED" | "CANCELLED" | "ARCHIVED"
+        "draft" | "scheduled" | "active" | "paused" | "ended" | "cancelled" | "archived"
     ) {
         return Err(CommerceServiceError::validation("invalid campaign status"));
     }

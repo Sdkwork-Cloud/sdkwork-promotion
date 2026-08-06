@@ -1,8 +1,40 @@
 import { appApiPath } from './paths';
-import type { HttpClient } from '../http/client';
+import type { ApiRequestOptions, HttpClient } from '../http/client';
 
-import type { NoData, PromotionsCodesRedemptionsCreateRequest, PromotionsCodesRedemptionsCreateResult } from '../types';
+import type { NoData, PromotionsCodesRedemptionsCreateRequest, PromotionsCodesRedemptionsCreateResult, PromotionsMemberCardsConsumptionsCreateRequest } from '../types';
 
+
+export class PromotionsMemberCardsConsumptionsApi {
+  private client: HttpClient;
+
+  constructor(client: HttpClient) {
+    this.client = client;
+  }
+
+
+async create(cardId: string | number, body: PromotionsMemberCardsConsumptionsCreateRequest, requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/member_cards/${serializePathParameter(cardId, { name: 'cardId', style: 'simple', explode: false })}/consumptions`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'data' });
+  }
+}
+
+export class PromotionsMemberCardsApi {
+  private client: HttpClient;
+  public readonly consumptions: PromotionsMemberCardsConsumptionsApi;
+
+  constructor(client: HttpClient) {
+    this.client = client;
+    this.consumptions = new PromotionsMemberCardsConsumptionsApi(client);
+  }
+
+
+async list(requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/member_cards`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'data' });
+  }
+
+async retrieve(cardId: string | number, requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/member_cards/${serializePathParameter(cardId, { name: 'cardId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'data' });
+  }
+}
 
 export class PromotionsUserCouponsWalletApi {
   private client: HttpClient;
@@ -13,13 +45,13 @@ export class PromotionsUserCouponsWalletApi {
 
 
 /** List */
-  async list(): Promise<NoData> {
-    return this.client.get<NoData>(appApiPath(`/promotions/user_coupons/wallet`));
+  async list(requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/user_coupons/wallet`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'data' });
   }
 
 /** Retrieve */
-  async retrieve(userCouponId: string): Promise<NoData> {
-    return this.client.get<NoData>(appApiPath(`/promotions/user_coupons/wallet/${serializePathParameter(userCouponId, { name: 'userCouponId', style: 'simple', explode: false })}`));
+  async retrieve(userCouponId: string, requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/user_coupons/wallet/${serializePathParameter(userCouponId, { name: 'userCouponId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'data' });
   }
 }
 
@@ -32,8 +64,8 @@ export class PromotionsUserCouponsClaimsApi {
 
 
 /** Create */
-  async create(): Promise<NoData> {
-    return this.client.post<NoData>(appApiPath(`/promotions/user_coupon_claims`));
+  async create(requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/user_coupon_claims`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, sdkworkUnwrapKind: 'data' });
   }
 }
 
@@ -50,13 +82,13 @@ export class PromotionsUserCouponsApi {
 
 
 /** List */
-  async list(): Promise<NoData> {
-    return this.client.get<NoData>(appApiPath(`/promotions/user_coupons`));
+  async list(requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/user_coupons`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'data' });
   }
 
 /** Retrieve */
-  async retrieve(userCouponId: string): Promise<NoData> {
-    return this.client.get<NoData>(appApiPath(`/promotions/user_coupons/${serializePathParameter(userCouponId, { name: 'userCouponId', style: 'simple', explode: false })}`));
+  async retrieve(userCouponId: string, requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/user_coupons/${serializePathParameter(userCouponId, { name: 'userCouponId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'data' });
   }
 }
 
@@ -69,13 +101,13 @@ export class PromotionsOffersApi {
 
 
 /** List */
-  async list(): Promise<NoData> {
-    return this.client.get<NoData>(appApiPath(`/promotions/offers`));
+  async list(requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/offers`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'data' });
   }
 
 /** Retrieve */
-  async retrieve(offerId: string): Promise<NoData> {
-    return this.client.get<NoData>(appApiPath(`/promotions/offers/${serializePathParameter(offerId, { name: 'offerId', style: 'simple', explode: false })}`));
+  async retrieve(offerId: string, requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/offers/${serializePathParameter(offerId, { name: 'offerId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'data' });
   }
 }
 
@@ -88,8 +120,8 @@ export class PromotionsDiscountApplicationsSettlementsApi {
 
 
 /** Settle */
-  async create(applicationId: string): Promise<NoData> {
-    return this.client.post<NoData>(appApiPath(`/promotions/discount_applications/${serializePathParameter(applicationId, { name: 'applicationId', style: 'simple', explode: false })}/settlements`));
+  async create(applicationId: string, requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/discount_applications/${serializePathParameter(applicationId, { name: 'applicationId', style: 'simple', explode: false })}/settlements`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, sdkworkUnwrapKind: 'data' });
   }
 }
 
@@ -102,8 +134,8 @@ export class PromotionsDiscountApplicationsReleasesApi {
 
 
 /** Release */
-  async create(applicationId: string): Promise<NoData> {
-    return this.client.post<NoData>(appApiPath(`/promotions/discount_applications/${serializePathParameter(applicationId, { name: 'applicationId', style: 'simple', explode: false })}/releases`));
+  async create(applicationId: string, requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/discount_applications/${serializePathParameter(applicationId, { name: 'applicationId', style: 'simple', explode: false })}/releases`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, sdkworkUnwrapKind: 'data' });
   }
 }
 
@@ -116,8 +148,8 @@ export class PromotionsDiscountApplicationsReversalsApi {
 
 
 /** Create */
-  async create(): Promise<NoData> {
-    return this.client.post<NoData>(appApiPath(`/promotions/discount_applications/reversals`));
+  async create(requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/discount_applications/reversals`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, sdkworkUnwrapKind: 'data' });
   }
 }
 
@@ -136,13 +168,13 @@ export class PromotionsDiscountApplicationsApi {
 
 
 /** Create */
-  async create(): Promise<NoData> {
-    return this.client.post<NoData>(appApiPath(`/promotions/discount_applications`));
+  async create(requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/discount_applications`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, sdkworkUnwrapKind: 'data' });
   }
 
 /** Rollback */
-  async rollback(applicationId: string): Promise<NoData> {
-    return this.client.post<NoData>(appApiPath(`/promotions/discount_applications/${serializePathParameter(applicationId, { name: 'applicationId', style: 'simple', explode: false })}/rollback`));
+  async rollback(applicationId: string, requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/discount_applications/${serializePathParameter(applicationId, { name: 'applicationId', style: 'simple', explode: false })}/rollback`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, sdkworkUnwrapKind: 'data' });
   }
 }
 
@@ -155,8 +187,12 @@ export class PromotionsCodesRedemptionsApi {
 
 
 /** Create */
-  async create(body: PromotionsCodesRedemptionsCreateRequest): Promise<PromotionsCodesRedemptionsCreateResult> {
-    return this.client.post<PromotionsCodesRedemptionsCreateResult>(appApiPath(`/promotions/codes/redemptions`), body, undefined, undefined, 'application/json');
+  async create(body: PromotionsCodesRedemptionsCreateRequest, requestOptions?: ApiRequestOptions): Promise<PromotionsCodesRedemptionsCreateResult> {
+    return this.client.request<PromotionsCodesRedemptionsCreateResult>(appApiPath(`/promotions/codes/redemptions`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'data' });
+  }
+
+async preview(body: PromotionsCodesRedemptionsCreateRequest, requestOptions?: ApiRequestOptions): Promise<NoData> {
+    return this.client.request<NoData>(appApiPath(`/promotions/codes/redemptions/preview`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'POST' as any, body, contentType: 'application/json', sdkworkUnwrapKind: 'data' });
   }
 }
 
@@ -177,6 +213,7 @@ export class PromotionsApi {
   public readonly discountApplications: PromotionsDiscountApplicationsApi;
   public readonly offers: PromotionsOffersApi;
   public readonly userCoupons: PromotionsUserCouponsApi;
+  public readonly memberCards: PromotionsMemberCardsApi;
 
   constructor(client: HttpClient) {
     this.client = client;
@@ -184,6 +221,7 @@ export class PromotionsApi {
     this.discountApplications = new PromotionsDiscountApplicationsApi(client);
     this.offers = new PromotionsOffersApi(client);
     this.userCoupons = new PromotionsUserCouponsApi(client);
+    this.memberCards = new PromotionsMemberCardsApi(client);
   }
 
 }

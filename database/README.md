@@ -21,17 +21,9 @@ All promotion tables use the commerce platform **TEXT schema**:
 
 This module is in **initialization state** for greenfield deployments:
 
-1. **Baseline** — `database/ddl/baseline/{engine}/0001_promotion_baseline.sql` contains the full DDL snapshot (including campaign, code batch, and distribution tables).
-2. **Migrations** — `database/migrations/{engine}/` contains the post-baseline change chain:
-   - `0002_marketing_admin.up.sql` — marketing admin surface (TEXT-aligned columns).
-   - `0003_coupon_code_issue_mode.up.sql` — `promotion_coupon_stock.code_issue_mode`
-     (`REALTIME` | `BATCH`) for pre-generated pool codes.
+1. **Baseline** — `database/ddl/baseline/{engine}/0001_promotion_baseline.sql` contains the full DDL snapshot.
+2. **Migrations** — `database/migrations/{engine}/` is reserved for post-GA incremental schema changes only. It is intentionally empty at initialization.
 3. **Drift** — run `pnpm db:drift:check` before release.
-
-The promotion module is registered as a federated commerce capability database:
-`crates/sdkwork-promotion-database-host` exposes `database_module()`, and the Cloud
-Router commerce runtime bootstraps it on the shared commerce pool together with
-payment, order, and membership modules.
 
 ## Commands
 

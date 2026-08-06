@@ -7,16 +7,14 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use axum::{Json, Router};
-use sdkwork_commerce_promotion_repository_sqlx::{
-    PostgresCommerceExchangeStore, SqliteCommerceExchangeStore,
-};
+use sdkwork_commerce_promotion_repository_sqlx::PostgresCommerceExchangeStore;
 use sdkwork_commerce_promotion_service::{
     AppCommerceExchangeRuleItem, AppCommerceExchangeRuleQuery, AppCommerceSubject,
 };
 use sdkwork_contract_service::CommerceServiceError;
 use sdkwork_iam_context_service::IamAppContext;
 use serde::{Deserialize, Serialize};
-use sqlx::{PgPool, SqlitePool};
+use sqlx::PgPool;
 
 use crate::subject::app_runtime_subject_from_extension;
 
@@ -79,21 +77,7 @@ struct AppCommercePointsExchangeRateResponse {
     rate: String,
 }
 
-impl CommerceExchangeStore for SqliteCommerceExchangeStore {
-    fn list_exchange_rules<'a>(
-        &'a self,
-        query: AppCommerceExchangeRuleQuery,
-    ) -> CommerceExchangeFuture<'a, Vec<AppCommerceExchangeRuleItem>> {
-        Box::pin(async move { self.list_exchange_rules(query).await })
-    }
 
-    fn load_points_exchange_rate<'a>(
-        &'a self,
-        query: AppCommerceExchangeRuleQuery,
-    ) -> CommerceExchangeFuture<'a, Option<AppCommerceExchangeRuleItem>> {
-        Box::pin(async move { self.load_points_exchange_rate(query).await })
-    }
-}
 
 impl CommerceExchangeStore for PostgresCommerceExchangeStore {
     fn list_exchange_rules<'a>(
@@ -131,9 +115,7 @@ impl AppCommerceExchangeApiResult<()> {
     }
 }
 
-pub fn app_exchange_router_with_sqlite_pool(pool: SqlitePool) -> Router {
-    build_app_exchange_router(Arc::new(SqliteCommerceExchangeStore::new(pool)))
-}
+
 
 pub fn app_exchange_router_with_postgres_pool(pool: PgPool) -> Router {
     build_app_exchange_router(Arc::new(PostgresCommerceExchangeStore::new(pool)))

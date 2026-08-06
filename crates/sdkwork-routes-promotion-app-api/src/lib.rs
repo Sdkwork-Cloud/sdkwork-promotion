@@ -8,12 +8,12 @@ pub mod subject;
 pub mod web_bootstrap;
 
 pub use exchange_router::{
-    app_exchange_router_with_postgres_pool, app_exchange_router_with_sqlite_pool,
-    build_app_exchange_router, CommerceExchangeFuture, CommerceExchangeStore,
+    app_exchange_router_with_postgres_pool, build_app_exchange_router, CommerceExchangeFuture,
+    CommerceExchangeStore,
 };
 pub use promotion_router::{
-    app_promotion_router_with_postgres_pool, app_promotion_router_with_sqlite_pool,
-    build_app_promotion_router, CommercePromotionFuture, CommercePromotionStore,
+    app_promotion_router_with_postgres_pool, build_app_promotion_router, CommercePromotionFuture,
+    CommercePromotionStore,
 };
 pub use routes::build_promotion_app_router_with_framework;
 pub use web_bootstrap::wrap_router_with_web_framework_from_env;
