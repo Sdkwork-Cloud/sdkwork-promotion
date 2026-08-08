@@ -674,29 +674,22 @@ async fn redeem_promotion_code(
 
 async fn fetch_promotion_offers(
     State(_state): State<AppPromotionState>,
-    runtime_context: Option<Extension<IamAppContext>>,
     request_context: Option<Extension<WebRequestContext>>,
 ) -> Response {
     let ctx = request_context.as_ref().map(|ext| &ext.0);
-    let _subject = match app_runtime_subject_from_extension(runtime_context) {
-        Ok(subject) => subject,
-        Err(message) => return crate::api_response::unauthorized(ctx, message),
-    };
+    // Anonymous display surface (route manifest public): catalogue browsing
+    // must not require an authentication subject.
     crate::api_response::success_items(ctx, Vec::<serde_json::Value>::new(), 1, 20)
 }
 
 async fn retrieve_promotion_offer(
     State(_state): State<AppPromotionState>,
-    runtime_context: Option<Extension<IamAppContext>>,
     request_context: Option<Extension<WebRequestContext>>,
     axum::extract::Path(offer_id): axum::extract::Path<String>,
 ) -> Response {
     let ctx = request_context.as_ref().map(|ext| &ext.0);
-    let _subject = match app_runtime_subject_from_extension(runtime_context) {
-        Ok(subject) => subject,
-        Err(message) => return crate::api_response::unauthorized(ctx, message),
-    };
     let _ = offer_id;
+    // Anonymous display surface: no authentication subject required.
     crate::api_response::not_found(ctx, "promotion offer not found")
 }
 

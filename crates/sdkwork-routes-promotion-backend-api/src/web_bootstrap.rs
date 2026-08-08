@@ -25,11 +25,7 @@ where
                 "PROMOTION_ENVIRONMENT",
                 "SDKWORK_ENV",
             ],
-            &[
-                "SDKWORK_CORS_ALLOWED_ORIGINS",
-                "SDKWORK_PROMOTION_CORS_ALLOWED_ORIGINS",
-                "PROMOTION_CORS_ORIGINS",
-            ],
+            &["SDKWORK_CORS_ALLOWED_ORIGINS"],
         );
     let layer = sdkwork_iam_web_adapter::build_web_framework_layer(
         resolver,

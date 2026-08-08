@@ -644,12 +644,7 @@
             "description": "Error response."
           }
         },
-        "security": [
-          {
-            "AccessToken": [],
-            "AuthToken": []
-          }
-        ],
+        "security": [],
         "summary": "List",
         "tags": [
           "promotions"
@@ -659,7 +654,7 @@
         "x-read-sources": [
           "system"
         ],
-        "x-route-scope": "console",
+        "x-route-scope": "public",
         "x-sdk-domain": "promotion",
         "x-sdkwork-domain": "promotion",
         "x-sdkwork-resource": "promotions.offers",
@@ -668,7 +663,8 @@
         "x-sdkwork-owner": "sdkwork-promotion",
         "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
         "x-sdkwork-api-surface": "app-api",
-        "x-sdkwork-permission": "commerce.promotions.offers.access"
+        "x-sdkwork-permission": "commerce.promotions.offers.access",
+        "x-sdkwork-auth-mode": "anonymous"
       }
     },
     "/app/v3/api/promotions/offers/{offerId}": {
@@ -738,12 +734,7 @@
             "description": "Error response."
           }
         },
-        "security": [
-          {
-            "AccessToken": [],
-            "AuthToken": []
-          }
-        ],
+        "security": [],
         "summary": "Retrieve",
         "tags": [
           "promotions"
@@ -753,7 +744,7 @@
         "x-read-sources": [
           "system"
         ],
-        "x-route-scope": "console",
+        "x-route-scope": "public",
         "x-sdk-domain": "promotion",
         "x-sdkwork-domain": "promotion",
         "x-sdkwork-resource": "promotions.offers",
@@ -762,7 +753,8 @@
         "x-sdkwork-owner": "sdkwork-promotion",
         "x-sdkwork-api-authority": "sdkwork-promotion-app-api",
         "x-sdkwork-api-surface": "app-api",
-        "x-sdkwork-permission": "commerce.promotions.offers.access"
+        "x-sdkwork-permission": "commerce.promotions.offers.access",
+        "x-sdkwork-auth-mode": "anonymous"
       }
     },
     "/app/v3/api/promotions/user_coupon_claims": {

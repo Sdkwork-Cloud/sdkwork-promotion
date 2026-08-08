@@ -102,12 +102,12 @@ export class PromotionsOffersApi {
 
 /** List */
   async list(requestOptions?: ApiRequestOptions): Promise<NoData> {
-    return this.client.request<NoData>(appApiPath(`/promotions/offers`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'data' });
+    return this.client.request<NoData>(appApiPath(`/promotions/offers`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, skipAuth: true, sdkworkUnwrapKind: 'data' });
   }
 
 /** Retrieve */
   async retrieve(offerId: string, requestOptions?: ApiRequestOptions): Promise<NoData> {
-    return this.client.request<NoData>(appApiPath(`/promotions/offers/${serializePathParameter(offerId, { name: 'offerId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, sdkworkUnwrapKind: 'data' });
+    return this.client.request<NoData>(appApiPath(`/promotions/offers/${serializePathParameter(offerId, { name: 'offerId', style: 'simple', explode: false })}`), { signal: requestOptions?.signal, timeout: requestOptions?.timeout, method: 'GET' as any, skipAuth: true, sdkworkUnwrapKind: 'data' });
   }
 }
 
